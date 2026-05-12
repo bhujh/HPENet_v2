@@ -144,4 +144,4 @@ dmypy.json
 /log/radar/
 /log/s3dis/
 /data/S3DIS/
-/data/RadarClassi/
+/data/RadarClassi/radarfull/raw/
