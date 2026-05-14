@@ -548,6 +548,7 @@ class HPENetV2Decoder(nn.Module):
                  ):
         super().__init__()
         self.decoder_layers = decoder_layers
+        self.norm_args = norm_args
         self.in_channels = encoder_channel_list[-1]
         skip_channels = encoder_channel_list[:-1]
         if len(skip_channels) < decoder_stages:
@@ -575,7 +576,7 @@ class HPENetV2Decoder(nn.Module):
         layers = []
         mlp = [skip_channels + self.in_channels] + \
               [fp_channels] * self.decoder_layers
-        layers.append(FeaturePropogation(mlp))
+        layers.append(FeaturePropogation(mlp, norm_args=self.norm_args))
         self.in_channels = fp_channels
         return nn.Sequential(*layers)
 

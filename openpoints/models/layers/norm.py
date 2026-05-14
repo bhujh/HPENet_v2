@@ -54,21 +54,39 @@ class FastBatchNorm1d(nn.Module):
             raise ValueError("Non supported number of dimensions {}".format(x.dim()))
 
 
-_NORM_LAYER = dict(
-    bn1d=nn.BatchNorm1d,
-    bn2d=nn.BatchNorm2d,
-    bn=nn.BatchNorm2d,
-    in2d=nn.InstanceNorm2d, 
-    in1d=nn.InstanceNorm1d, 
-    gn=nn.GroupNorm,
-    syncbn=nn.SyncBatchNorm,
-    ln=nn.LayerNorm,    # for tokens
-    ln1d=LayerNorm1d,   # for point cloud
-    ln2d=LayerNorm2d,   # for point cloud
-    fastbn1d=FastBatchNorm1d, 
-    fastbn2d=FastBatchNorm1d, 
-    fastbn=FastBatchNorm1d, 
-)
+# _NORM_LAYER = dict(
+#     bn1d=nn.BatchNorm1d,
+#     bn2d=nn.BatchNorm2d,
+#     bn=nn.BatchNorm2d,
+#     # in=nn.InstanceNorm1d,
+#     in2d=nn.InstanceNorm2d, 
+#     in1d=nn.InstanceNorm1d, 
+#     gn=nn.GroupNorm,
+#     syncbn=nn.SyncBatchNorm,
+#     ln=nn.LayerNorm,    # for tokens
+#     ln1d=LayerNorm1d,   # for point cloud
+#     ln2d=LayerNorm2d,   # for point cloud
+#     fastbn1d=FastBatchNorm1d, 
+#     fastbn2d=FastBatchNorm1d, 
+#     fastbn=FastBatchNorm1d, 
+# )
+
+_NORM_LAYER = {
+    "bn1d": nn.BatchNorm1d,
+    "bn2d": nn.BatchNorm2d,
+    "bn": nn.BatchNorm2d,
+    "in": nn.InstanceNorm1d,  # 新增
+    "in2d": nn.InstanceNorm2d,
+    "in1d": nn.InstanceNorm1d,
+    "gn": nn.GroupNorm,
+    "syncbn": nn.SyncBatchNorm,
+    "ln": nn.LayerNorm,
+    "ln1d": LayerNorm1d,
+    "ln2d": LayerNorm2d,
+    "fastbn1d": FastBatchNorm1d,
+    "fastbn2d": FastBatchNorm1d,
+    "fastbn": FastBatchNorm1d,
+}
 
 
 def create_norm(norm_args, channels, dimension=None):

@@ -60,9 +60,9 @@ class RadarClassi(Dataset):
         data_list = sorted(os.listdir(raw_root))
         data_list = [item[:-4] for item in data_list]
         if split == 'train':
-            self.data_list = [item for item in data_list if int(item) <= 170]
+            self.data_list = [item for item in data_list if int(item) <= 250]
         else:
-            self.data_list = [item for item in data_list if int(item) > 170]
+            self.data_list = [item for item in data_list if int(item) > 250]
 
         processed_root = os.path.join(data_root, 'processed')
         filename = os.path.join(

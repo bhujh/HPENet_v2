@@ -51,7 +51,7 @@ def generate_data_list(cfg):
     elif "radarclassi" in cfg.dataset.common.NAME.lower():
         raw_root = os.path.join(cfg.dataset.common.data_root, "raw")
         data_list = sorted(os.listdir(raw_root))
-        data_list = [os.path.join(raw_root, item) for item in data_list if int(item[:-4])>170]
+        data_list = [os.path.join(raw_root, item) for item in data_list if int(item[:-4])>250]
     elif 'scannet' in cfg.dataset.common.NAME.lower():
         data_list = glob.glob(os.path.join(cfg.dataset.common.data_root, cfg.dataset.test.split, "*.pth"))
     elif 'semantickitti' in cfg.dataset.common.NAME.lower():
@@ -285,10 +285,10 @@ def main(gpu, cfg):
                      f'train_miou {train_miou:.2f}, val_miou {val_miou:.2f}, best val miou {best_val:.2f}')
         if writer is not None:
             writer.add_scalar('best_val', best_val, epoch)
-            writer.add_scalar('val_miou', val_miou, epoch)
             writer.add_scalar('macc_when_best', macc_when_best, epoch)
             writer.add_scalar('oa_when_best', oa_when_best, epoch)
             writer.add_scalar('val_macc', val_macc, epoch)
+            writer.add_scalar("val_miou", val_miou, epoch)
             writer.add_scalar('val_oa', val_oa, epoch)
             writer.add_scalar('train_loss', train_loss, epoch)
             writer.add_scalar('train_miou', train_miou, epoch)
@@ -778,7 +778,7 @@ def test(model, data_list, cfg, num_votes=1):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Scene segmentation training/testing')
-    parser.add_argument('--cfg', type=str, required=True, help='config file')
+    parser.add_argument("--cfg", default="cfgs/radar/hpenet-xl.yaml", type=str, required=True, help="config file")
     parser.add_argument('--profile', action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()
     # print("+++++++++++++++++++")
