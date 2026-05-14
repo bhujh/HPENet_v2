@@ -28,12 +28,20 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-def write_to_csv(oa, macc, miou, ious, best_epoch, cfg, write_header=True, area=5):
+def write_to_csv(oa, macc, miou, mp, mr, ious, precisions, recalls, best_epoch, cfg, write_header=True, area=5):
     ious_table = [f'{item:.2f}' for item in ious]
-    header = ['method', 'Area', 'OA', 'mACC', 'mIoU'] + cfg.classes + ['best_epoch', 'log_path', 'wandb link']
+    precisions_table = [f'{item:.2f}' for item in precisions]
+    recalls_table = [f'{item:.2f}' for item in recalls]
+    header = ['method', 'Area', 'OA', 'mACC', 'mIoU', 'mP', 'mR'] + \
+             [f'iou_{c}' for c in cfg.classes] + \
+             [f'prec_{c}' for c in cfg.classes] + \
+             [f'rec_{c}' for c in cfg.classes] + \
+             ['best_epoch', 'log_path', 'wandb link']
     data = [cfg.cfg_basename, str(area), f'{oa:.2f}', f'{macc:.2f}',
-            f'{miou:.2f}'] + ious_table + [str(best_epoch), cfg.run_dir,
-                                           wandb.run.get_url() if cfg.wandb.use_wandb else '-']
+            f'{miou:.2f}', f'{mp:.2f}', f'{mr:.2f}'] + \
+           ious_table + precisions_table + recalls_table + \
+           [str(best_epoch), cfg.run_dir,
+            wandb.run.get_url() if cfg.wandb.use_wandb else '-']
     with open(cfg.csv_path, 'a', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
         if write_header:
@@ -51,7 +59,10 @@ def generate_data_list(cfg):
     elif "radarclassi" in cfg.dataset.common.NAME.lower():
         raw_root = os.path.join(cfg.dataset.common.data_root, "raw")
         data_list = sorted(os.listdir(raw_root))
-        data_list = [os.path.join(raw_root, item) for item in data_list if int(item[:-4])>250]
+        np.random.seed(100)  # 固定种子保证可复现
+        np.random.shuffle(data_list)
+        n = len(data_list)
+        data_list = [os.path.join(raw_root, item) for item in data_list[int(n * 0.83) :]]
     elif 'scannet' in cfg.dataset.common.NAME.lower():
         data_list = glob.glob(os.path.join(cfg.dataset.common.data_root, cfg.dataset.test.split, "*.pth"))
     elif 'semantickitti' in cfg.dataset.common.NAME.lower():
@@ -192,25 +203,31 @@ def main(gpu, cfg):
         else:
             if cfg.mode == 'val':
                 best_epoch, best_val = load_checkpoint(model, pretrained_path=cfg.pretrained_path)
-                val_miou, val_macc, val_oa, val_ious, val_accs = validate_fn(model, val_loader, cfg, num_votes=1, epoch=epoch)
+                val_miou, val_macc, val_oa, val_ious, val_accs, val_mp, val_mr, val_precisions, val_recalls = \
+                    validate_fn(model, val_loader, cfg, num_votes=1, epoch=epoch)
                 with np.printoptions(precision=2, suppress=True):
                     logging.info(
-                        f'Best ckpt @E{best_epoch},  val_oa , val_macc, val_miou: {val_oa:.2f} {val_macc:.2f} {val_miou:.2f}, '
-                        f'\niou per cls is: {val_ious}')
+                        f'Best ckpt @E{best_epoch},  val_oa , val_macc, val_miou: {val_oa:.2f} {val_macc:.2f} {val_miou:.2f}, val_mp {val_mp:.2f}, val_mr {val_mr:.2f}, '
+                        f'\niou per cls is: {val_ious}'
+                        f'\nprecision per cls is: {val_precisions}'
+                        f'\nrecall per cls is: {val_recalls}')
                 return val_miou
             elif cfg.mode == 'test':
                 best_epoch, best_val = load_checkpoint(model, pretrained_path=cfg.pretrained_path)
                 data_list = generate_data_list(cfg)
                 logging.info(f"length of test dataset: {len(data_list)}")
-                test_miou, test_macc, test_oa, test_ious, test_accs, _ = test(model, data_list, cfg)
+                test_miou, test_macc, test_oa, test_ious, test_accs, test_mp, test_mr, test_precisions, test_recalls, _ = \
+                    test(model, data_list, cfg)
 
                 if test_miou is not None:
                     with np.printoptions(precision=2, suppress=True):
                         logging.info(
-                            f'Best ckpt @E{best_epoch},  test_oa , test_macc, test_miou: {test_oa:.2f} {test_macc:.2f} {test_miou:.2f}, '
-                            f'\niou per cls is: {test_ious}')
+                            f'Best ckpt @E{best_epoch},  test_oa , test_macc, test_miou: {test_oa:.2f} {test_macc:.2f} {test_miou:.2f}, test_mp {test_mp:.2f}, test_mr {test_mr:.2f}, '
+                            f'\niou per cls is: {test_ious}'
+                            f'\nprecision per cls is: {test_precisions}'
+                            f'\nrecall per cls is: {test_recalls}')
                     cfg.csv_path = os.path.join(cfg.run_dir, cfg.run_name + '_test.csv')
-                    write_to_csv(test_oa, test_macc, test_miou, test_ious, best_epoch, cfg)
+                    write_to_csv(test_oa, test_macc, test_miou, test_mp, test_mr, test_ious, test_precisions, test_recalls, best_epoch, cfg)
                 return test_miou
 
             elif 'encoder' in cfg.mode:
@@ -254,35 +271,45 @@ def main(gpu, cfg):
     else:
         scaler = None
 
-    val_miou, val_macc, val_oa, val_ious, val_accs = 0., 0., 0., [], []
+    val_miou, val_macc, val_oa, val_ious, val_accs, val_mp, val_mr = 0., 0., 0., [], [], 0., 0.
+    val_precisions, val_recalls = [], []
     best_val, macc_when_best, oa_when_best, ious_when_best, best_epoch = 0., 0., 0., [], 0
+    mp_when_best, mr_when_best = 0., 0.
+    precisions_when_best, recalls_when_best = [], []
     total_iter = 0
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
         if cfg.distributed:
             train_loader.sampler.set_epoch(epoch)
         if hasattr(train_loader.dataset, 'epoch'):  # some dataset sets the dataset length as a fixed steps.
             train_loader.dataset.epoch = epoch - 1
-        train_loss, train_miou, train_macc, train_oa, _, _, total_iter = \
+        train_loss, train_miou, train_macc, train_oa, _, _, train_mp, train_mr, _, _, total_iter = \
             train_one_epoch(model, train_loader, criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg)
 
         is_best = False
         if epoch % cfg.val_freq == 0:
-            val_miou, val_macc, val_oa, val_ious, val_accs = validate_fn(model, val_loader, cfg, epoch=epoch, total_iter=total_iter)
+            val_miou, val_macc, val_oa, val_ious, val_accs, val_mp, val_mr, val_precisions, val_recalls = \
+                validate_fn(model, val_loader, cfg, epoch=epoch, total_iter=total_iter)
             if val_miou > best_val:
                 is_best = True
                 best_val = val_miou
                 macc_when_best = val_macc
                 oa_when_best = val_oa
                 ious_when_best = val_ious
+                mp_when_best = val_mp
+                mr_when_best = val_mr
+                precisions_when_best = val_precisions
+                recalls_when_best = val_recalls
                 best_epoch = epoch
                 with np.printoptions(precision=2, suppress=True):
                     logging.info(
-                        f'Find a better ckpt @E{epoch}, val_miou {val_miou:.2f} val_macc {macc_when_best:.2f}, val_oa {oa_when_best:.2f}'
-                        f'\nmious: {val_ious}')
+                        f'Find a better ckpt @E{epoch}, val_miou {val_miou:.2f} val_macc {macc_when_best:.2f}, val_oa {oa_when_best:.2f}, val_mp {val_mp:.2f}, val_mr {val_mr:.2f}'
+                        f'\nmious: {val_ious}'
+                        f'\nprecisions: {val_precisions}'
+                        f'\nrecalls: {val_recalls}')
 
         lr = optimizer.param_groups[0]['lr']
         logging.info(f'Epoch {epoch} LR {lr:.6f} '
-                     f'train_miou {train_miou:.2f}, val_miou {val_miou:.2f}, best val miou {best_val:.2f}')
+                     f'train_miou {train_miou:.2f}, val_miou {val_miou:.2f}, best val miou {best_val:.2f}, val_mp {val_mp:.2f}, val_mr {val_mr:.2f}')
         if writer is not None:
             writer.add_scalar('best_val', best_val, epoch)
             writer.add_scalar('macc_when_best', macc_when_best, epoch)
@@ -293,6 +320,12 @@ def main(gpu, cfg):
             writer.add_scalar('train_loss', train_loss, epoch)
             writer.add_scalar('train_miou', train_miou, epoch)
             writer.add_scalar('train_macc', train_macc, epoch)
+            writer.add_scalar('train_mp', train_mp, epoch)
+            writer.add_scalar('train_mr', train_mr, epoch)
+            writer.add_scalar('val_mp', val_mp, epoch)
+            writer.add_scalar('val_mr', val_mr, epoch)
+            writer.add_scalar('best_mp', mp_when_best, epoch)
+            writer.add_scalar('best_mr', mr_when_best, epoch)
             writer.add_scalar('lr', lr, epoch)
 
         if cfg.sched_on_epoch:
@@ -311,8 +344,10 @@ def main(gpu, cfg):
     # validate
     with np.printoptions(precision=2, suppress=True):
         logging.info(
-            f'Best ckpt @E{best_epoch},  val_oa {oa_when_best:.2f}, val_macc {macc_when_best:.2f}, val_miou {best_val:.2f}, '
-            f'\niou per cls is: {ious_when_best}')
+            f'Best ckpt @E{best_epoch},  val_oa {oa_when_best:.2f}, val_macc {macc_when_best:.2f}, val_miou {best_val:.2f}, val_mp {mp_when_best:.2f}, val_mr {mr_when_best:.2f}, '
+            f'\niou per cls is: {ious_when_best}'
+            f'\nprecision per cls is: {precisions_when_best}'
+            f'\nrecall per cls is: {recalls_when_best}')
 
     if cfg.world_size < 2:  # do not support multi gpu testing
         # test
@@ -320,24 +355,30 @@ def main(gpu, cfg):
         cfg.csv_path = os.path.join(cfg.run_dir, cfg.run_name + f'.csv')
         if 'sphere' in cfg.dataset.common.NAME.lower():
             # TODO: 
-            test_miou, test_macc, test_oa, test_ious, test_accs = validate_sphere(model, val_loader, cfg, epoch=epoch)
+            test_miou, test_macc, test_oa, test_ious, test_accs, test_mp, test_mr, test_precisions, test_recalls = \
+                validate_sphere(model, val_loader, cfg, epoch=epoch)
         else:
             data_list = generate_data_list(cfg)
-            test_miou, test_macc, test_oa, test_ious, test_accs, _ = test(model, data_list, cfg)
+            test_miou, test_macc, test_oa, test_ious, test_accs, test_mp, test_mr, test_precisions, test_recalls, _ = \
+                test(model, data_list, cfg)
         with np.printoptions(precision=2, suppress=True):
             logging.info(
-                f'Best ckpt @E{best_epoch},  test_oa {test_oa:.2f}, test_macc {test_macc:.2f}, test_miou {test_miou:.2f}, '
-                f'\niou per cls is: {test_ious}')
+                f'Best ckpt @E{best_epoch},  test_oa {test_oa:.2f}, test_macc {test_macc:.2f}, test_miou {test_miou:.2f}, test_mp {test_mp:.2f}, test_mr {test_mr:.2f}, '
+                f'\niou per cls is: {test_ious}'
+                f'\nprecision per cls is: {test_precisions}'
+                f'\nrecall per cls is: {test_recalls}')
         if writer is not None:
             writer.add_scalar('test_miou', test_miou, epoch)
             writer.add_scalar('test_macc', test_macc, epoch)
             writer.add_scalar('test_oa', test_oa, epoch)
-        write_to_csv(test_oa, test_macc, test_miou, test_ious, best_epoch, cfg, write_header=True)
+            writer.add_scalar('test_mp', test_mp, epoch)
+            writer.add_scalar('test_mr', test_mr, epoch)
+        write_to_csv(test_oa, test_macc, test_miou, test_mp, test_mr, test_ious, test_precisions, test_recalls, best_epoch, cfg, write_header=True)
         logging.info(f'save results in {cfg.csv_path}')
         if cfg.use_voting:
             load_checkpoint(model, pretrained_path=os.path.join(cfg.ckpt_dir, f'{cfg.run_name}_ckpt_best.pth'))
             set_random_seed(cfg.seed)
-            val_miou, val_macc, val_oa, val_ious, val_accs = validate_fn(model, val_loader, cfg, num_votes=20,
+            val_miou, val_macc, val_oa, val_ious, val_accs, _, _, _, _ = validate_fn(model, val_loader, cfg, num_votes=20,
                                                                          data_transform=data_transform, epoch=epoch)
             if writer is not None:
                 writer.add_scalar('val_miou20', val_miou, cfg.epochs + 50)
@@ -415,8 +456,8 @@ def train_one_epoch(model, train_loader, criterion, optimizer, scheduler, scaler
         if idx % cfg.print_freq:
             pbar.set_description(f"Train Epoch [{epoch}/{cfg.epochs}] "
                                  f"Loss {loss_meter.val:.3f} Acc {cm.overall_accuray:.2f}")
-    miou, macc, oa, ious, accs = cm.all_metrics()
-    return loss_meter.avg, miou, macc, oa, ious, accs, total_iter
+    miou, macc, oa, ious, accs, mp, mr, precisions, recalls = cm.all_metrics()
+    return loss_meter.avg, miou, macc, oa, ious, accs, mp, mr, precisions, recalls, total_iter
 
 
 @torch.no_grad()
@@ -461,8 +502,8 @@ def validate(model, val_loader, cfg, num_votes=1, data_transform=None, epoch=-1,
     tp, union, count = cm.tp, cm.union, cm.count
     if cfg.distributed:
         dist.all_reduce(tp), dist.all_reduce(union), dist.all_reduce(count)
-    miou, macc, oa, ious, accs = get_mious(tp, union, count)
-    return miou, macc, oa, ious, accs
+    miou, macc, oa, ious, accs, mp, mr, precisions, recalls = get_mious(tp, union, count)
+    return miou, macc, oa, ious, accs, mp, mr, precisions, recalls
 
 
 @torch.no_grad()
@@ -514,8 +555,7 @@ def validate_sphere(model, val_loader, cfg, num_votes=1, data_transform=None, ep
     torch.cuda.empty_cache()
 
     cm.update(val_points_preds, val_points_labels)
-    miou, macc, oa, ious, accs = cm.all_metrics()
-
+    miou, macc, oa, ious, accs, mp, mr, precisions, recalls = cm.all_metrics()
     if cfg.get('visualize', False):
         dataset_name = cfg.dataset.common.NAME.lower()
         coord = val_loader.dataset.clouds_points[0]
@@ -538,8 +578,7 @@ def validate_sphere(model, val_loader, cfg, num_votes=1, data_transform=None, ep
             # output pred labels
             write_obj(coord[start_idx:end_idx], pred[start_idx:end_idx],
                         os.path.join(cfg.vis_dir, f'{cfg.cfg_basename}-{dataset_name}-{idx}.obj'))
-    return miou, macc, oa, ious, accs
-
+    return miou, macc, oa, ious, accs, mp, mr, precisions, recalls
 
 # TODO: multi gpu support. Warp to a dataloader.
 @torch.no_grad()
@@ -755,11 +794,14 @@ def test(model, data_list, cfg, num_votes=1):
 
         if label is not None:
             tp, union, count = cm.tp, cm.union, cm.count
-            miou, macc, oa, ious, accs = get_mious(tp, union, count)
+            miou, macc, oa, ious, accs, mp, mr, precisions, recalls = get_mious(tp, union, count)
             with np.printoptions(precision=2, suppress=True):
                 logging.info(
                     f'[{cloud_idx}]/[{len_data}] cloud,  test_oa , test_macc, test_miou: {oa:.2f} {macc:.2f} {miou:.2f}, '
-                    f'\niou per cls is: {ious}')
+                    f'mp {mp:.2f}, mr {mr:.2f}, '
+                    f'\niou per cls is: {ious}'
+                    f'\nprecision per cls is: {precisions}'
+                    f'\nrecall per cls is: {recalls}')
             all_cm.value += cm.value
 
     if 'scannet' in cfg.dataset.common.NAME.lower():
@@ -770,10 +812,10 @@ def test(model, data_list, cfg, num_votes=1):
         tp, union, count = all_cm.tp, all_cm.union, all_cm.count
         if cfg.distributed:
             dist.all_reduce(tp), dist.all_reduce(union), dist.all_reduce(count)
-        miou, macc, oa, ious, accs = get_mious(tp, union, count)
-        return miou, macc, oa, ious, accs, all_cm
+        miou, macc, oa, ious, accs, mp, mr, precisions, recalls = get_mious(tp, union, count)
+        return miou, macc, oa, ious, accs, mp, mr, precisions, recalls, all_cm
     else:
-        return None, None, None, None, None, None
+        return None, None, None, None, None, None, None, None, None, None
 
 
 if __name__ == "__main__":

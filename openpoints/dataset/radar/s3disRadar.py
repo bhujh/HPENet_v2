@@ -59,10 +59,13 @@ class RadarClassi(Dataset):
         self.raw_root = raw_root
         data_list = sorted(os.listdir(raw_root))
         data_list = [item[:-4] for item in data_list]
-        if split == 'train':
-            self.data_list = [item for item in data_list if int(item) <= 250]
+        np.random.seed(100)  # 固定种子保证可复现
+        np.random.shuffle(data_list)
+        n = len(data_list)
+        if split == "train":
+            self.data_list = data_list[:int(n * 0.83)]
         else:
-            self.data_list = [item for item in data_list if int(item) > 250]
+            self.data_list = data_list[int(n * 0.83):]
 
         processed_root = os.path.join(data_root, 'processed')
         filename = os.path.join(
@@ -182,9 +185,9 @@ class RadarClassi(Dataset):
 
         if hasattr(self, 'feat_mean'):
             if not hasattr(self, '_stats_logged'):
-                logging.info(f'Normalization stats: feat_mean={self.feat_mean.tolist()}, '
-                             f'feat_std={self.feat_std.tolist()}, '
-                             f'z_mean={self.z_mean.item():.2f}, z_std={self.z_std.item():.2f}')
+                # logging.info(f'Normalization stats: feat_mean={self.feat_mean.tolist()}, '
+                #              f'feat_std={self.feat_std.tolist()}, '
+                #              f'z_mean={self.z_mean.item():.2f}, z_std={self.z_std.item():.2f}')
                 self._stats_logged = True
             data['x'] = (data['x'] - self.feat_mean.to(data['x'].device)) / self.feat_std.to(data['x'].device).clamp(min=1e-5)
             data['heights'] = (data['heights'] - self.z_mean.to(data['heights'].device)) / self.z_std.to(data['heights'].device).clamp(min=1e-5)

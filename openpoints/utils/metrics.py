@@ -156,14 +156,21 @@ class ConfusionMatrix:
 
     def all_metrics(self):
         tp, fp, fn = self.tp, self.fp, self.fn,  
-  
+   
         iou_per_cls = tp / (tp + fp + fn).clamp(min=1) * 100
         acc_per_cls = tp / self.count.clamp(min=1) * 100
         over_all_acc = tp.sum() / self.total * 100
 
         miou = torch.mean(iou_per_cls)
         macc = torch.mean(acc_per_cls)  # class accuracy
-        return miou.item(), macc.item(), over_all_acc.item(), iou_per_cls.cpu().numpy(), acc_per_cls.cpu().numpy()
+        precision_per_cls = tp / (tp + fp).clamp(min=1) * 100
+        recall_per_cls = tp / (tp + fn).clamp(min=1) * 100
+        mp = torch.mean(precision_per_cls)
+        mr = torch.mean(recall_per_cls)
+        return miou.item(), macc.item(), over_all_acc.item(), \
+               iou_per_cls.cpu().numpy(), acc_per_cls.cpu().numpy(), \
+               mp.item(), mr.item(), \
+               precision_per_cls.cpu().numpy(), recall_per_cls.cpu().numpy()
 
 
 def get_mious(tp, union, count):
@@ -173,7 +180,15 @@ def get_mious(tp, union, count):
 
     miou = torch.mean(iou_per_cls)
     macc = torch.mean(acc_per_cls)  # class accuracy
-    return miou.item(), macc.item(), over_all_acc.item(), iou_per_cls.cpu().numpy(), acc_per_cls.cpu().numpy()
+    fp, fn = union - count, count - tp
+    precision_per_cls = (tp + 1e-10) / (tp + fp + 1e-10) * 100
+    recall_per_cls = (tp + 1e-10) / (tp + fn + 1e-10) * 100
+    mp = torch.mean(precision_per_cls)
+    mr = torch.mean(recall_per_cls)
+    return miou.item(), macc.item(), over_all_acc.item(), \
+           iou_per_cls.cpu().numpy(), acc_per_cls.cpu().numpy(), \
+           mp.item(), mr.item(), \
+           precision_per_cls.cpu().numpy(), recall_per_cls.cpu().numpy()
 
 
 def partnet_metrics(num_classes, num_parts, objects, preds, targets):
