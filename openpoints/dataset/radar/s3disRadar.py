@@ -76,9 +76,10 @@ class RadarClassi(Dataset):
             for item in tqdm(self.data_list, desc=f'Loading RadarClassi {split} split on Test Area {test_area}'):
                 data_path = os.path.join(raw_root, item + '.ply')
                 # cdata = np.load(data_path).astype(np.float32)
-                plydata = PlyData.read(data_path)
+                # plydata = PlyData.read(data_path)
                 # print(plydata["vertex"].data.dtype.names)
-                cdata = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
+                # cdata = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
+                cdata = self._load_ply_by_fields(data_path)
                 # print(cdata.shape)
                 cdata[:, :3] -= np.min(cdata[:, :3], 0)
                 if voxel_size:
@@ -113,8 +114,9 @@ class RadarClassi(Dataset):
 
             for item in tqdm(self.data_list, desc='Scanning training data'):
                 data_path = os.path.join(self.raw_root, item + '.ply')
-                plydata = PlyData.read(data_path)
-                cdata = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
+                # plydata = PlyData.read(data_path)
+                # cdata = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
+                cdata = self._load_ply_by_fields(data_path)
                 cdata[:, :3] -= np.min(cdata[:, :3], 0)
                 labels = cdata[:, 6].astype(np.int32)
                 for cls_idx in range(self.num_classes):
@@ -165,10 +167,11 @@ class RadarClassi(Dataset):
             data_path = os.path.join(
                 self.raw_root, self.data_list[data_idx] + '.ply')
             # cdata = np.load(data_path).astype(np.float32)
-            plydata = PlyData.read(data_path)
-            cdata = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
+            # plydata = PlyData.read(data_path)
+            # cdata = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
+            cdata = self._load_ply_by_fields(data_path)
             cdata[:, :3] -= np.min(cdata[:, :3], 0)
-            cdata = np.nan_to_num(cdata, nan=0.0)
+            # cdata = np.nan_to_num(cdata, nan=0.0)
             coord, feat, label = cdata[:, :3], cdata[:, 3:6], cdata[:, 6:7]
             coord, feat, label = crop_pc(
                 coord, feat, label, self.split, self.voxel_size, self.voxel_max,
@@ -197,6 +200,22 @@ class RadarClassi(Dataset):
     def __len__(self):
         return len(self.data_idx) * self.loop
         # return 1   # debug
+
+    def _load_ply_by_fields(self, data_path):
+        """按字段名加载雷达 PLY 数据，不依赖列索引"""
+        plydata = PlyData.read(data_path)
+        # vertex = plydata["vertex"]
+        vertex = plydata["vertex"].data
+        # 检查字段是否存在
+
+        required = ["x", "y", "z", "rcs", "snr", "v", "label"]
+        for f in required:
+            if f not in vertex.dtype.names:
+                raise ValueError(f"字段 '{f}' 不存在于 PLY 文件中")
+
+        cdata = np.column_stack((vertex["x"], vertex["y"], vertex["z"], vertex["rcs"], vertex["snr"], vertex["v"], vertex["label"])).astype(np.float32)
+        cdata = np.nan_to_num(cdata, nan=0.0)
+        return cdata
 
 
 """debug

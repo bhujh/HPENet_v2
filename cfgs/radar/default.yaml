@@ -62,7 +62,7 @@ sched: cosine
 warmup_epochs: 10
 
 min_lr: 1.0e-6 #
-lr: 0.005 # LR linear rule.
+lr: 0.01 # LR linear rule.
 
 grad_norm_clip: 10
 use_voting: False

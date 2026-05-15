@@ -87,7 +87,16 @@ def load_data(data_path, cfg):
         # data = np.load(data_path)  # xyzvrsl, N*7
         plydata = PlyData.read(data_path)
         # print(plydata["vertex"].data.dtype.names)
-        data = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
+        # data = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
+        vertex = plydata["vertex"].data
+        # 检查字段是否存在
+        required = ["x", "y", "z", "rcs", "snr", "v", "label"]
+        for f in required:
+            if f not in vertex.dtype.names:
+                raise ValueError(f"字段 '{f}' 不存在于 PLY 文件中")
+
+        data = np.column_stack((vertex["x"], vertex["y"], vertex["z"], vertex["rcs"], vertex["snr"], vertex["v"], vertex["label"])).astype(np.float32)
+        data = np.nan_to_num(data, nan=0.0)
         coord, feat, label = data[:, :3], data[:, 3:6], data[:, 6]
         # feat = np.clip(feat / 255.0, 0, 1).astype(np.float32)
     elif 'scannet' in cfg.dataset.common.NAME.lower():
