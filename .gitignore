@@ -145,3 +145,4 @@ dmypy.json
 /log/s3dis/
 /data/S3DIS/
 /data/RadarClassi/radarfull/raw/
+.omo/
