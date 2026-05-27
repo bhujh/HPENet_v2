@@ -14,94 +14,17 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from deploy.common import load_data_ply, preprocess_test, load_stats
+
 import argparse
 import numpy as np
 import torch
-from plyfile import PlyData
 from tqdm import tqdm
 
 from openpoints.dataset.data_util import voxelize, get_features_by_keys
 from openpoints.utils.config import EasyConfig
 from openpoints.models.build import build_model_from_cfg
 from deploy.onnx_backend import patch_model_for_onnx
-
-
-# ---------------------------------------------------------------------------
-#  Data loading (identical to examples/segmentation/main.py:load_data)
-# ---------------------------------------------------------------------------
-
-def load_data_ply(data_path):
-    """Load a single radar PLY file.
-
-    Returns:
-        coord: (N, 3)  xyz
-        feat:  (N, 3)  rcs, snr, v
-        label: (N,)    ground truth
-    """
-    plydata = PlyData.read(data_path)
-    vertex = plydata["vertex"].data
-
-    required = ["x", "y", "z", "rcs", "snr", "v", "label"]
-    for f in required:
-        if f not in vertex.dtype.names:
-            raise ValueError(f"Field '{f}' not found in {data_path}")
-
-    data = np.column_stack((
-        vertex["x"], vertex["y"], vertex["z"],
-        vertex["rcs"], vertex["snr"], vertex["v"],
-        vertex["label"],
-    )).astype(np.float32)
-    data = np.nan_to_num(data, nan=0.0)
-
-    coord = data[:, :3]
-    feat = data[:, 3:6]
-    label = data[:, 6]
-    return coord, feat, label
-
-
-def preprocess_test(coord, feat, voxel_size=0.1):
-    """Mimics the test-time preprocessing: voxelize → split into sub-clouds.
-
-    Returns:
-        coord, feat: original arrays (shifted)
-        idx_points: list of index arrays for each sub-cloud
-        voxel_idx, reverse_idx_part, reverse_idx_sort: for vote merging
-    """
-    coord = coord - coord.min(0)
-
-    idx_points = []
-    voxel_idx_out = None
-    reverse_idx_part = None
-    reverse_idx_sort = None
-
-    if voxel_size is not None:
-        idx_sort, voxel_idx, count = voxelize(coord, voxel_size, mode=1)
-        for i in range(count.max()):
-            idx_select = np.cumsum(np.insert(count, 0, 0)[0:-1]) + i % count
-            idx_part = idx_sort[idx_select]
-            np.random.shuffle(idx_part)
-            idx_points.append(idx_part)
-    else:
-        idx_points.append(np.arange(coord.shape[0]))
-
-    coord = np.nan_to_num(coord, nan=0.0)
-    feat = np.nan_to_num(feat, nan=0.0)
-    return coord, feat, idx_points, voxel_idx, reverse_idx_part, reverse_idx_sort
-
-
-# ---------------------------------------------------------------------------
-#  Feature normalization
-# ---------------------------------------------------------------------------
-
-def load_stats(stats_file):
-    """Load feature normalization statistics."""
-    stats = torch.load(stats_file, map_location='cpu')
-    return (
-        stats['feat_mean'],   # (3,)  rcs, snr, v
-        stats['feat_std'],    # (3,)
-        stats['z_mean'],      # scalar
-        stats['z_std'],       # scalar
-    )
 
 
 # ---------------------------------------------------------------------------

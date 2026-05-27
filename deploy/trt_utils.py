@@ -11,7 +11,6 @@ NO deprecated API (get_binding_index, enqueue, max_workspace_size, etc.)
 
 import os
 import sys
-import ctypes
 import numpy as np
 import torch
 import tensorrt as trt
@@ -40,15 +39,6 @@ TRT_TO_NUMPY = {
 
 _TRT_LIB_PATH = "/usr/local/TensorRT-8.6.1.6/targets/x86_64-linux-gnu/lib"
 _CUDA_LIB_PATH = "/usr/local/cuda-11.8/lib64"
-
-
-def _is_cuda_available():
-    """Return True if CUDA / nvidia-smi is available."""
-    try:
-        ctypes.CDLL("libcuda.so.1")
-        return True
-    except OSError:
-        return False
 
 
 def setup_trt_env(lib_path=_TRT_LIB_PATH, cuda_path=_CUDA_LIB_PATH):
