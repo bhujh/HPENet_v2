@@ -68,7 +68,7 @@ def load_checkpoint(model, checkpoint_path):
     return model
 
 
-def export_onnx(wrapped_model, output_path, num_points=30000):
+def export_onnx(wrapped_model, output_path, num_points=4096):
     """Trace and export the model to ONNX.
 
     Args:
@@ -148,7 +148,7 @@ def main():
     parser.add_argument('--output', type=str,
                         default='deploy/onnx_model.onnx',
                         help='Output ONNX file path')
-    parser.add_argument('--num_points', type=int, default=30000,
+    parser.add_argument('--num_points', type=int, default=4096,
                         help='Maximum number of points for dummy export input (voxel_max)')
     parser.add_argument('--no_patch', action='store_true',
                         help='Skip ONNX operator patching (debug only – will fail with CUDA ops)')
@@ -171,6 +171,8 @@ def main():
     # 2. Build model
     print('\n[2/5] Building model...')
     model = build_model_from_cfg(cfg.model)
+    print(model)
+    os.abort()
 
     # 3. Load checkpoint
     print(f'\n[3/5] Loading checkpoint: {args.checkpoint}')
