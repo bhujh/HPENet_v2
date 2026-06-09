@@ -31,8 +31,8 @@ endif()
 
 if(TensorRT_ROOT)
   # 显式指定根目录时，搜索标准子目录结构
-  # TensorRT 8.x 典型结构:
-  #   TensorRT-8.x.x.x/
+  # TensorRT 典型结构:
+  #   TensorRT-{version}/
   #   ├── include/NvInfer.h
   #   └── lib/libnvinfer.so
   set(_TRT_SEARCH_PATHS
@@ -45,14 +45,27 @@ else()
     /usr/local/TensorRT-8.6.1.6
     /usr/local/TensorRT-8.5.3.1
     /usr/local/TensorRT-8.4.3.1
+    /usr/local/TensorRT-10.9.0.34
+    /usr/local/TensorRT-10.16.0.34
+    /usr/local/TensorRT-10.15.1.34
     /usr/local/TensorRT
     /usr/lib/x86_64-linux-gnu
     /usr/local/cuda/TensorRT
   )
 endif()
 
+if(WIN32)
+  # Windows 常见安装路径
+  list(APPEND _TRT_SEARCH_PATHS
+    "C:/TensorRT-10.16.1.11"
+    "C:/TensorRT-10.16.0.34"
+    "C:/TensorRT-10.9.0.34"
+    "C:/Program Files/NVIDIA GPU Computing Toolkit/TensorRT"
+  )
+endif()
+
 # ---------------------------------------------------------------------------
-# 查找头文件: NvInfer.h (TensorRT 8.x+ 使用大写文件名)
+# 查找头文件: NvInfer.h (TensorRT 8.x+/10.x 使用大写文件名)
 # ---------------------------------------------------------------------------
 find_path(TensorRT_INCLUDE_DIR NvInfer.h
   PATHS ${_TRT_SEARCH_PATHS}
@@ -97,7 +110,7 @@ find_package_handle_standard_args(TensorRT
     TensorRT_INCLUDE_DIR
     TensorRT_LIBRARY_NVINFER
   FAIL_MESSAGE
-    "TensorRT 未找到！请指定 -DTENSORRT_ROOT=/path/to/TensorRT-8.x.x.x"
+    "TensorRT 未找到！请指定 -DTENSORRT_ROOT=/path/to/TensorRT (e.g., /usr/local/TensorRT-8.6.1.6 or C:/TensorRT-10.16.1.11)"
 )
 
 if(TensorRT_FOUND)

@@ -6,6 +6,33 @@
 #include <stdexcept>
 #include <iostream>
 
+// ══════════════════════════════════════════════════════════════════════════════
+// TensorRT 版本兼容性
+// ══════════════════════════════════════════════════════════════════════════════
+//
+// 当前代码使用 TensorRT 现代 name-based tensor API (getIOTensorName →
+// setTensorAddress → enqueueV3)，该 API 在 TRT 8.5+ 引入，在 TRT 10.x 中
+// 是标准的唯一 API。所有在此文件中调用的 TRT API 在 TRT 8.6 和 10.x 间
+// 签名一致，无废弃或移除：
+//
+//   createInferRuntime, deserializeCudaEngine, getNbIOTensors,
+//   getIOTensorName, getTensorIOMode, getTensorShape, getTensorDataType,
+//   createExecutionContext
+//
+// 注意: TRT 10.x 中 nvinfer1::Dims::d[] 类型从 int32_t 变为 int64_t，
+//       但代码仅做值赋值 (d[0]=1, d[1]=N, d[2]=3)，
+//       int → int64_t 隐式转换正常工作，无需修改。
+//
+// NV_TENSORRT_MAJOR 由 <NvInfer.h> → <NvInferVersion.h> 提供。
+// ══════════════════════════════════════════════════════════════════════════════
+
+#define STRINGIFY_IMPL(x) #x
+#define STRINGIFY(x)      STRINGIFY_IMPL(x)
+
+static_assert(NV_TENSORRT_MAJOR >= 8,
+    "HPENet V2 requires TensorRT 8.0 or later. "
+    "Detected NV_TENSORRT_MAJOR=" STRINGIFY(NV_TENSORRT_MAJOR));
+
 // ---------------------------------------------------------------------------
 //  TrEngine 实现
 // ---------------------------------------------------------------------------

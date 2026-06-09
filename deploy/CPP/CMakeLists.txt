@@ -9,8 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 cmake_policy(SET CMP0146 OLD)
 cmake_policy(SET CMP0144 NEW)
 
-# GPU 架构: Ampere+ (sm80, sm86, sm89)
-set(CMAKE_CUDA_ARCHITECTURES "80;86;89")
+# GPU 架构: 默认 Ampere+ (sm80, sm86, sm89)
+# 跨平台使用时可通过 -DCMAKE_CUDA_ARCHITECTURES=... 覆盖
+# 例如 RTX 5090 (Blackwell) 使用 sm120, RTX 5060 使用 sm120
+set(CMAKE_CUDA_ARCHITECTURES "80;86;89" CACHE STRING
+    "CUDA architecture codes (e.g., 80;86;89 for Ampere/Ada, 120 for Blackwell)")
 
 # 查找 CUDA
 find_package(CUDA REQUIRED)
@@ -18,6 +21,7 @@ find_package(CUDA REQUIRED)
 # 查找 TensorRT
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(TensorRT REQUIRED)
+message(STATUS "TensorRT version: ${TensorRT_VERSION}")
 
 # GoogleTest (FetchContent)
 include(FetchContent)
@@ -55,8 +59,10 @@ add_executable(hpenet_trt_infer
 target_include_directories(hpenet_trt_infer PRIVATE include ${CUDA_INCLUDE_DIRS})
 target_link_libraries(hpenet_trt_infer PRIVATE ${TensorRT_LIBRARIES} ${CUDA_LIBRARIES})
 
-# RPATH 配置
-set_target_properties(hpenet_trt_infer PROPERTIES
-  BUILD_RPATH "${TensorRT_ROOT}/lib:${CUDA_TOOLKIT_ROOT_DIR}/lib64"
-  INSTALL_RPATH "${TensorRT_ROOT}/lib:${CUDA_TOOLKIT_ROOT_DIR}/lib64"
-)
+# RPATH 配置 (仅 Unix; Windows 使用 DLL 搜索路径)
+if(UNIX)
+  set_target_properties(hpenet_trt_infer PROPERTIES
+    BUILD_RPATH "${TensorRT_ROOT}/lib:${CUDA_TOOLKIT_ROOT_DIR}/lib64"
+    INSTALL_RPATH "${TensorRT_ROOT}/lib:${CUDA_TOOLKIT_ROOT_DIR}/lib64"
+  )
+endif()
