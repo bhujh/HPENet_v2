@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "active_work_id": "deploy-cpp-port-e8f9b019",
+  "active_work_id": "gpu-memory-monitor-6ef276c7",
   "works": {
     "deploy-code-review-fix-5c18802b": {
       "work_id": "deploy-code-review-fix-5c18802b",
@@ -10,10 +10,10 @@
       "started_at": "2026-05-24T16:50:32.104Z",
       "updated_at": "2026-05-24T16:55:12.102Z",
       "session_ids": [
-        "ses_1c5ba0f2bffethR3h4FjN3xeoH"
+        "opencode:ses_1c5ba0f2bffethR3h4FjN3xeoH"
       ],
       "session_origins": {
-        "ses_1c5ba0f2bffethR3h4FjN3xeoH": "direct"
+        "opencode:ses_1c5ba0f2bffethR3h4FjN3xeoH": "direct"
       },
       "agent": "atlas",
       "task_sessions": {
@@ -55,10 +55,10 @@
       "started_at": "2026-05-29T06:29:02.835Z",
       "updated_at": "2026-05-29T07:04:52.317Z",
       "session_ids": [
-        "ses_18d972f77ffe6QUnfB4n3LBNr2"
+        "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2"
       ],
       "session_origins": {
-        "ses_18d972f77ffe6QUnfB4n3LBNr2": "direct"
+        "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2": "direct"
       },
       "agent": "atlas",
       "task_sessions": {
@@ -168,125 +168,67 @@
       },
       "ended_at": "2026-05-29T07:04:52.317Z",
       "elapsed_ms": 2149482
+    },
+    "gpu-memory-monitor-6ef276c7": {
+      "work_id": "gpu-memory-monitor-6ef276c7",
+      "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/gpu-memory-monitor.md",
+      "plan_name": "gpu-memory-monitor",
+      "status": "completed",
+      "started_at": "2026-06-08T02:22:20.705Z",
+      "updated_at": "2026-06-08T04:19:16.076Z",
+      "session_ids": [
+        "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2"
+      ],
+      "session_origins": {
+        "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {
+        "todo:1": {
+          "task_key": "todo:1",
+          "task_label": "1",
+          "task_title": "`cuda_utils.h` — 添加 `GpuMemoryInfo` + `get_gpu_memory_info()`",
+          "session_id": "opencode:ses_15aa87346ffehejmzTJwggZgND",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "started_at": "2026-06-08T02:39:34.118Z",
+          "status": "completed",
+          "updated_at": "2026-06-08T04:18:54.126Z",
+          "ended_at": "2026-06-08T04:18:54.126Z",
+          "elapsed_ms": 5960008
+        }
+      },
+      "ended_at": "2026-06-08T04:19:16.076Z",
+      "elapsed_ms": 7015371
     }
   },
-  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/deploy-cpp-port.md",
-  "started_at": "2026-05-29T06:29:02.835Z",
+  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/gpu-memory-monitor.md",
+  "started_at": "2026-06-08T02:22:20.705Z",
   "status": "completed",
-  "updated_at": "2026-05-29T07:04:52.317Z",
+  "updated_at": "2026-06-08T04:19:16.076Z",
   "session_ids": [
-    "ses_18d972f77ffe6QUnfB4n3LBNr2"
+    "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2"
   ],
   "session_origins": {
-    "ses_18d972f77ffe6QUnfB4n3LBNr2": "direct"
+    "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2": "direct"
   },
-  "plan_name": "deploy-cpp-port",
+  "plan_name": "gpu-memory-monitor",
   "task_sessions": {
     "todo:1": {
       "task_key": "todo:1",
       "task_label": "1",
-      "task_title": "项目脚手架：创建 deploy/CPP/ 目录结构和 CMakeLists.txt",
-      "session_id": "ses_18d9306dcffeGvAL2NVP1zdiCQ",
+      "task_title": "`cuda_utils.h` — 添加 `GpuMemoryInfo` + `get_gpu_memory_info()`",
+      "session_id": "opencode:ses_15aa87346ffehejmzTJwggZgND",
       "agent": "Sisyphus-Junior",
       "category": "quick",
-      "updated_at": "2026-05-29T06:32:21.896Z",
-      "started_at": "2026-05-29T06:31:52.698Z",
+      "started_at": "2026-06-08T02:39:34.118Z",
       "status": "completed",
-      "ended_at": "2026-05-29T06:32:21.895Z",
-      "elapsed_ms": 29197
-    },
-    "todo:2": {
-      "task_key": "todo:2",
-      "task_label": "2",
-      "task_title": "Logger 工具类：实现 TrLogger + CUDA/TRT 错误检查宏",
-      "session_id": "ses_18d90b7aeffee7nJ20YNPxOtHd",
-      "agent": "Sisyphus-Junior",
-      "category": "quick",
-      "updated_at": "2026-05-29T06:33:00.789Z",
-      "started_at": "2026-05-29T06:32:52.524Z",
-      "status": "completed",
-      "ended_at": "2026-05-29T06:33:00.789Z",
-      "elapsed_ms": 8265
-    },
-    "todo:3": {
-      "task_key": "todo:3",
-      "task_label": "3",
-      "task_title": "通用类型定义：PointCloud, FeatureStats, Config, InferenceResult 结构体",
-      "session_id": "ses_18d8fd9cdffe62ZQ4ctPrI0dJZ",
-      "agent": "Sisyphus-Junior",
-      "category": "quick",
-      "started_at": "2026-05-29T06:33:26.919Z",
-      "status": "completed",
-      "updated_at": "2026-05-29T06:39:33.184Z",
-      "ended_at": "2026-05-29T06:39:33.184Z",
-      "elapsed_ms": 366265
-    },
-    "todo:8": {
-      "task_key": "todo:8",
-      "task_label": "8",
-      "task_title": "FNV64-1A 哈希 CUDA kernel：实现与测试（对比黄金数据）",
-      "session_id": "ses_18d89de49ffef4aqlUIlH8Ibk3",
-      "agent": "Sisyphus-Junior",
-      "category": "deep",
-      "updated_at": "2026-05-29T06:43:33.902Z",
-      "started_at": "2026-05-29T06:43:23.243Z",
-      "status": "completed",
-      "ended_at": "2026-05-29T06:43:33.901Z",
-      "elapsed_ms": 10658
-    },
-    "todo:9": {
-      "task_key": "todo:9",
-      "task_label": "9",
-      "task_title": "体素化 CUDA kernel：完整体素化 + 子云分割 + 测试",
-      "session_id": "ses_18d867558ffe40p2DijLxPvOPT",
-      "agent": "Sisyphus-Junior",
-      "category": "deep",
-      "updated_at": "2026-05-29T06:50:06.635Z",
-      "started_at": "2026-05-29T06:49:49.282Z",
-      "status": "completed",
-      "ended_at": "2026-05-29T06:50:06.635Z",
-      "elapsed_ms": 17353
-    },
-    "todo:15": {
-      "task_key": "todo:15",
-      "task_label": "15",
-      "task_title": "TRT 推理执行器：ExecutionContext + 动态形状 + enqueueV3",
-      "session_id": "ses_18d80708cffeMYA6CJcM0PfxGa",
-      "agent": "Sisyphus-Junior",
-      "category": "deep",
-      "updated_at": "2026-05-29T06:53:42.958Z",
-      "started_at": "2026-05-29T06:53:39.397Z",
-      "status": "completed",
-      "ended_at": "2026-05-29T06:53:42.958Z",
-      "elapsed_ms": 3561
-    },
-    "todo:16": {
-      "task_key": "todo:16",
-      "task_label": "16",
-      "task_title": "主推理流水线：组装所有模块的完整 pipeline",
-      "session_id": "ses_18d7d19eaffeFISBdbjtb9MAZf",
-      "agent": "Sisyphus-Junior",
-      "category": "deep",
-      "updated_at": "2026-05-29T06:57:53.883Z",
-      "started_at": "2026-05-29T06:57:44.254Z",
-      "status": "completed",
-      "ended_at": "2026-05-29T06:57:53.883Z",
-      "elapsed_ms": 9629
-    },
-    "final-wave:f1": {
-      "task_key": "final-wave:f1",
-      "task_label": "F1",
-      "task_title": "**方案合规审查** — `oracle`",
-      "session_id": "ses_18d76a374ffeCvYMhFAGBbelEv",
-      "agent": "oracle",
-      "started_at": "2026-05-29T06:59:44.523Z",
-      "status": "completed",
-      "updated_at": "2026-05-29T07:04:27.431Z",
-      "ended_at": "2026-05-29T07:04:27.431Z",
-      "elapsed_ms": 282908
+      "updated_at": "2026-06-08T04:18:54.126Z",
+      "ended_at": "2026-06-08T04:18:54.126Z",
+      "elapsed_ms": 5960008
     }
   },
   "agent": "atlas",
-  "ended_at": "2026-05-29T07:04:52.317Z",
-  "elapsed_ms": 2149482
+  "ended_at": "2026-06-08T04:19:16.076Z",
+  "elapsed_ms": 7015371
 }

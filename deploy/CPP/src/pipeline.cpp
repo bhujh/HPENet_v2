@@ -28,6 +28,8 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+
+#include "cuda_utils.h"
 #include <vector>
 
 #include "ply_reader.h"
@@ -254,6 +256,12 @@ InferenceResult InferencePipeline::process_file(const std::string& ply_path) {
     auto t1 = std::chrono::high_resolution_clock::now();
     result.latency_ms =
         std::chrono::duration<float, std::milli>(t1 - t0).count();
+
+    {
+        auto mem = get_gpu_memory_info();
+        std::cout << "  [GPU] " << mem.used_bytes / (1024 * 1024)
+                  << " MiB used" << std::endl;
+    }
 
     return result;
 }

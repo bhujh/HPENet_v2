@@ -172,3 +172,18 @@ public:
 private:
     int saved_device_ = -1;
 };
+
+// ── GPU Memory Info ──
+struct GpuMemoryInfo {
+    size_t total_bytes = 0;
+    size_t free_bytes  = 0;
+    size_t used_bytes  = 0;  // total - free
+};
+
+inline GpuMemoryInfo get_gpu_memory_info(int device = 0) {
+    GpuMemoryInfo info;
+    DeviceGuard guard(device);
+    CHECK_CUDA(cudaMemGetInfo(&info.free_bytes, &info.total_bytes));
+    info.used_bytes = info.total_bytes - info.free_bytes;
+    return info;
+}

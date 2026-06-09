@@ -29,11 +29,11 @@
 # echo $NUM_GPU_AVAILABLE
 
 
-cfg=cfgs/radar/hpenet-xl.yaml
+cfg=cfgs/radar/hpenet-l.yaml
 # PY_ARGS=${@:2}
 # echo ${PY_ARGS}
-CUDA_VISIBLE_DEVICES=0 python examples/segmentation/main.py --cfg $cfg wandb.use_wandb=False mode=test \
---pretrained_path log/radar/radar-train-hpenet-xl-ngpus1-20260509-104329-5sjPCRhhj6uqsL9r5JdT8d/checkpoint/radar-train-hpenet-xl-ngpus1-20260509-104329-5sjPCRhhj6uqsL9r5JdT8d_ckpt_best.pth
+CUDA_VISIBLE_DEVICES=7 python examples/segmentation/main.py --cfg $cfg wandb.use_wandb=False mode=test \
+--pretrained_path log/radar/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g/checkpoint/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g_ckpt_best.pth
 
 
 # how to run

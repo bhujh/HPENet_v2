@@ -19,6 +19,7 @@
 
 #include "types.h"
 #include "logger.h"
+#include "cuda_utils.h"
 #include "pipeline.h"
 #include "ply_reader.h"
 
@@ -161,17 +162,32 @@ int main(int argc, char** argv) {
         config.min_n, config.max_n, config.voxel_size, config.seed
     );
     std::cout << "  Pipeline ready.\n";
+    {
+        auto mem = get_gpu_memory_info();
+        std::cout << "  GPU Memory: " << mem.used_bytes / (1024 * 1024)
+                  << " MiB used / " << mem.total_bytes / (1024 * 1024) << " MiB total\n";
+    }
 
     // ── Warmup ──
     std::cout << "Warmup (" << config.warmup << " runs)...\n";
     pipeline.warmup(config.warmup);
     std::cout << "  Warmup done.\n";
+    {
+        auto mem = get_gpu_memory_info();
+        std::cout << "  GPU Memory: " << mem.used_bytes / (1024 * 1024)
+                  << " MiB used / " << mem.total_bytes / (1024 * 1024) << " MiB total\n";
+    }
 
     // ── Process files ──
     std::cout << "\n";
     std::cout << "============================================================\n";
     std::cout << "  File                  Points     Acc      Time\n";
     std::cout << "------------------------------------------------------------\n";
+    {
+        auto mem = get_gpu_memory_info();
+        std::cout << "  [Baseline] " << mem.used_bytes / (1024 * 1024)
+                  << " MiB used / " << mem.total_bytes / (1024 * 1024) << " MiB total\n\n";
+    }
 
     auto results = pipeline.process_directory(config.data_dir, config.num_files);
 
@@ -229,6 +245,13 @@ int main(int argc, char** argv) {
                   << "  " << std::fixed << std::setprecision(4) << acc
                   << "   " << fmt_time(total_s) << "\n";
         ++idx;
+    }
+
+    {
+        auto mem = get_gpu_memory_info();
+        std::cout << "------------------------------------------------------------\n";
+        std::cout << "  [Final GPU Memory] " << mem.used_bytes / (1024 * 1024)
+                  << " MiB used / " << mem.total_bytes / (1024 * 1024) << " MiB total\n";
     }
 
     // ── Summary ──
