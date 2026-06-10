@@ -17,7 +17,7 @@ from openpoints.models.build import build_model_from_cfg
 from deploy.onnx_backend import patch_model_for_onnx
 from deploy.trt_utils import setup_trt_env, TRTSession
 
-
+# 确认测试模式时是否有min_n>1024的限制，
 def pad_subcloud(pos, x, min_n):
     """Pad to min_n points by replicating the last point."""
     N = pos.shape[1]
