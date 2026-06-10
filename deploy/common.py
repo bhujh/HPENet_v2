@@ -110,6 +110,6 @@ def preprocess_subcloud(coord, feat, idx_part, feat_mean, feat_std,
 
     x_combined = torch.cat([feat_t, heights_t], dim=-1)
 
-    pos_batch = pos_t.unsqueeze(0).numpy().astype(np.float32)
+    pos_batch = pos_t.unsqueeze(0).contiguous().numpy().astype(np.float32)
     x_batch = x_combined.unsqueeze(0).transpose(1, 2).contiguous().numpy().astype(np.float32)
     return pos_batch, x_batch

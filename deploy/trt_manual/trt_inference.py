@@ -18,6 +18,21 @@ from deploy.onnx_backend import patch_model_for_onnx
 from deploy.trt_utils import setup_trt_env, TRTSession
 
 
+def pad_subcloud(pos, x, min_n):
+    """Pad to min_n points by replicating the last point."""
+    N = pos.shape[1]
+    if N >= min_n:
+        return pos, x
+    pad = min_n - N
+    pos_pad = np.concatenate(
+        [pos, np.tile(pos[:, -1:, :], (1, pad, 1))], axis=1
+    ).astype(np.float32)
+    x_pad = np.concatenate(
+        [x, np.tile(x[:, :, -1:], (1, 1, pad))], axis=2
+    ).astype(np.float32)
+    return pos_pad, x_pad
+
+
 def infer_one_cloud_trt(session, coord, feat, idx_points, feat_mean, feat_std,
                         z_mean, z_std, min_n=1024, gravity_dim=2):
     """TRT inference on all sub-clouds of one point cloud."""
