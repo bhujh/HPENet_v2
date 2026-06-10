@@ -10,7 +10,7 @@ ctest --output-on-failure
 # linux trt10.16
 cd deploy/CPP && rm -rf build && mkdir build && cd build
 cmake .. -G "Unix Makefiles" \
-  -DTENSORRT_ROOT=/usr/local/TensorRT-10.16.0.34 \
+  -DTENSORRT_ROOT=/usr/local/TensorRT-10.16.1.11 \
   -DCMAKE_CUDA_ARCHITECTURES="120"
 make -j$(nproc)
 ctest --output-on-failure
