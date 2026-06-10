@@ -645,7 +645,7 @@ def test(model, data_list, cfg, num_votes=1):
         all_logits = []
         coord, feat, label, idx_points, voxel_idx, reverse_idx_part, reverse_idx  = load_data(data_path, cfg)
         if label is not None:
-            label = torch.from_numpy(label.astype(np.long).squeeze()).cuda(non_blocking=True)
+            label = torch.from_numpy(label.astype(np.int64).squeeze()).cuda(non_blocking=True)
 
         len_part = len(idx_points)
         nearest_neighbor = len_part == 1
