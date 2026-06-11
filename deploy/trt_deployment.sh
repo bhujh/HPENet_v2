@@ -8,4 +8,4 @@ export LD_LIBRARY_PATH=$CONDA_PREFIX/lib/python3.10/site-packages/nvidia/cudnn/l
 # python deploy/trt_build.py
 
 # 推理
-python deploy/trt_inference.py --engine deploy/trt_model_fp32.engine --compare
+CUDA_VISIBLE_DEVICES=7 python deploy/trt_inference.py --engine deploy/trt_model_fp32.engine --compare

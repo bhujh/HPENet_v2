@@ -136,9 +136,9 @@ class TRTSession:
 
         # --- transfer inputs to GPU ---
         if "pos" not in self._input_buffers or self._input_buffers["pos"].shape != pos.shape:
-            self._input_buffers["pos"] = torch.empty(pos.shape, dtype=torch.float32, device="cuda")
+            self._input_buffers["pos"] = torch.empty(pos.shape, dtype=TRT_TO_TORCH[self._input_specs["pos"]["dtype"]], device="cuda")
         if "x" not in self._input_buffers or self._input_buffers["x"].shape != x.shape:
-            self._input_buffers["x"] = torch.empty(x.shape, dtype=torch.float32, device="cuda")
+            self._input_buffers["x"] = torch.empty(x.shape, dtype=TRT_TO_TORCH[self._input_specs["x"]["dtype"]], device="cuda")
 
         pos_gpu = self._input_buffers["pos"]
         x_gpu = self._input_buffers["x"]

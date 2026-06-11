@@ -68,7 +68,7 @@ def load_checkpoint(model, checkpoint_path):
     return model
 
 
-def export_onnx(wrapped_model, output_path, num_points=4096):
+def export_onnx(wrapped_model, output_path, num_points=3500):
     """Trace and export the model to ONNX.
 
     Args:
@@ -104,7 +104,7 @@ def export_onnx(wrapped_model, output_path, num_points=4096):
         input_names=['pos', 'x'],
         output_names=['output'],
         dynamic_axes=dynamic_axes,
-        opset_version=16,
+        opset_version=17,
         do_constant_folding=True,
         verbose=False,
     )
@@ -121,7 +121,7 @@ def export_onnx(wrapped_model, output_path, num_points=4096):
 
 def test_pytorch_forward(model, wrapped_model):
     """Run a forward pass to verify patched model produces sensible output."""
-    B, N = 1, 1024
+    B, N = 1, 3500
     pos = torch.randn(B, N, 3)
     x = torch.randn(B, 4, N)
 
@@ -148,7 +148,7 @@ def main():
     parser.add_argument('--output', type=str,
                         default='deploy/onnx_model.onnx',
                         help='Output ONNX file path')
-    parser.add_argument('--num_points', type=int, default=4096,
+    parser.add_argument('--num_points', type=int, default=3500,
                         help='Maximum number of points for dummy export input (voxel_max)')
     parser.add_argument('--no_patch', action='store_true',
                         help='Skip ONNX operator patching (debug only – will fail with CUDA ops)')
@@ -172,7 +172,7 @@ def main():
     print('\n[2/5] Building model...')
     model = build_model_from_cfg(cfg.model)
     print(model)
-    os.abort()
+    # os.abort()
 
     # 3. Load checkpoint
     print(f'\n[3/5] Loading checkpoint: {args.checkpoint}')

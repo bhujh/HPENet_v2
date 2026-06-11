@@ -87,7 +87,8 @@ def traceable_ball_query(radius, nsample, xyz, new_xyz):
 
     dist = torch.cdist(new_xyz, xyz)  # (B, npoint, N)
 
-    large_val = torch.tensor(1e10, dtype=dist.dtype, device=dist.device)
+    # large_val = torch.tensor(1e10, dtype=dist.dtype, device=dist.device)
+    large_val = torch.full((), 1e10, dtype=dist.dtype, device=dist.device)
 
     # Mask points beyond radius
     dist_masked = torch.where(dist <= radius, dist, large_val)

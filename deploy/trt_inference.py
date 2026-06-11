@@ -161,7 +161,7 @@ def main():
     parser.add_argument("--stats_file", type=str,
                         default="data/RadarClassi/radarfull/processed/feat_stats_area5.pth",
                         help="Feature statistics file")
-    parser.add_argument("--num_files", type=int, default=3,
+    parser.add_argument("--num_files", type=int, default=10,
                         help="Number of test files (use -1 for all)")
     parser.add_argument("--compare", action="store_true",
                         help="Compare TRT vs ONNX vs PyTorch outputs")

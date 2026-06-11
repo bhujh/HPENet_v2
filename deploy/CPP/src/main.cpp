@@ -32,7 +32,7 @@ struct CLIConfig {
     std::string data_dir     = "data/RadarClassi/radarfull/raw";
     int    num_files    = -1;
     int    min_n        = 1024;
-    int    max_n        = 30000;
+    int    max_n        = 6000;
     float  voxel_size   = 0.1f;
     int    warmup       = 5;
     std::string output_path   = "./output";
@@ -58,7 +58,7 @@ static void print_help(const char* progname) {
               << "  --min_n=<int>           Minimum sub-cloud size (smaller padded)\n"
               << "                           (default: 1024)\n"
               << "  --max_n=<int>           Maximum sub-cloud size\n"
-              << "                           (default: 30000)\n"
+              << "                           (default: 6000)\n"
               << "  --voxel_size=<float>    Voxel size for preprocessing\n"
               << "                           (default: 0.1)\n"
               << "  --warmup=<int>          Number of warmup runs\n"
@@ -163,6 +163,7 @@ int main(int argc, char** argv) {
     );
     std::cout << "  Pipeline ready.\n";
     {
+        //监测显存占用（Mb）
         auto mem = get_gpu_memory_info();
         std::cout << "  GPU Memory: " << mem.used_bytes / (1024 * 1024)
                   << " MiB used / " << mem.total_bytes / (1024 * 1024) << " MiB total\n";

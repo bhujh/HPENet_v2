@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - "-I/home/wangpeng/CODE/HPENet_v2-main/deploy/CPP/include"  # 替换为你的头文件所在的实际目录
+    - "-I${workspaceFolder}/deploy/CPP/include" # 使用相对路径或环境变量
+    - "-I/usr/local/cuda-11.8/include"  # 替换为你的头文件所在的实际目录
+    # - "-I/usr/local/TensorRT-8.6.1.6/include"  # 替换为你的头文件所在的实际目录

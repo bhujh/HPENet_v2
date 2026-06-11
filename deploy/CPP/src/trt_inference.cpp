@@ -99,7 +99,11 @@ float* TrInference::infer(float* d_pos, float* d_x, int N, cudaStream_t stream) 
 
     // ---------- 3. 分配/重用输出 buffer ----------
     // 输出形状: (1, 2, N) float32
-    size_t out_size = static_cast<size_t>(1) * 2 * N * sizeof(float);
+    // size_t out_size = static_cast<size_t>(1) * 2 * N * sizeof(float);
+    auto out_dtype = engine_->get()->getTensorDataType(output_name_.c_str());
+    size_t type_size = (out_dtype == nvinfer1::DataType::kHALF) ? 2 : 4;
+    size_t out_size = static_cast<size_t>(1) * 2 * N * type_size;
+
     if (!d_output_ || d_output_->size() < out_size) {
         // 按需重新分配（比 N 增大时扩容，缩小时重用避免重复分配）
         d_output_ = std::make_unique<CudaBuffer>(out_size);

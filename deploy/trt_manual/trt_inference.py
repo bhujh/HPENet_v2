@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from deploy.common import load_data_ply, preprocess_test, load_stats, preprocess_subcloud
 
 import time
@@ -66,6 +66,30 @@ def infer_one_cloud_trt(session, coord, feat, idx_points, feat_mean, feat_std,
     return merged
 
 
+def infer_one_cloud_onnx(session, coord, feat, idx_points, feat_mean, feat_std,
+                         z_mean, z_std, gravity_dim=2):
+    """ONNX Runtime inference on all sub-clouds."""
+    all_logits = []
+    all_idx = []
+
+    for idx_part in idx_points:
+        pos_batch, x_batch = preprocess_subcloud(
+            coord, feat, idx_part, feat_mean, feat_std, z_mean, z_std, gravity_dim,
+        )
+
+        outputs = session.run(None, {"pos": pos_batch, "x": x_batch})
+        logits = outputs[0]
+
+        all_logits.append(torch.from_numpy(logits[0]))
+        all_idx.append(torch.from_numpy(idx_part).long())
+
+    all_logits_cat = torch.cat(all_logits, dim=1).transpose(0, 1)
+    idx_flat = torch.cat(all_idx, dim=0)
+
+    from torch_scatter import scatter
+    merged = scatter(all_logits_cat, idx_flat, dim=0, reduce="mean")
+    return merged
+
 
 def main():
     parser = argparse.ArgumentParser(description="HPENet V2 TensorRT Inference")
@@ -82,7 +106,7 @@ def main():
     parser.add_argument("--stats_file", type=str,
                         default="data/RadarClassi/radarfull/processed/feat_stats_area5.pth",
                         help="Feature statistics file")
-    parser.add_argument("--num_files", type=int, default=3,
+    parser.add_argument("--num_files", type=int, default=10,
                         help="Number of test files (use -1 for all)")
     parser.add_argument("--compare", action="store_true",
                         help="Compare TRT vs ONNX vs PyTorch outputs")
@@ -147,6 +171,7 @@ def main():
     for cloud_idx, fname in enumerate(tqdm(test_files, desc="Inference")):
         data_path = os.path.join(args.data_dir, fname)
         coord, feat, label = load_data_ply(data_path)
+        print("coord:",coord.shape)
         coord, feat, idx_points, _, _, _ = preprocess_test(
             coord, feat, voxel_size=0.1,
         )
@@ -161,6 +186,7 @@ def main():
         trt_time = time.time() - t0
         total_trt_time += trt_time
         pred_trt = logits_trt.argmax(dim=1)
+        print("pred_trt:",pred_trt.shape)
         acc_trt = (pred_trt == label_t).float().mean().item()
         trt_accs.append(acc_trt)
         num_with_gt += 1
@@ -175,15 +201,9 @@ def main():
             pred_onnx = logits_onnx.argmax(dim=1)
             acc_onnx = (pred_onnx == label_t).float().mean().item()
 
-            logits_pt = infer_one_cloud_pytorch(
-                pt_model, coord, feat, idx_points,
-                feat_mean, feat_std, z_mean, z_std,
-            )
-            pred_pt = logits_pt.argmax(dim=1)
-            acc_pt = (pred_pt == label_t).float().mean().item()
 
             match = (pred_trt == pred_onnx).float().mean().item()
-            line += f"  {acc_onnx:>8.4f}  {acc_pt:>8.4f}  {match:>9.4f}"
+            line += f"  {acc_onnx:>8.4f}  {match:>9.4f}"
 
         tqdm.write(line)
 
