@@ -54,13 +54,13 @@ public:
     /// @param N      点数
     /// @param stream CUDA stream (默认 0 = default stream)
     /// @return GPU 上的输出指针, shape (1, 2, N), float32
-    float* infer(float* d_pos, float* d_x, int N, cudaStream_t stream = 0);
+    void* infer(float* d_pos, float* d_x, int N, cudaStream_t stream = 0);
 
     // ── 查询 ──
 
     /// 获取输出 GPU 指针（最近一次 infer 或 set_tensor_address 绑定的地址）
-    float* get_output() const {
-        return d_output_ ? static_cast<float*>(d_output_->data()) : nullptr;
+    void* get_output() const {
+        return d_output_ ? d_output_->data() : nullptr;
     }
 
     /// 获取底层 IExecutionContext（高级用法，谨慎修改状态）
@@ -69,6 +69,8 @@ public:
     /// 获取输出张量名称
     const std::string& get_output_name() const { return output_name_; }
 
+    bool is_output_fp16() const { return output_dtype_ == nvinfer1::DataType::kHALF; }
+
 private:
     nvinfer1::IExecutionContext* context_ = nullptr;
     std::unique_ptr<CudaBuffer> d_output_;
@@ -76,4 +78,6 @@ private:
 
     /// 输出张量名称（构造时从 engine 自动发现）
     std::string output_name_;
+
+    nvinfer1::DataType output_dtype_ = nvinfer1::DataType::kFLOAT;
 };

@@ -1,105 +1,25 @@
 {
-  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/trt-version-compat.md",
-  "plan_name": "trt-version-compat",
-  "started_at": "2026-06-09T11:57:48.387Z",
+  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/cpp-inference-fixes.md",
+  "plan_name": "cpp-inference-fixes",
+  "started_at": "2026-06-12T01:00:30.000Z",
+  "updated_at": "2026-06-12T01:30:00.000Z",
+  "ended_at": "2026-06-12T01:30:00.000Z",
+  "elapsed_ms": 1770000,
   "session_ids": [
-    "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2",
-    "opencode:ses_153a2b606ffemgL4wiXL7R5Hgn",
-    "opencode:ses_153a29ef4ffedn6xtfBYA77qBd",
-    "opencode:ses_153a28ab9ffetARiqPunJJnc3v",
-    "opencode:ses_153a28559ffefPcMgpXLjEvBMs"
+    "opencode:ses_148b685b6ffeZATG0Gd8ZgaPiX"
   ],
   "session_origins": {
-    "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2": "direct",
-    "opencode:ses_153a2b606ffemgL4wiXL7R5Hgn": "appended",
-    "opencode:ses_153a29ef4ffedn6xtfBYA77qBd": "appended",
-    "opencode:ses_153a28ab9ffetARiqPunJJnc3v": "appended",
-    "opencode:ses_153a28559ffefPcMgpXLjEvBMs": "appended"
+    "opencode:ses_148b685b6ffeZATG0Gd8ZgaPiX": "direct"
   },
   "status": "completed",
   "agent": "atlas",
-  "task_sessions": {
-    "todo:1": {
-      "task_key": "todo:1",
-      "task_label": "1",
-      "task_title": "**`cmake/FindTensorRT.cmake` — 添加 TRT 10.x 搜索路径（Linux + Windows）**",
-      "session_id": "opencode:ses_153c04400ffemxBuI0hGVdyFeg",
-      "agent": "Sisyphus-Junior",
-      "category": "quick",
-      "updated_at": "2026-06-09T12:29:41.284Z",
-      "started_at": "2026-06-09T12:28:39.314Z",
-      "status": "completed",
-      "ended_at": "2026-06-09T12:29:41.284Z",
-      "elapsed_ms": 61970
-    },
-    "todo:5": {
-      "task_key": "todo:5",
-      "task_label": "5",
-      "task_title": "**Windows TRT 10.x: 构建编译验证（用户手动）**",
-      "session_id": "opencode:ses_153a29ef4ffedn6xtfBYA77qBd",
-      "agent": "Sisyphus-Junior",
-      "category": "deep",
-      "started_at": "2026-06-09T12:33:30.770Z",
-      "status": "running",
-      "updated_at": "2026-06-09T12:33:31.563Z"
-    }
-  },
   "schema_version": 2,
-  "works": {
-    "trt-version-compat-legacy": {
-      "work_id": "trt-version-compat-legacy",
-      "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/trt-version-compat.md",
-      "plan_name": "trt-version-compat",
-      "status": "completed",
-      "started_at": "2026-06-09T11:57:48.387Z",
-      "updated_at": "2026-06-09T12:34:22.533Z",
-      "session_ids": [
-        "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2",
-        "opencode:ses_153a2b606ffemgL4wiXL7R5Hgn",
-        "opencode:ses_153a29ef4ffedn6xtfBYA77qBd",
-        "opencode:ses_153a28ab9ffetARiqPunJJnc3v",
-        "opencode:ses_153a28559ffefPcMgpXLjEvBMs"
-      ],
-      "session_origins": {
-        "opencode:ses_18d972f77ffe6QUnfB4n3LBNr2": "direct",
-        "opencode:ses_153a2b606ffemgL4wiXL7R5Hgn": "appended",
-        "opencode:ses_153a29ef4ffedn6xtfBYA77qBd": "appended",
-        "opencode:ses_153a28ab9ffetARiqPunJJnc3v": "appended",
-        "opencode:ses_153a28559ffefPcMgpXLjEvBMs": "appended"
-      },
-      "agent": "atlas",
-      "task_sessions": {
-        "todo:1": {
-          "task_key": "todo:1",
-          "task_label": "1",
-          "task_title": "**`cmake/FindTensorRT.cmake` — 添加 TRT 10.x 搜索路径（Linux + Windows）**",
-          "session_id": "opencode:ses_153c04400ffemxBuI0hGVdyFeg",
-          "agent": "Sisyphus-Junior",
-          "category": "quick",
-          "updated_at": "2026-06-09T12:29:41.284Z",
-          "started_at": "2026-06-09T12:28:39.314Z",
-          "status": "completed",
-          "ended_at": "2026-06-09T12:29:41.284Z",
-          "elapsed_ms": 61970
-        },
-        "todo:5": {
-          "task_key": "todo:5",
-          "task_label": "5",
-          "task_title": "**Windows TRT 10.x: 构建编译验证（用户手动）**",
-          "session_id": "opencode:ses_153a29ef4ffedn6xtfBYA77qBd",
-          "agent": "Sisyphus-Junior",
-          "category": "deep",
-          "started_at": "2026-06-09T12:33:30.770Z",
-          "status": "running",
-          "updated_at": "2026-06-09T12:33:31.563Z"
-        }
-      },
-      "ended_at": "2026-06-09T12:34:22.533Z",
-      "elapsed_ms": 2194146
-    }
-  },
-  "active_work_id": "trt-version-compat-legacy",
-  "updated_at": "2026-06-09T12:34:22.533Z",
-  "ended_at": "2026-06-09T12:34:22.533Z",
-  "elapsed_ms": 2194146
+  "task_sessions": {
+    "todo:1": {"task_label": "1", "status": "completed", "agent": "general"},
+    "todo:2": {"task_label": "2", "status": "completed", "agent": "general"},
+    "todo:3": {"task_label": "3", "status": "completed", "agent": "general"},
+    "todo:4": {"task_label": "4", "status": "completed", "agent": "bash"},
+    "todo:5": {"task_label": "5", "status": "completed", "agent": "bash"},
+    "todo:6": {"task_label": "6", "status": "completed", "agent": "bash"}
+  }
 }

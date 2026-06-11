@@ -30,6 +30,7 @@
 #include <random>
 
 #include "cuda_utils.h"
+#include <cuda_fp16.h>
 #include <vector>
 
 #include "ply_reader.h"
@@ -137,6 +138,9 @@ InferenceResult InferencePipeline::process_file(const std::string& ply_path) {
             stats_);                // 归一化统计量
 
         // (b) 若 N > max_n, 拆分为多个 chunk
+        // NOTE: Preprocessing (centering + normalization) is applied to the full
+        // sub-cloud before splitting, so chunking does not alter per-point statistics.
+        // Set max_n large enough (e.g., 30000) to keep sub-clouds intact in practice.
         ChunkResult chunks = SubcloudUtils::split_oversized(
             pp.pos.data(), pp.x.data(), N, max_n_);
 
@@ -163,22 +167,27 @@ InferenceResult InferencePipeline::process_file(const std::string& ply_path) {
                 stream_.native());
 
             // (e) TRT 推理 → GPU logits (1, 2, N_padded)
-            float* d_output = inference_->infer(
+            void* d_output = inference_->infer(
                 static_cast<float*>(d_pos_->data()),
                 static_cast<float*>(d_x_->data()),
                 padded.N_padded,
                 stream_.native());
 
             // (f) 下载 logits 到 CPU, 然后 trim padding
-            std::vector<float> h_logits(
-                static_cast<size_t>(2) * padded.N_padded);
-            CHECK_CUDA(cudaMemcpyAsync(
-                h_logits.data(),
-                d_output,
-                static_cast<size_t>(2) * padded.N_padded * sizeof(float),
-                cudaMemcpyDeviceToHost,
-                stream_.native()));
-            stream_.synchronize();
+            const size_t elem_count = static_cast<size_t>(2) * padded.N_padded;
+            std::vector<float> h_logits(elem_count);
+
+            if (inference_->is_output_fp16()) {
+                std::vector<__half> h_logits_half(elem_count);
+                CHECK_CUDA(cudaMemcpyAsync(h_logits_half.data(), d_output, elem_count * sizeof(__half), cudaMemcpyDeviceToHost, stream_.native()));
+                stream_.synchronize();
+                for (size_t i = 0; i < elem_count; ++i) {
+                    h_logits[i] = __half2float(h_logits_half[i]);
+                }
+            } else {
+                CHECK_CUDA(cudaMemcpyAsync(h_logits.data(), d_output, elem_count * sizeof(float), cudaMemcpyDeviceToHost, stream_.native()));
+                stream_.synchronize();
+            }
 
             // Trim: 移除填充部分
             SubcloudUtils::trim_padding(
@@ -219,9 +228,6 @@ InferenceResult InferencePipeline::process_file(const std::string& ply_path) {
         all_idx.data(),
         static_cast<size_t>(total_src) * sizeof(int64_t),
         stream_.native());
-    d_out.memset(0, 0);  // 输出 buffer 置零
-    d_cnt.memset(0, 0);  // 计数 buffer 置零
-
     launch_scatter_mean_kernel(
         static_cast<const float*>(d_src.data()),
         static_cast<const int64_t*>(d_idx.data()),

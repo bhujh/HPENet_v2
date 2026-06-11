@@ -13,6 +13,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <algorithm>
+#include <random>
 #include <chrono>
 #include <numeric>
 #include <filesystem>
@@ -32,7 +33,7 @@ struct CLIConfig {
     std::string data_dir     = "data/RadarClassi/radarfull/raw";
     int    num_files    = -1;
     int    min_n        = 1024;
-    int    max_n        = 6000;
+    int    max_n        = 30000;
     float  voxel_size   = 0.1f;
     int    warmup       = 5;
     std::string output_path   = "./output";
@@ -194,8 +195,6 @@ int main(int argc, char** argv) {
 
     std::vector<double> accuracies;
     std::vector<double> latencies;
-    int idx = 0;
-
     // List files in directory for display names
     std::vector<std::string> all_ply;
     if (std::filesystem::exists(config.data_dir)) {
@@ -205,9 +204,14 @@ int main(int argc, char** argv) {
             }
         }
         std::sort(all_ply.begin(), all_ply.end());
+        std::mt19937 rng(config.seed);
+        std::shuffle(all_ply.begin(), all_ply.end(), rng);
+        // WARNING: This test-split logic duplicates process_directory() in pipeline.cpp.
+        // Both must use the same seed, same float constant (0.83f), and same num_files limit.
+        // If files change between the two calls, displayed filenames will not match results.
         // Python test split: take last 17%
         int n_total = all_ply.size();
-        int test_start = static_cast<int>(n_total * 0.83);
+        int test_start = static_cast<int>(n_total * 0.83f);
         std::vector<std::string> test_files(all_ply.begin() + test_start, all_ply.end());
         if (config.num_files > 0 && config.num_files < static_cast<int>(test_files.size())) {
             test_files.resize(config.num_files);
@@ -222,7 +226,7 @@ int main(int argc, char** argv) {
 
         // Compute accuracy against ground-truth labels
         std::string fname = (i < all_ply.size()) ? all_ply[i] : ("file_" + std::to_string(i) + ".ply");
-        std::string fpath = config.data_dir + "/" + fname;
+        std::string fpath = (std::filesystem::path(config.data_dir) / fname).string();
         float acc = 0.0f;
         if (std::filesystem::exists(fpath)) {
             try {
@@ -244,8 +248,7 @@ int main(int argc, char** argv) {
         std::cout << "  " << std::left << std::setw(20) << fname
                   << " " << std::right << std::setw(8) << result.predictions.size()
                   << "  " << std::fixed << std::setprecision(4) << acc
-                  << "   " << fmt_time(total_s) << "\n";
-        ++idx;
+                   << "   " << fmt_time(total_s) << "\n";
     }
 
     {

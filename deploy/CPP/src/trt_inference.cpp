@@ -22,6 +22,7 @@ TrInference::TrInference(TrEngine& engine, TrLogger& logger)
         throw std::runtime_error("[TrInference] Engine has no output tensors");
     }
     output_name_ = outputs[0].name;
+    output_dtype_ = engine_->get()->getTensorDataType(output_name_.c_str());
 
     // 3. 打印基本信息
     std::cout << "[TrInference] Output tensor: \"" << output_name_ << "\""
@@ -73,7 +74,7 @@ void TrInference::synchronize(cudaStream_t stream) {
 
 // ── 便捷推理 ──
 
-float* TrInference::infer(float* d_pos, float* d_x, int N, cudaStream_t stream) {
+void* TrInference::infer(float* d_pos, float* d_x, int N, cudaStream_t stream) {
     // ---------- 1. 设置动态输入形状 ----------
     //
     // pos: (1, N, 3) — 动态维度在 axis=1
@@ -98,7 +99,7 @@ float* TrInference::infer(float* d_pos, float* d_x, int N, cudaStream_t stream) 
     set_tensor_address("x", d_x);
 
     // ---------- 3. 分配/重用输出 buffer ----------
-    // 输出形状: (1, 2, N) float32
+    // 输出形状: (1, 2, N)
     // size_t out_size = static_cast<size_t>(1) * 2 * N * sizeof(float);
     auto out_dtype = engine_->get()->getTensorDataType(output_name_.c_str());
     size_t type_size = (out_dtype == nvinfer1::DataType::kHALF) ? 2 : 4;
@@ -113,5 +114,5 @@ float* TrInference::infer(float* d_pos, float* d_x, int N, cudaStream_t stream) 
     // ---------- 4. 异步推理 ----------
     run_async(stream);
 
-    return static_cast<float*>(d_output_->data());
+    return d_output_->data();
 }
