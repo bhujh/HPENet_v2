@@ -4,10 +4,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# MSVC CRT: 匹配 TensorRT 预编译库的动态 CRT (/MD)
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+endif()
+
 # 策略: 抑制 CMake 3.28+ 警告
-# CMP0146: FindCUDA 模块已移除 (使用 find_package(CUDA) 仍有效)
 # CMP0144: find_package 使用大写 <PACKAGENAME>_ROOT
-cmake_policy(SET CMP0146 OLD)
 cmake_policy(SET CMP0144 NEW)
 
 # GPU 架构: 默认 Ampere+ (sm80, sm86, sm89)
@@ -16,8 +19,8 @@ cmake_policy(SET CMP0144 NEW)
 set(CMAKE_CUDA_ARCHITECTURES "80;86;89" CACHE STRING
     "CUDA architecture codes (e.g., 80;86;89 for Ampere/Ada, 120 for Blackwell)")
 
-# 查找 CUDA
-find_package(CUDA REQUIRED)
+# 查找 CUDA (使用现代 CUDAToolkit 模块替代废弃的 FindCUDA)
+find_package(CUDAToolkit REQUIRED)
 
 # 查找 TensorRT
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -57,8 +60,8 @@ add_executable(hpenet_trt_infer
     src/kernels/fnv_hash.cu
     src/kernels/scatter_mean.cu
 )
-target_include_directories(hpenet_trt_infer PRIVATE include ${CUDA_INCLUDE_DIRS})
-target_link_libraries(hpenet_trt_infer PRIVATE ${TensorRT_LIBRARIES} ${CUDA_LIBRARIES})
+target_include_directories(hpenet_trt_infer PRIVATE include ${CUDAToolkit_INCLUDE_DIRS})
+target_link_libraries(hpenet_trt_infer PRIVATE ${TensorRT_LIBRARIES} CUDA::cudart)
 
 # RPATH 配置 (仅 Unix; Windows 使用 DLL 搜索路径)
 if(UNIX)
@@ -66,4 +69,15 @@ if(UNIX)
     BUILD_RPATH "${TensorRT_ROOT}/lib:${CUDA_TOOLKIT_ROOT_DIR}/lib64"
     INSTALL_RPATH "${TensorRT_ROOT}/lib:${CUDA_TOOLKIT_ROOT_DIR}/lib64"
   )
+elseif(WIN32)
+  # 确保 RUNTIME_OUTPUT_DIRECTORY 有效（VS 多配置生成器下可能为空）
+  if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+  endif()
+  # 复制 TRT DLL 到输出目录（TRT 10: nvinfer_10.dll 等）
+  file(GLOB TRT_DLLS "${TensorRT_ROOT}/lib/*.dll")
+  foreach(DLL ${TRT_DLLS})
+    configure_file("${DLL}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/" COPY_ONLY)
+  endforeach()
+  message(STATUS "Copied TensorRT DLLs to output directory")
 endif()

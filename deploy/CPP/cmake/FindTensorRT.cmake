@@ -1,5 +1,7 @@
 # FindTensorRT.cmake
-# 查找 TensorRT 库（nvinfer, nvinfer_plugin, nvonnxparser）
+# 查找 TensorRT 库（nvinfer/nvinfer_10, nvinfer_plugin/nvinfer_plugin_10, nvonnxparser/nvonnxparser_10）
+#
+# 支持 TensorRT 8.x (nvinfer) 和 TensorRT 10.x (nvinfer_10) 的库命名约定。
 #
 # 用法:
 #   find_package(TensorRT REQUIRED)
@@ -10,7 +12,7 @@
 #   TensorRT_FOUND          - 是否找到
 #   TensorRT_INCLUDE_DIRS   - 头文件路径
 #   TensorRT_LIBRARIES      - 库文件列表
-#   TensorRT_VERSION        - 版本字符串 (如 "8.6.1.6")
+#   TensorRT_VERSION        - 版本字符串 (如 "8.6.1.6" 或 "10.16.1.11")
 #   TensorRT_ROOT           - 根目录
 
 # ---------------------------------------------------------------------------
@@ -29,7 +31,22 @@ if(NOT TensorRT_ROOT)
   endif()
 endif()
 
-if(TensorRT_ROOT)
+# Windows 路径优先检查
+if(WIN32)
+  set(_TRT_SEARCH_PATHS
+    "C:/Program Files/NVIDIA Corporation/TensorRT-10.16.1"
+    "C:/Program Files/NVIDIA Corporation/TensorRT-10.16.0"
+    "C:/Program Files/NVIDIA Corporation/TensorRT"
+    "C:/TensorRT-10.16.1.11"
+    "C:/TensorRT-10.16.0.34"
+    "C:/TensorRT-10.9.0.34"
+    "C:/Program Files/NVIDIA GPU Computing Toolkit/TensorRT"
+  )
+  # 用户指定的 TensorRT_ROOT 优先于硬编码路径
+  if(TensorRT_ROOT)
+    list(PREPEND _TRT_SEARCH_PATHS "${TensorRT_ROOT}")
+  endif()
+elseif(TensorRT_ROOT)
   # 显式指定根目录时，搜索标准子目录结构
   # TensorRT 典型结构:
   #   TensorRT-{version}/
@@ -40,7 +57,7 @@ if(TensorRT_ROOT)
     "${TensorRT_ROOT}/targets/x86_64-linux-gnu"
   )
 else()
-  # 常见安装路径
+  # 常见安装路径 (仅非 Windows 平台)
   set(_TRT_SEARCH_PATHS
     /usr/local/TensorRT-8.6.1.6
     /usr/local/TensorRT-8.5.3.1
@@ -51,16 +68,6 @@ else()
     /usr/local/TensorRT
     /usr/lib/x86_64-linux-gnu
     /usr/local/cuda/TensorRT
-  )
-endif()
-
-if(WIN32)
-  # Windows 常见安装路径
-  list(APPEND _TRT_SEARCH_PATHS
-    "C:/TensorRT-10.16.1.11"
-    "C:/TensorRT-10.16.0.34"
-    "C:/TensorRT-10.9.0.34"
-    "C:/Program Files/NVIDIA GPU Computing Toolkit/TensorRT"
   )
 endif()
 
@@ -76,22 +83,25 @@ find_path(TensorRT_INCLUDE_DIR NvInfer.h
 # ---------------------------------------------------------------------------
 # 查找库文件
 # ---------------------------------------------------------------------------
-find_library(TensorRT_LIBRARY_NVINFER nvinfer
+find_library(TensorRT_LIBRARY_NVINFER
+  NAMES nvinfer nvinfer_10
   PATHS ${_TRT_SEARCH_PATHS}
   PATH_SUFFIXES lib lib64 lib/x86_64-linux-gnu
-  DOC "TensorRT 核心库 (nvinfer)"
+  DOC "TensorRT 核心库 (nvinfer / nvinfer_10)"
 )
 
-find_library(TensorRT_LIBRARY_PLUGIN nvinfer_plugin
+find_library(TensorRT_LIBRARY_PLUGIN
+  NAMES nvinfer_plugin nvinfer_plugin_10
   PATHS ${_TRT_SEARCH_PATHS}
   PATH_SUFFIXES lib lib64 lib/x86_64-linux-gnu
-  DOC "TensorRT 插件库 (nvinfer_plugin)"
+  DOC "TensorRT 插件库 (nvinfer_plugin / nvinfer_plugin_10)"
 )
 
-find_library(TensorRT_LIBRARY_PARSER nvonnxparser
+find_library(TensorRT_LIBRARY_PARSER
+  NAMES nvonnxparser nvonnxparser_10
   PATHS ${_TRT_SEARCH_PATHS}
   PATH_SUFFIXES lib lib64 lib/x86_64-linux-gnu
-  DOC "TensorRT ONNX 解析器 (nvonnxparser)"
+  DOC "TensorRT ONNX 解析器 (nvonnxparser / nvonnxparser_10)"
 )
 
 # ---------------------------------------------------------------------------

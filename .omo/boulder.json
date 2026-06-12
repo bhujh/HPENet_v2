@@ -1,25 +1,112 @@
 {
-  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/cpp-inference-fixes.md",
-  "plan_name": "cpp-inference-fixes",
-  "started_at": "2026-06-12T01:00:30.000Z",
-  "updated_at": "2026-06-12T01:30:00.000Z",
-  "ended_at": "2026-06-12T01:30:00.000Z",
-  "elapsed_ms": 1770000,
+  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/revert-uniqueptr-keep-cmake.md",
+  "plan_name": "revert-uniqueptr-keep-cmake",
+  "started_at": "2026-06-12T02:00:14.299Z",
+  "updated_at": "2026-06-12T02:01:41.361Z",
   "session_ids": [
-    "opencode:ses_148b685b6ffeZATG0Gd8ZgaPiX"
+    "opencode:ses_147f93055ffe7I31Gky25FR1no"
   ],
   "session_origins": {
-    "opencode:ses_148b685b6ffeZATG0Gd8ZgaPiX": "direct"
+    "opencode:ses_147f93055ffe7I31Gky25FR1no": "direct"
   },
   "status": "completed",
   "agent": "atlas",
   "schema_version": 2,
-  "task_sessions": {
-    "todo:1": {"task_label": "1", "status": "completed", "agent": "general"},
-    "todo:2": {"task_label": "2", "status": "completed", "agent": "general"},
-    "todo:3": {"task_label": "3", "status": "completed", "agent": "general"},
-    "todo:4": {"task_label": "4", "status": "completed", "agent": "bash"},
-    "todo:5": {"task_label": "5", "status": "completed", "agent": "bash"},
-    "todo:6": {"task_label": "6", "status": "completed", "agent": "bash"}
-  }
+  "ended_at": "2026-06-12T02:01:41.360Z",
+  "elapsed_ms": 87061,
+  "task_sessions": {},
+  "works": {
+    "cpp-deploy-windows-fix-legacy": {
+      "work_id": "cpp-deploy-windows-fix-legacy",
+      "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/cpp-deploy-windows-fix.md",
+      "plan_name": "cpp-deploy-windows-fix",
+      "status": "completed",
+      "started_at": "2026-06-12T16:45:00.000Z",
+      "ended_at": null,
+      "elapsed_ms": null,
+      "updated_at": "2026-06-11T19:25:47.130Z",
+      "session_ids": [
+        "opencode:ses_1482604b3ffeB7ucs9aoS4Xcy3",
+        "opencode:ses_147f93055ffe7I31Gky25FR1no"
+      ],
+      "session_origins": {
+        "opencode:ses_1482604b3ffeB7ucs9aoS4Xcy3": "direct",
+        "opencode:ses_147f93055ffe7I31Gky25FR1no": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {
+        "final-wave:f1": {
+          "task_key": "final-wave:f1",
+          "task_label": "F1",
+          "task_title": "**Plan Compliance Audit** — 逐项检查 \"Must Have\" 清单和 \"Must NOT Have\" 禁止修改文件。",
+          "session_id": "opencode:ses_147f6b4efffeTcFG6gRm3zpEm5",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-low",
+          "updated_at": "2026-06-11T19:25:45.277Z",
+          "started_at": "2026-06-11T19:24:38.104Z",
+          "status": "completed",
+          "ended_at": "2026-06-11T19:25:45.277Z",
+          "elapsed_ms": 67173
+        },
+        "final-wave:f2": {
+          "task_key": "final-wave:f2",
+          "task_label": "F2",
+          "task_title": "**Code Quality Review** — 检查所有修改文件的代码质量。",
+          "session_id": "opencode:ses_147f69f11ffehmTwDnURNCDJ0C",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-low",
+          "updated_at": "2026-06-11T19:25:45.890Z",
+          "started_at": "2026-06-11T19:24:43.427Z",
+          "status": "completed",
+          "ended_at": "2026-06-11T19:25:45.890Z",
+          "elapsed_ms": 62463
+        },
+        "final-wave:f3": {
+          "task_key": "final-wave:f3",
+          "task_label": "F3",
+          "task_title": "**Real Manual QA** — 顺序验证所有 QA 场景（从 Task 1 到 Task 7）。在 Linux 环境下执行完整回归验证。",
+          "session_id": "opencode:ses_147f685e0ffeiLmwkokjpFVoKt",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-low",
+          "updated_at": "2026-06-11T19:25:46.532Z",
+          "started_at": "2026-06-11T19:24:50.035Z",
+          "status": "completed",
+          "ended_at": "2026-06-11T19:25:46.532Z",
+          "elapsed_ms": 56497
+        },
+        "final-wave:f4": {
+          "task_key": "final-wave:f4",
+          "task_label": "F4",
+          "task_title": "**Scope Fidelity Check** — For each task, read \"What to do\" in the plan, read the actual diff. Verify 1:1 — spec中的全部built（无遗漏），spec外的全部not built（无scope creep）。检查 \"Must NOT do\" 合规。",
+          "session_id": "opencode:ses_147f65f51ffehlgJDBWjJdLWoB",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-low",
+          "updated_at": "2026-06-11T19:25:47.130Z",
+          "started_at": "2026-06-11T19:24:59.999Z",
+          "status": "completed",
+          "ended_at": "2026-06-11T19:25:47.130Z",
+          "elapsed_ms": 47131
+        }
+      }
+    },
+    "revert-uniqueptr-keep-cmake-938a4282": {
+      "work_id": "revert-uniqueptr-keep-cmake-938a4282",
+      "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/revert-uniqueptr-keep-cmake.md",
+      "plan_name": "revert-uniqueptr-keep-cmake",
+      "status": "completed",
+      "started_at": "2026-06-12T02:00:14.299Z",
+      "updated_at": "2026-06-12T02:01:41.361Z",
+      "session_ids": [
+        "opencode:ses_147f93055ffe7I31Gky25FR1no"
+      ],
+      "session_origins": {
+        "opencode:ses_147f93055ffe7I31Gky25FR1no": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {},
+      "ended_at": "2026-06-12T02:01:41.360Z",
+      "elapsed_ms": 87061
+    }
+  },
+  "active_work_id": "revert-uniqueptr-keep-cmake-938a4282"
 }

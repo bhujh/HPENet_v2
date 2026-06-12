@@ -9,14 +9,13 @@ function(add_gpu_test TEST_NAME TEST_SOURCE)
   add_executable(${TEST_NAME} ${TEST_SOURCE} ${ARGN})
   target_include_directories(${TEST_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include
-    ${CUDA_INCLUDE_DIRS}          # needed when .cpp sources use CUDA Runtime API
+    ${CUDAToolkit_INCLUDE_DIRS}   # needed when .cpp sources use CUDA Runtime API
   )
   target_link_libraries(${TEST_NAME} PRIVATE
     gtest gtest_main
-    ${TensorRT_LIBRARIES} ${CUDA_LIBRARIES}
-    ${CUDA_cublas_LIBRARY} ${CUDA_cudart_LIBRARY}
+    ${TensorRT_LIBRARIES} CUDA::cudart
   )
-  set_target_properties(${TEST_NAME} PROPERTIES CUDA_ARCHITECTURES "86")
+  set_target_properties(${TEST_NAME} PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endfunction()
 
