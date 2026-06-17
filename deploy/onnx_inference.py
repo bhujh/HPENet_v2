@@ -37,7 +37,7 @@ def run_onnx_inference(session, pos, x):
     Args:
         session: onnxruntime.InferenceSession
         pos: (1, N, 3) numpy
-        x:   (1, 4, N) numpy  –  combined & normalized features
+        x:   (1, 4, N) numpy - combined & normalized features
 
     Returns:
         logits: (1, 2, N) numpy

@@ -26,3 +26,18 @@ cmake .. -G "Visual Studio 16 2019" -A x64 ^
   -DCMAKE_CUDA_ARCHITECTURES="120"
 cmake --build . --config Release -j
 ctest --output-on-failure -C Release
+
+
+
+# CPP_onnx
+cd deploy/CPP_onnx
+rm -rf build && mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
+
+cd deploy/CPP_onnx
+LD_LIBRARY_PATH=./lib ./build/hpenet_onnx_infer \
+  --onnx    ../../deploy/onnx_model.onnx \
+  --data_dir ../../data/RadarClassi/radarfull/raw \
+  --stats_file stats.json \
+  --num_files 3
