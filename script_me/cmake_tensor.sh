@@ -37,7 +37,7 @@ make -j$(nproc)
 
 cd deploy/CPP_onnx
 LD_LIBRARY_PATH=./lib ./build/hpenet_onnx_infer \
-  --onnx    ../../deploy/onnx_model.onnx \
+  --onnx ../../deploy/onnx_model.onnx \
   --data_dir ../../data/RadarClassi/radarfull/raw \
+  --output_dir ./output \
   --stats_file stats.json \
-  --num_files 3

@@ -11,6 +11,7 @@ struct PointCloud {
     std::vector<float> feat;
     std::vector<float> label;
     int num_points = 0;
+    bool has_label = false;
     PointCloud() = default;
     PointCloud(int n) : coord(n*3), feat(n*3), label(n), num_points(n) {}
 };
@@ -42,6 +43,10 @@ void preprocess_subcloud(const float* coord, const float* feat,
 std::vector<float> scatter_mean(const float* logits, const int* indices,
                                 int total_points, int num_orig, int num_classes);
 
+void write_annotated_ply(const std::string& output_path,
+                         const PointCloud& pc,
+                         const std::vector<int>& predictions);
+
 // ── ONNX Inference Pipeline ─────────────────────────────────────────────
 
 class OnnxInferencePipeline {
@@ -57,8 +62,6 @@ public:
     OnnxInferencePipeline(const OnnxInferencePipeline&) = delete;
     OnnxInferencePipeline& operator=(const OnnxInferencePipeline&) = delete;
     InferenceResult process_file(const std::string& ply_path);
-    std::vector<InferenceResult> process_directory(
-        const std::string& data_dir, int num_files = -1);
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl_;

@@ -22,12 +22,6 @@
 //  Simple JSON parser for stats files
 // ============================================================================
 
-static std::string trim(const std::string& s) {
-    size_t start = s.find_first_not_of(" \t\r\n");
-    size_t end   = s.find_last_not_of(" \t\r\n");
-    return (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
-}
-
 static std::vector<float> parse_float_array(const std::string& s) {
     std::vector<float> out;
     std::string num;
@@ -95,6 +89,16 @@ PointCloud load_data_ply(const std::string& data_path) {
     tinyply::PlyFile ply_file;
     ply_file.parse_header(stream);
 
+    bool has_label_field = false;
+    for (const auto& elem : ply_file.get_elements()) {
+        if (elem.name == "vertex") {
+            for (const auto& prop : elem.properties) {
+                if (prop.name == "label") { has_label_field = true; break; }
+            }
+            break;
+        }
+    }
+
     // Request required fields
     auto x_data     = ply_file.request_properties_from_element("vertex", {"x"});
     auto y_data     = ply_file.request_properties_from_element("vertex", {"y"});
@@ -102,7 +106,9 @@ PointCloud load_data_ply(const std::string& data_path) {
     auto rcs_data   = ply_file.request_properties_from_element("vertex", {"rcs"});
     auto snr_data   = ply_file.request_properties_from_element("vertex", {"snr"});
     auto v_data     = ply_file.request_properties_from_element("vertex", {"v"});
-    auto label_data = ply_file.request_properties_from_element("vertex", {"label"});
+    std::shared_ptr<tinyply::PlyData> label_data;
+    if (has_label_field)
+        label_data = ply_file.request_properties_from_element("vertex", {"label"});
 
     ply_file.read(stream);
 
@@ -133,7 +139,12 @@ PointCloud load_data_ply(const std::string& data_path) {
         pc.feat[i * 3 + 1] = read_float(snr_data, i);
         pc.feat[i * 3 + 2] = read_float(v_data, i);
 
-        pc.label[i] = read_float(label_data, i);
+        if (label_data && label_data->buffer.get()) {
+            pc.label[i] = read_float(label_data, i);
+            pc.has_label = true;
+        } else {
+            pc.label[i] = 0.0f;
+        }
     }
 
     return pc;
@@ -188,21 +199,18 @@ std::vector<std::vector<int>> voxelize_cpu(const float* coord, int num_points,
     // Step 3: group voxels and count points per voxel
     std::vector<int> idx_sort(num_points);
     std::vector<int> counts;
-    std::vector<int> voxel_starts;
     for (int i = 0; i < num_points; ) {
         uint64_t cur_hash = ph[i].hash;
         int j = i;
         while (j < num_points && ph[j].hash == cur_hash) j++;
         int cnt = j - i;
         counts.push_back(cnt);
-        voxel_starts.push_back(i);
         for (int k = i; k < j; k++) {
             idx_sort[k] = ph[k].idx;
         }
         i = j;
     }
 
-    // Step 4: generate sub-clouds — one point per voxel per shift
     int num_voxels = static_cast<int>(counts.size());
     int max_count = 0;
     for (int c : counts) max_count = std::max(max_count, c);
@@ -388,6 +396,18 @@ InferenceResult OnnxInferencePipeline::process_file(const std::string& ply_path)
         empty.filename = ply_path;
         return empty;
     }
+    if (N < min_n_) {
+        std::cerr << "WARNING: " << ply_path << " has " << N
+                  << " points (< min_n=" << min_n_ << "), skipping\n";
+        InferenceResult empty;
+        empty.filename = ply_path;
+        empty.predictions.resize(N, 0);
+        return empty;
+    }
+    if (N > max_n_) {
+        std::cerr << "WARNING: " << ply_path << " has " << N
+                  << " points (> max_n=" << max_n_ << "), truncating\n";
+    }
 
     // Translate to origin: coord -= min(coord)
     float mx = pc.coord[0], my = pc.coord[1], mz = pc.coord[2];
@@ -406,13 +426,16 @@ InferenceResult OnnxInferencePipeline::process_file(const std::string& ply_path)
     auto idx_points = voxelize_cpu(pc.coord.data(), N, voxel_size_, seed_);
 
     // Per sub-cloud: preprocess + ONNX inference
+    constexpr int kMinSubcloudPoints = 16;
     std::vector<float> all_logits;
     std::vector<int> all_indices;
     int total_sub = 0;
+    int skipped_sub = 0;
 
     for (const auto& part : idx_points) {
         int np = static_cast<int>(part.size());
         if (np == 0) continue;
+        if (np < kMinSubcloudPoints) { skipped_sub++; continue; }
 
         std::vector<float> pos_out, x_out;
         preprocess_subcloud(pc.coord.data(), pc.feat.data(),
@@ -433,9 +456,10 @@ InferenceResult OnnxInferencePipeline::process_file(const std::string& ply_path)
         ort_inputs.push_back(std::move(x_t));
 
         Ort::RunOptions run_opts;
-        auto outputs = impl.session.Run(run_opts, impl.input_names.data(),
-                                        ort_inputs.data(), 2,
-                                        impl.output_names.data(), 1);
+        try {
+            auto outputs = impl.session.Run(run_opts, impl.input_names.data(),
+                                            ort_inputs.data(), 2,
+                                            impl.output_names.data(), 1);
 
         float* out_data = outputs[0].GetTensorMutableData<float>();
         auto out_info = outputs[0].GetTensorTypeAndShapeInfo();
@@ -449,6 +473,18 @@ InferenceResult OnnxInferencePipeline::process_file(const std::string& ply_path)
             all_indices.push_back(part[j]);
             total_sub++;
         }
+        } catch (const std::exception& e) {
+            skipped_sub++;
+            std::cerr << "WARNING: " << ply_path
+                      << " sub-cloud (np=" << np << ") ONNX inference failed: "
+                      << e.what() << ", skipping\n";
+        }
+    }
+
+    if (skipped_sub > 0) {
+        std::cerr << "WARNING: " << ply_path << " skipped " << skipped_sub
+                  << " sub-cloud" << (skipped_sub > 1 ? "s" : "")
+                  << " (< " << kMinSubcloudPoints << " points)\n";
     }
 
     if (total_sub == 0) {
@@ -478,29 +514,39 @@ InferenceResult OnnxInferencePipeline::process_file(const std::string& ply_path)
     return result;
 }
 
-std::vector<InferenceResult> OnnxInferencePipeline::process_directory(
-    const std::string& data_dir, int num_files) {
-    std::vector<std::string> files;
-    for (const auto& entry : std::filesystem::directory_iterator(data_dir)) {
-        if (entry.path().extension() == ".ply") {
-            files.push_back(entry.path().string());
-        }
-    }
-    std::sort(files.begin(), files.end());
+void write_annotated_ply(const std::string& output_path,
+                         const PointCloud& pc,
+                         const std::vector<int>& predictions) {
+    int N = pc.num_points;
+    if (N == 0 || predictions.empty()) return;
 
-    int n_total = static_cast<int>(files.size());
-    int start_idx = static_cast<int>(n_total * 0.83);  // truncation matches Python int()
-    std::vector<std::string> test_files(files.begin() + start_idx, files.end());
-
-    if (num_files > 0 && num_files < static_cast<int>(test_files.size())) {
-        test_files.resize(num_files);
+    std::vector<float> float6(N * 6);
+    for (int i = 0; i < N; i++) {
+        float6[i * 6 + 0] = pc.coord[i * 3 + 0];
+        float6[i * 6 + 1] = pc.coord[i * 3 + 1];
+        float6[i * 6 + 2] = pc.coord[i * 3 + 2];
+        float6[i * 6 + 3] = pc.feat[i * 3 + 0];
+        float6[i * 6 + 4] = pc.feat[i * 3 + 1];
+        float6[i * 6 + 5] = pc.feat[i * 3 + 2];
     }
 
-    std::vector<InferenceResult> results;
-    for (const auto& f : test_files) {
-        auto r = process_file(f);
-        r.filename = f;  // ensure filename is set
-        results.push_back(std::move(r));
-    }
-    return results;
+    std::vector<int32_t> label32(N);
+    for (int i = 0; i < N; i++)
+        label32[i] = static_cast<int32_t>(predictions[i]);
+
+    std::filebuf fb;
+    if (!fb.open(output_path, std::ios::out))
+        throw std::runtime_error("Failed to open output file: " + output_path);
+    std::ostream os(&fb);
+
+    tinyply::PlyFile ply;
+    ply.add_properties_to_element("vertex", {"x","y","z","rcs","snr","v"},
+        tinyply::Type::FLOAT32, N, reinterpret_cast<const uint8_t*>(float6.data()),
+        tinyply::Type::INVALID, 0);
+    ply.add_properties_to_element("vertex", {"label"},
+        tinyply::Type::INT32, N, reinterpret_cast<const uint8_t*>(label32.data()),
+        tinyply::Type::INVALID, 0);
+    ply.write(os, false);
+
+    fb.close();
 }
