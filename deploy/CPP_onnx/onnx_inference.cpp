@@ -81,66 +81,74 @@ FeatureStats load_stats(const std::string& json_path) {
 // ============================================================================
 
 PointCloud load_data_ply(const std::string& data_path) {
+    // Phase 1: parse header with tinyply (robust, handles all edge cases)
     std::ifstream stream(data_path, std::ios::binary);
-    if (!stream.is_open()) {
-        throw std::runtime_error("Failed to open file: " + data_path);
-    }
+    if (!stream) throw std::runtime_error("Failed to open: " + data_path);
 
     tinyply::PlyFile ply_file;
     ply_file.parse_header(stream);
 
+    int num_vertices = 0;
+    std::vector<std::string> prop_names;
     bool has_label_field = false;
+
     for (const auto& elem : ply_file.get_elements()) {
         if (elem.name == "vertex") {
+            num_vertices = static_cast<int>(elem.size);
             for (const auto& prop : elem.properties) {
-                if (prop.name == "label") { has_label_field = true; break; }
+                prop_names.push_back(prop.name);
+                if (prop.name == "label") has_label_field = true;
             }
             break;
         }
     }
 
-    // Request required fields
-    auto x_data     = ply_file.request_properties_from_element("vertex", {"x"});
-    auto y_data     = ply_file.request_properties_from_element("vertex", {"y"});
-    auto z_data     = ply_file.request_properties_from_element("vertex", {"z"});
-    auto rcs_data   = ply_file.request_properties_from_element("vertex", {"rcs"});
-    auto snr_data   = ply_file.request_properties_from_element("vertex", {"snr"});
-    auto v_data     = ply_file.request_properties_from_element("vertex", {"v"});
-    std::shared_ptr<tinyply::PlyData> label_data;
-    if (has_label_field)
-        label_data = ply_file.request_properties_from_element("vertex", {"label"});
+    if (num_vertices <= 0) throw std::runtime_error("No vertex element in PLY");
 
-    ply_file.read(stream);
+    // Map property names → column indices
+    int ix_x = -1, ix_y = -1, ix_z = -1,
+        ix_rcs = -1, ix_snr = -1, ix_v = -1, ix_label = -1;
+    for (int i = 0; i < (int)prop_names.size(); i++) {
+        const auto& p = prop_names[i];
+        if      (p == "x")     ix_x = i;
+        else if (p == "y")     ix_y = i;
+        else if (p == "z")     ix_z = i;
+        else if (p == "rcs")   ix_rcs = i;
+        else if (p == "snr")   ix_snr = i;
+        else if (p == "v")     ix_v = i;
+        else if (p == "label") ix_label = i;
+    }
 
-    int num_points = static_cast<int>(x_data->count);
-    PointCloud pc(num_points);
+    if (ix_x < 0 || ix_y < 0 || ix_z < 0)
+        throw std::runtime_error("PLY missing x/y/z field");
 
-    // Read value as float regardless of stored type
-    auto read_float = [](const std::shared_ptr<tinyply::PlyData>& d, size_t i) -> float {
-        float v = 0.0f;
-        const void* buf = d->buffer.get();
-        switch (d->t) {
-            case tinyply::Type::FLOAT32: v = static_cast<const float*>(buf)[i]; break;
-            case tinyply::Type::FLOAT64: v = static_cast<float>(static_cast<const double*>(buf)[i]); break;
-            case tinyply::Type::INT32:   v = static_cast<float>(static_cast<const int32_t*>(buf)[i]); break;
-            case tinyply::Type::UINT8:   v = static_cast<float>(static_cast<const uint8_t*>(buf)[i]); break;
-            case tinyply::Type::INT8:    v = static_cast<float>(static_cast<const int8_t*>(buf)[i]); break;
-            default: break;
-        }
-        return std::isnan(v) ? 0.0f : v;
-    };
+    // Phase 2: read data ourselves (tinyply's read() can't handle 'nan' literals)
+    stream.clear(); // in case parse_header set eof/fail
+    PointCloud pc(num_vertices);
+    int nprop = (int)prop_names.size();
+    std::vector<float> vals(nprop);
+    std::string line;
 
-    for (int i = 0; i < num_points; i++) {
-        pc.coord[i * 3 + 0] = read_float(x_data, i);
-        pc.coord[i * 3 + 1] = read_float(y_data, i);
-        pc.coord[i * 3 + 2] = read_float(z_data, i);
+    for (int i = 0; i < num_vertices; i++) {
+        if (!std::getline(stream, line))
+            throw std::runtime_error(
+                "PLY truncated: expected " + std::to_string(num_vertices)
+                + " points, got " + std::to_string(i));
+        std::istringstream iss(line);
+        for (int j = 0; j < nprop; j++)
+            if (!(iss >> vals[j])) vals[j] = 0.0f;
+        for (int j = 0; j < nprop; j++)
+            if (std::isnan(vals[j])) vals[j] = 0.0f;
 
-        pc.feat[i * 3 + 0] = read_float(rcs_data, i);
-        pc.feat[i * 3 + 1] = read_float(snr_data, i);
-        pc.feat[i * 3 + 2] = read_float(v_data, i);
+        pc.coord[i*3+0] = vals[ix_x];
+        pc.coord[i*3+1] = vals[ix_y];
+        pc.coord[i*3+2] = vals[ix_z];
+        pc.feat[i*3+0]  = ix_rcs >= 0 ? vals[ix_rcs] : 0.0f;
+        pc.feat[i*3+1]  = ix_snr >= 0 ? vals[ix_snr] : 0.0f;
+        pc.feat[i*3+2]  = ix_v >= 0   ? vals[ix_v]   : 0.0f;
 
-        if (label_data && label_data->buffer.get()) {
-            pc.label[i] = read_float(label_data, i);
+        if (ix_label >= 0) {
+            pc.label[i] = std::isnan(vals[ix_label]) ? 0.0f : vals[ix_label];
             pc.has_label = true;
         } else {
             pc.label[i] = 0.0f;
@@ -159,8 +167,8 @@ PointCloud load_data_ply(const std::string& data_path) {
 static uint64_t fnv_hash_coord(const int64_t* coord3) {
     uint64_t hash = 14695981039346656037ULL;
     for (int j = 0; j < 3; j++) {
-        hash ^= static_cast<uint64_t>(coord3[j]);
         hash *= 1099511628211ULL;
+        hash ^= static_cast<uint64_t>(coord3[j]);
     }
     return hash;
 }
