@@ -180,7 +180,7 @@ def main():
     parser.add_argument('--stats_file', type=str,
                         default='data/RadarClassi/radarfull/processed/feat_stats_area5.pth',
                         help='Feature statistics file')
-    parser.add_argument('--num_files', type=int, default=3,
+    parser.add_argument('--num_files', type=int, default=30,
                         help='Number of files to test (use -1 for all)')
     parser.add_argument('--compare', action='store_true', default=True,
                         help='Compare ONNX vs PyTorch outputs')
@@ -239,11 +239,11 @@ def main():
         f for f in os.listdir(args.data_dir)
         if f.endswith('.ply')
     ])
-    np.random.seed(100)
-    np.random.shuffle(all_files)
+    # np.random.seed(100)
+    # np.random.shuffle(all_files)
     n_total = len(all_files)
     # Take last 17% as test (matching generate_data_list in main.py)
-    test_files = all_files[int(n_total * 0.83):]
+    test_files = all_files[int(n_total * 0.2):]
     if args.num_files > 0:
         test_files = test_files[:args.num_files]
     print(f'  Total PLY files: {n_total}')
