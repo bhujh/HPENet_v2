@@ -66,6 +66,8 @@ class RadarClassi(Dataset):
             self.data_list = data_list[:int(n * 0.83)]
         else:
             self.data_list = data_list[int(n * 0.83):]
+        # print(self.data_list)
+        # os.abort()
 
         processed_root = os.path.join(data_root, 'processed')
         filename = os.path.join(
@@ -83,7 +85,7 @@ class RadarClassi(Dataset):
                 # print(cdata.shape)
                 cdata[:, :3] -= np.min(cdata[:, :3], 0)
                 if voxel_size:
-                    coord, feat, label = cdata[:,0:3], cdata[:, 3:6], cdata[:, 6:7]
+                    coord, feat, label = cdata[:,0:3], cdata[:, 3:-1], cdata[:, -1:]
                     uniq_idx = voxelize(coord, voxel_size)
                     coord, feat, label = coord[uniq_idx], feat[uniq_idx], label[uniq_idx]
                     cdata = np.hstack((coord, feat, label))
@@ -103,11 +105,21 @@ class RadarClassi(Dataset):
         assert len(self.data_idx) > 0
         logging.info(f"\nTotally {len(self.data_idx)} samples in {split} set")
 
+        
         stats_file = os.path.join(processed_root, f'feat_stats_area{test_area}.pth')
         if split == 'train':
+            featDim = 0  # 使用的特征维度
+            if len(self.data_list)>1:
+                data_path = os.path.join(self.raw_root, self.data_list[0] + '.ply')
+                cdata = self._load_ply_by_fields(data_path)
+                featDim = cdata[:, 3:-1].shape[-1]
+                # print(data_path)
+                # print("featDim:",featDim)
+                # os.abort()
+
             counts = np.zeros(self.num_classes, dtype=np.int32)
-            feat_sum = np.zeros(3, dtype=np.float64)
-            feat_sq_sum = np.zeros(3, dtype=np.float64)
+            feat_sum = np.zeros(featDim, dtype=np.float64)
+            feat_sq_sum = np.zeros(featDim, dtype=np.float64)
             z_sum = 0.0
             z_sq_sum = 0.0
             n_total = 0
@@ -118,10 +130,10 @@ class RadarClassi(Dataset):
                 # cdata = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
                 cdata = self._load_ply_by_fields(data_path)
                 cdata[:, :3] -= np.min(cdata[:, :3], 0)
-                labels = cdata[:, 6].astype(np.int32)
+                labels = cdata[:, -1].astype(np.int32)
                 for cls_idx in range(self.num_classes):
                     counts[cls_idx] += (labels == cls_idx).sum()
-                feat = np.nan_to_num(cdata[:, 3:6], nan=0.0)
+                feat = np.nan_to_num(cdata[:, 3:-1], nan=0.0)
                 z = np.nan_to_num(cdata[:, 2], nan=0.0)
                 feat_sum += feat.sum(axis=0)
                 feat_sq_sum += (feat ** 2).sum(axis=0)
@@ -159,7 +171,7 @@ class RadarClassi(Dataset):
     def __getitem__(self, idx):
         data_idx = self.data_idx[idx % len(self.data_idx)]
         if self.presample:
-            coord, feat, label = np.split(self.data[data_idx], [3, 6], axis=1)
+            coord, feat, label = np.split(self.data[data_idx], [3, -1], axis=1)
             coord = np.nan_to_num(coord, nan=0.0)
             feat = np.nan_to_num(feat, nan=0.0)
             label = np.nan_to_num(label, nan=0.0)
@@ -172,7 +184,7 @@ class RadarClassi(Dataset):
             cdata = self._load_ply_by_fields(data_path)
             cdata[:, :3] -= np.min(cdata[:, :3], 0)
             # cdata = np.nan_to_num(cdata, nan=0.0)
-            coord, feat, label = cdata[:, :3], cdata[:, 3:6], cdata[:, 6:7]
+            coord, feat, label = cdata[:, :3], cdata[:, 3:-1], cdata[:, -1:]
             coord, feat, label = crop_pc(
                 coord, feat, label, self.split, self.voxel_size, self.voxel_max,
                 downsample=not self.presample, variable=self.variable, shuffle=self.shuffle)
@@ -208,12 +220,12 @@ class RadarClassi(Dataset):
         vertex = plydata["vertex"].data
         # 检查字段是否存在
 
-        required = ["x", "y", "z", "rcs", "snr", "v", "label"]
+        required = ["x", "y", "z", "mag", "rcs", "snr", "v", "label"]
         for f in required:
             if f not in vertex.dtype.names:
                 raise ValueError(f"字段 '{f}' 不存在于 PLY 文件中")
 
-        cdata = np.column_stack((vertex["x"], vertex["y"], vertex["z"], vertex["rcs"], vertex["snr"], vertex["v"], vertex["label"])).astype(np.float32)
+        cdata = np.column_stack((vertex["x"], vertex["y"], vertex["z"], vertex["mag"], vertex["rcs"], vertex["snr"], vertex["v"], vertex["label"])).astype(np.float32)
         cdata = np.nan_to_num(cdata, nan=0.0)
         return cdata
 
