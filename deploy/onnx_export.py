@@ -35,10 +35,10 @@ class HPENetONNXWrapper(nn.Module):
         return self.model({'pos': pos, 'x': x})
 
 
-def load_config():
+def load_config(cfg_path:str):
     """Load the 3-level config cascade."""
     cfg = EasyConfig()
-    cfg.load('cfgs/radar/hpenet-l.yaml', recursive=True)
+    cfg.load(cfg_path, recursive=True)
     return cfg
 
 
@@ -79,7 +79,7 @@ def export_onnx(wrapped_model, output_path, num_points=3500):
     wrapped_model.eval()
     wrapped_model.cpu()
 
-    B, N, C_in = 1, num_points, 4  # 4 = rcs, snr, v, z_height
+    B, N, C_in = 1, num_points, 5  # 4 = rcs, snr, v, z_height
     device = 'cpu'
 
     pos = torch.randn(B, N, 3, device=device)
@@ -123,7 +123,7 @@ def test_pytorch_forward(model, wrapped_model):
     """Run a forward pass to verify patched model produces sensible output."""
     B, N = 1, 3500
     pos = torch.randn(B, N, 3)
-    x = torch.randn(B, 4, N)
+    x = torch.randn(B, 5, N)
 
     with torch.no_grad():
         out = wrapped_model(pos, x)
@@ -143,10 +143,13 @@ def test_pytorch_forward(model, wrapped_model):
 def main():
     parser = argparse.ArgumentParser(description='Export HPENet V2 to ONNX')
     parser.add_argument('--checkpoint', type=str,
-                        default='log/radar/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g/checkpoint/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g_ckpt_best.pth',
+                        default='log/radar/radar-train-hpenet-ll-ngpus1-20260625-144233-c5U2epnpA9JLFW53JxxUSj/checkpoint/radar-train-hpenet-ll-ngpus1-20260625-144233-c5U2epnpA9JLFW53JxxUSj_ckpt_best.pth',
                         help='Path to the checkpoint .pth file')
+    parser.add_argument('--cfg', type=str,
+                        default='cfgs/radar/hpenet-ll.yaml',
+                        help='Path to the cfg .yaml file')
     parser.add_argument('--output', type=str,
-                        default='deploy/onnx_model.onnx',
+                        default='deploy/onnx_model_feat5.onnx',
                         help='Output ONNX file path')
     parser.add_argument('--num_points', type=int, default=3500,
                         help='Maximum number of points for dummy export input (voxel_max)')
@@ -160,7 +163,7 @@ def main():
 
     # 1. Load config
     print('\n[1/5] Loading config cascade...')
-    cfg = load_config()
+    cfg = load_config(args.cfg)
     if cfg.model.get('in_channels', None) is None:
         cfg.model.in_channels = cfg.model.encoder_args.in_channels
     print(f'  Model: {cfg.model.NAME}')

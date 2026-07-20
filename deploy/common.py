@@ -32,25 +32,25 @@ def load_data_ply(data_path):
     plydata = PlyData.read(data_path)
     vertex = plydata["vertex"].data
 
-    required = ["x", "y", "z", "rcs", "snr", "v", "label"]
+    required = ["x", "y", "z", "mag", "rcs", "snr", "v", "label"]
     for f in required:
         if f not in vertex.dtype.names:
             raise ValueError(f"Field '{f}' not found in {data_path}")
 
     data = np.column_stack((
         vertex["x"], vertex["y"], vertex["z"],
-        vertex["rcs"], vertex["snr"], vertex["v"],
+        vertex["mag"], vertex["rcs"], vertex["snr"], vertex["v"],
         vertex["label"],
     )).astype(np.float32)
     data = np.nan_to_num(data, nan=0.0)
 
     coord = data[:, :3]
-    feat = data[:, 3:6]
-    label = data[:, 6]
+    feat = data[:, 3:-1]
+    label = data[:, -1]
     return coord, feat, label
 
 
-def preprocess_test(coord, feat, voxel_size=0.1):
+def preprocess_test(coord, feat, voxel_size=0.3):
     """Voxelize → split into sub-clouds (one point per voxel per shift)."""
     coord = coord - coord.min(0)
 

@@ -132,7 +132,7 @@ class TRTSession:
 
         # --- set dynamic input shapes ---
         self.context.set_input_shape("pos", (1, N, 3))
-        self.context.set_input_shape("x", (1, 4, N))
+        self.context.set_input_shape("x", (1, x.shape[1], N))
 
         # --- transfer inputs to GPU ---
         if "pos" not in self._input_buffers or self._input_buffers["pos"].shape != pos.shape:

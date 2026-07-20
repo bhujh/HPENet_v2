@@ -83,9 +83,9 @@ def build_engine(onnx_path, engine_path, fp16=False,
 
     # x: (1, 4, N) — dynamic on dim 2
     profile.set_shape("x",
-                      (1, 4, min_n),
-                      (1, 4, opt_n),
-                      (1, 4, max_n))
+                      (1, 5, min_n),
+                      (1, 5, opt_n),
+                      (1, 5, max_n))
 
     # ---------- 4. Builder configuration ----------
     config = builder.create_builder_config()
@@ -129,7 +129,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Build TensorRT engine from ONNX model (TRT 8.6.1+)"
     )
-    parser.add_argument("--onnx", type=str, default="deploy/onnx_model.onnx",
+    parser.add_argument("--onnx", type=str, default="deploy/onnx_model_feat5.onnx",
                         help="Path to input ONNX model")
     parser.add_argument("--output", type=str, default=None,
                         help="Output engine path (default: trt_model_fp{32,16}.engine)")
@@ -139,7 +139,7 @@ def main():
                         help="Minimum point count for dynamic profile")
     parser.add_argument("--opt_n", type=int, default=3500,
                         help="Optimal point count for dynamic profile")
-    parser.add_argument("--max_n", type=int, default=6000,
+    parser.add_argument("--max_n", type=int, default=10000,
                         help="Maximum point count for dynamic profile")
     parser.add_argument("--workspace", type=int, default=2,
                         help="GPU workspace in GiB")
@@ -147,7 +147,7 @@ def main():
 
     if args.output is None:
         suffix = "fp16" if args.fp16 else "fp32"
-        args.output = f"deploy/trt_model_{suffix}.engine"
+        args.output = f"deploy/trt_model_feat5_{suffix}.engine"
 
     print("=" * 60)
     print("HPENet V2 → TensorRT Engine Builder (TRT 8.6)")

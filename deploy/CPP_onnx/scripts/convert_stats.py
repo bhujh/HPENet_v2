@@ -4,7 +4,11 @@
 Usage:
     python3 convert_stats.py --input feats_stats.pth --output stats.json
 """
+import os
+import sys
 
+# Add project root to path (mirrors examples/segmentation/__init__.py)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 import argparse
 import json
 import torch
@@ -12,8 +16,8 @@ import torch
 
 def main():
     parser = argparse.ArgumentParser(description="Convert .pth stats to JSON")
-    parser.add_argument("--input", required=True, help="Path to .pth stats file")
-    parser.add_argument("--output", default="stats.json", help="Output JSON path")
+    parser.add_argument("--input", type=str, required=True, default="data/RadarClassi/radarfullwl/processed/feat_stats_area5.pth", help="Path to .pth stats file")
+    parser.add_argument("--output", default="stats_feat5.json", help="Output JSON path")
     args = parser.parse_args()
 
     stats = torch.load(args.input, map_location="cpu", weights_only=True)

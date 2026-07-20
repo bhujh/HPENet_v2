@@ -169,16 +169,19 @@ def infer_one_cloud_pytorch(model, coord, feat, idx_points, feat_mean, feat_std,
 
 def main():
     parser = argparse.ArgumentParser(description='HPENet V2 ONNX Inference')
-    parser.add_argument('--onnx', type=str, default='deploy/onnx_model.onnx',
+    parser.add_argument('--onnx', type=str, default='deploy/onnx_model_feat5.onnx',
                         help='Path to ONNX model')
     parser.add_argument('--checkpoint', type=str,
-                        default='log/radar/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g/checkpoint/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g_ckpt_best.pth',
+                        default='log/radar/radar-train-hpenet-ll-ngpus1-20260625-144233-c5U2epnpA9JLFW53JxxUSj/checkpoint/radar-train-hpenet-ll-ngpus1-20260625-144233-c5U2epnpA9JLFW53JxxUSj_ckpt_best.pth',
                         help='Path to PyTorch checkpoint (for comparison)')
+    parser.add_argument('--cfg', type=str,
+                        default='cfgs/radar/hpenet-ll.yaml',
+                        help='Path to the cfg .yaml file')
     parser.add_argument('--data_dir', type=str,
-                        default='data/RadarClassi/radarfull/raw',
+                        default='data/RadarClassi/radarfullwl/raw',
                         help='Directory of test PLY files')
     parser.add_argument('--stats_file', type=str,
-                        default='data/RadarClassi/radarfull/processed/feat_stats_area5.pth',
+                        default='data/RadarClassi/radarfullwl/processed/feat_stats_area5.pth',
                         help='Feature statistics file')
     parser.add_argument('--num_files', type=int, default=30,
                         help='Number of files to test (use -1 for all)')
@@ -213,13 +216,14 @@ def main():
 
     # Load PyTorch model for comparison
     pt_model = None
+    print('\n[3a/4] Loading PyTorch model for comparison...')
+    cfg = EasyConfig()
+    cfg.load(args.cfg, recursive=True)
+    if cfg.model.get('in_channels', None) is None:
+        cfg.model.in_channels = cfg.model.encoder_args.in_channels
+    
     if args.compare:
-        print('\n[3a/4] Loading PyTorch model for comparison...')
-        cfg = EasyConfig()
-        cfg.load('cfgs/radar/hpenet-l.yaml', recursive=True)
-        if cfg.model.get('in_channels', None) is None:
-            cfg.model.in_channels = cfg.model.encoder_args.in_channels
-
+        
         pt_model = build_model_from_cfg(cfg.model)
         ckpt = torch.load(args.checkpoint, map_location='cpu')
         state_dict = ckpt.get('model', ckpt.get('state_dict', ckpt))
@@ -255,10 +259,12 @@ def main():
     gravity_dim = 2
 
     for cloud_idx, fname in enumerate(tqdm(test_files, desc='Inference')):
+        # print("radius:", type(cfg.model.encoder_args.radius))
+
         data_path = os.path.join(args.data_dir, fname)
         coord, feat, label = load_data_ply(data_path)
         coord, feat, idx_points, _, _, _ = preprocess_test(
-            coord, feat, voxel_size=0.1,
+            coord, feat, voxel_size=float(cfg.model.encoder_args.radius),
         )
 
         # ONNX inference

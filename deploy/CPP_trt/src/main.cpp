@@ -29,7 +29,7 @@
 // ---------------------------------------------------------------------------
 struct CLIConfig {
     std::string engine_path  = "deploy/trt_model_fp32.engine";
-    std::string stats_path   = "deploy/CPP/stats.json";
+    std::string stats_path   = "deploy/CPP_trt/stats.json";
     std::string data_dir     = "data/RadarClassi/radarfull/raw";
     int    num_files    = -1;
     int    min_n        = 1024;

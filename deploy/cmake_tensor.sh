@@ -1,10 +1,14 @@
 # linux trt8.6
-cd deploy/CPP && rm -rf build && mkdir build && cd build
+cd deploy/CPP_trt && rm -rf build && mkdir build && cd build
 cmake .. -G "Unix Makefiles" \
   -DTENSORRT_ROOT=/usr/local/TensorRT-8.6.1.6 \
   -DCMAKE_CUDA_ARCHITECTURES="80;86;89"
 make -j$(nproc)
 ctest --output-on-failure
+
+# 执行：
+cd ~/CODE/HPENet_v2-main
+./deploy/CPP_trt/build/hpenet_trt_infer
 
 
 # linux trt10.16

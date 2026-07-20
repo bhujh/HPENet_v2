@@ -169,21 +169,22 @@ def infer_one_cloud_pytorch(model, coord, feat, idx_points, feat_mean, feat_std,
 
 def main():
     parser = argparse.ArgumentParser(description='HPENet V2 ONNX Inference')
-    parser.add_argument('--onnx', type=str, default='deploy/onnx_model.onnx',
+    parser.add_argument('--onnx', type=str, default='deploy/onnx_model_feat5.onnx',
                         help='Path to ONNX model')
     parser.add_argument('--checkpoint', type=str,
                         default='log/radar/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g/checkpoint/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g_ckpt_best.pth',
                         help='Path to PyTorch checkpoint (for comparison)')
+    parser.add_argument('--cfgPath', type=str,
+                        default='cfgs/radar/hpenet-ll.yaml',
+                        help='Path to the cfg .yaml file')
     parser.add_argument('--data_dir', type=str,
-                        default='data/RadarClassi/radarfull/raw',
+                        default='data/RadarClassi/radarfullwl/raw',
                         help='Directory of test PLY files')
     parser.add_argument('--stats_file', type=str,
-                        default='data/RadarClassi/radarfull/processed/feat_stats_area5.pth',
+                        default='data/RadarClassi/radarfullwl/processed/feat_stats_area5.pth',
                         help='Feature statistics file')
-    parser.add_argument('--num_files', type=int, default=3,
+    parser.add_argument('--num_files', type=int, default=10,
                         help='Number of files to test (use -1 for all)')
-    parser.add_argument('--compare', action='store_true', default=True,
-                        help='Compare ONNX vs PyTorch outputs')
     args = parser.parse_args()
 
     print('=' * 60)
@@ -211,6 +212,12 @@ def main():
     print(f'  z_mean:    {z_mean.item():.4f}')
     print(f'  z_std:     {z_std.item():.4f}')
 
+    # load config param
+    cfg = EasyConfig()
+    cfg.load(args.cfgPath, recursive=True)
+    if cfg.model.get('in_channels', None) is None:
+        cfg.model.in_channels = cfg.model.encoder_args.in_channels
+
 
     # Get data files
     print(f'\n[3/4] Listing test files from: {args.data_dir}')
@@ -237,7 +244,7 @@ def main():
         data_path = os.path.join(args.data_dir, fname)
         coord, feat, label = load_data_ply(data_path)
         coord, feat, idx_points, _, _, _ = preprocess_test(
-            coord, feat, voxel_size=0.1,
+            coord, feat, voxel_size=float(cfg.model.encoder_args.radius),
         )
 
         # ONNX inference

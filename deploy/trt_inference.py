@@ -148,18 +148,21 @@ def infer_one_cloud_pytorch(model, coord, feat, idx_points, feat_mean, feat_std,
 
 def main():
     parser = argparse.ArgumentParser(description="HPENet V2 TensorRT Inference")
-    parser.add_argument("--engine", type=str, default="deploy/trt_model_fp32.engine",
+    parser.add_argument("--engine", type=str, default="deploy/trt_model_feat5_fp32.engine",
                         help="Path to TensorRT engine")
-    parser.add_argument("--onnx", type=str, default="deploy/onnx_model.onnx",
+    parser.add_argument("--onnx", type=str, default="deploy/onnx_model_feat5.onnx",
                         help="Path to ONNX model (for comparison)")
     parser.add_argument("--checkpoint", type=str,
-                        default="log/radar/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g/checkpoint/radar-train-hpenet-l-ngpus1-20260515-013127-HXWMALkaAC4GiUWjNV5c3g_ckpt_best.pth",
+                        default="log/radar/radar-train-hpenet-ll-ngpus1-20260625-144233-c5U2epnpA9JLFW53JxxUSj/checkpoint/radar-train-hpenet-ll-ngpus1-20260625-144233-c5U2epnpA9JLFW53JxxUSj_ckpt_best.pth",
                         help="Path to PyTorch checkpoint (for comparison)")
+    parser.add_argument('--cfgPath', type=str,
+                        default='cfgs/radar/hpenet-ll.yaml',
+                        help='Path to the cfg .yaml file')
     parser.add_argument("--data_dir", type=str,
-                        default="data/RadarClassi/radarfull/raw",
+                        default="data/RadarClassi/radarfullwl/raw",
                         help="Directory of test PLY files")
     parser.add_argument("--stats_file", type=str,
-                        default="data/RadarClassi/radarfull/processed/feat_stats_area5.pth",
+                        default="data/RadarClassi/radarfullwl/processed/feat_stats_area5.pth",
                         help="Feature statistics file")
     parser.add_argument("--num_files", type=int, default=10,
                         help="Number of test files (use -1 for all)")
@@ -177,6 +180,10 @@ def main():
 
     # --- Env ---
     setup_trt_env()
+    cfg = EasyConfig()
+    cfg.load(args.cfgPath, recursive=True)
+    if cfg.model.get("in_channels", None) is None:
+        cfg.model.in_channels = cfg.model.encoder_args.in_channels
 
     # --- Load TRT ---
     print(f"\n[1/4] Loading TRT engine: {args.engine}")
@@ -186,7 +193,7 @@ def main():
     # --- Warmup ---
     print(f"\n[2/4] Warmup ({args.warmup} runs)...")
     warmup_pos = np.random.randn(1, args.min_n, 3).astype(np.float32)
-    warmup_x = np.random.randn(1, 4, args.min_n).astype(np.float32)
+    warmup_x = np.random.randn(1, cfg.model.encoder_args.in_channels, args.min_n).astype(np.float32)
     for _ in range(args.warmup):
         trt_session.run(warmup_pos, warmup_x)
     print("  Warmup done.")
@@ -201,10 +208,7 @@ def main():
             args.onnx, providers=["CPUExecutionProvider"]
         )
 
-        cfg = EasyConfig()
-        cfg.load("cfgs/radar/hpenet-l.yaml", recursive=True)
-        if cfg.model.get("in_channels", None) is None:
-            cfg.model.in_channels = cfg.model.encoder_args.in_channels
+        
         pt_model = build_model_from_cfg(cfg.model)
         ckpt = torch.load(args.checkpoint, map_location="cpu")
         state_dict = ckpt.get("model", ckpt.get("state_dict", ckpt))
@@ -249,8 +253,9 @@ def main():
     for cloud_idx, fname in enumerate(tqdm(test_files, desc="Inference")):
         data_path = os.path.join(args.data_dir, fname)
         coord, feat, label = load_data_ply(data_path)
+        # print("coord'shape:",coord.shape)
         coord, feat, idx_points, _, _, _ = preprocess_test(
-            coord, feat, voxel_size=0.1,
+            coord, feat, voxel_size=cfg.model.encoder_args.radius,
         )
         label_t = torch.from_numpy(label.astype(np.int64))
 
