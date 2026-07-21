@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(hpenet_trt_infer LANGUAGES CXX CUDA)
+project(hpenet_trt_infer LANGUAGES C CXX CUDA)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -46,7 +46,7 @@ FetchContent_MakeAvailable(googletest)
 
 # 可执行文件
 add_executable(hpenet_trt_infer
-    src/main.cpp
+    src/test_rpc.c
     src/pipeline.cpp
     src/ply_reader.cpp
     src/trt_inference.cpp

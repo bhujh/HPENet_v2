@@ -174,7 +174,7 @@ extern "C" {
         // 允许重新初始化: 先销毁旧管线
         if (g_trtinfer_handle) {
             trt_pipeline_destroy();
-            return nullptr;
+            // return nullptr;
         }
         try {
             auto handle = std::make_unique<TensorrtInferencePipeline_C>();
@@ -186,7 +186,7 @@ extern "C" {
             );
             //释放所有权，将裸指针
             g_trtinfer_handle = handle.release();
-            return nullptr;
+            return g_trtinfer_handle;
         }
         catch (const std::exception& e) {
             // 创建失败，返回 NULL
@@ -322,7 +322,10 @@ extern "C" {
                 return -2.0f;
             }
             //保存初始雷达点云
-            write_annotated_ply<float>(std::string("D:/ProgramData/hpenet_deploy/radarfull/output/data0000071.ply"), pc, pc.label);
+            write_annotated_ply<float>(
+                std::string("/home/wangpeng/CODE/HPENet_v2-main/deploy/"
+                            "CPP_trt1/output/data0000071.ply"),
+                pc, pc.label);
             std::cerr << "first write_annotated_ply" << std::endl;
 
             // 2. 执行推理
@@ -334,7 +337,10 @@ extern "C" {
             std::cerr << "inference" << std::endl;
 
             //保存预测结果雷达点云
-            write_annotated_ply<int>(std::string("D:/ProgramData/hpenet_deploy/radarfull/output/result0000071.ply"), pc, result.predictions);
+            write_annotated_ply<int>(
+                std::string("/home/wangpeng/CODE/HPENet_v2-main/deploy/"
+                            "CPP_trt1/output/result0000071.ply"),
+                pc, result.predictions);
             std::cerr << "second write_annotated_ply" << std::endl;
 
             // 3. 结果更新

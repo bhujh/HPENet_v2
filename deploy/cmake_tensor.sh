@@ -5,7 +5,6 @@ cmake .. -G "Unix Makefiles" \
   -DCMAKE_CUDA_ARCHITECTURES="80;86;89"
 make -j$(nproc)
 ctest --output-on-failure
-
 # 执行：
 cd ~/CODE/HPENet_v2-main
 ./deploy/CPP_trt/build/hpenet_trt_infer
@@ -16,6 +15,9 @@ cd deploy/CPP_trt1 && rm -rf build && mkdir build && cd build
 cmake .. -G "Unix Makefiles" -DTENSORRT_ROOT=/usr/local/TensorRT-8.6.1.6 -DCMAKE_CUDA_ARCHITECTURES="80;86;89"
 make -j$(nproc)
 ctest --output-on-failure
+# 执行：
+cd ~/CODE/HPENet_v2-main
+./deploy/CPP_trt1/build/hpenet_trt_infer "/home/wangpeng/CODE/HPENet_v2-main/deploy/trt_model_fp32.engine" "/home/wangpeng/CODE/HPENet_v2-main/deploy/CPP_trt/stats.json" "/home/wangpeng/CODE/HPENet_v2-main/data/RadarClassi/radarfull/raw/0000071.ply" "/home/wangpeng/CODE/HPENet_v2-main/deploy/CPP_trt1/output/baocun0000071.ply"
 
 
 # windows msvc2019 trt10.16
