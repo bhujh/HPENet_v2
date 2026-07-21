@@ -11,11 +11,9 @@ cd ~/CODE/HPENet_v2-main
 ./deploy/CPP_trt/build/hpenet_trt_infer
 
 
-# linux trt10.16
-cd deploy/CPP && rm -rf build && mkdir build && cd build
-cmake .. -G "Unix Makefiles" \
-  -DTENSORRT_ROOT=/usr/local/TensorRT-10.16.1.11 \
-  -DCMAKE_CUDA_ARCHITECTURES="120"
+# C接口的tensorrt部署代码
+cd deploy/CPP_trt1 && rm -rf build && mkdir build && cd build
+cmake .. -G "Unix Makefiles" -DTENSORRT_ROOT=/usr/local/TensorRT-8.6.1.6 -DCMAKE_CUDA_ARCHITECTURES="80;86;89"
 make -j$(nproc)
 ctest --output-on-failure
 
