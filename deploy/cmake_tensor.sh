@@ -25,8 +25,8 @@ cd deploy\CPP
 rmdir /s /q build
 mkdir build
 cd build
-cmake .. -G "Visual Studio 16 2019" -A x64 ^
-  -DTENSORRT_ROOT=C:/TensorRT-10.16.1.11 ^
+cmake .. -G "Visual Studio 16 2019" -A x64 \
+  -DTENSORRT_ROOT=C:/TensorRT-10.16.1.11 \
   -DCMAKE_CUDA_ARCHITECTURES="120"
 cmake --build . --config Release -j
 ctest --output-on-failure -C Release
