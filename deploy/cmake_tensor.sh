@@ -20,6 +20,18 @@ cd ~/CODE/HPENet_v2-main
 ./deploy/CPP_trt1/build/hpenet_trt_infer "/home/wangpeng/CODE/HPENet_v2-main/deploy/trt_model_fp32.engine" "/home/wangpeng/CODE/HPENet_v2-main/deploy/CPP_trt/stats.json" "/home/wangpeng/CODE/HPENet_v2-main/data/RadarClassi/radarfull/raw/0000071.ply" "/home/wangpeng/CODE/HPENet_v2-main/deploy/CPP_trt1/output/baocun0000071.ply"
 
 
+# 交叉编译trt/C接口代码
+rm -rf build && mkdir build && cd build
+cmake .. -G "Unix Makefiles" -DCMAKE_CUDA_FLAGS="-cudart shared" -DCMAKE_TOOLCHAIN_FILE=./toolchain.cmake -DTENSORRT_ROOT=/usr/local/TensorRT-aarch64-8.2.5.1 -DCMAKE_CUDA_ARCHITECTURES="87"
+make -j$(nproc)
+####################
+cmake -B build-aarch64 -DCMAKE_TOOLCHAIN_FILE=aarch64-toolchain.cmake (-DTensorRT_ROOT=/usr/local/TensorRT-aarch64-8.5.3.1)
+cmake --build build-aarch64 -j$(nproc)
+./build-aarch64/hpenet_trt_infer
+scp build-aarch64/hpenet_trt_infer adas@192.168.137.40:/home/adas/CODE/CPP_trt1/build-aarch64/
+#################################
+
+
 # windows msvc2019 trt10.16
 cd deploy\CPP
 rmdir /s /q build
