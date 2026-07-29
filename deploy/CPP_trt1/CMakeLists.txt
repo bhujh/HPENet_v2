@@ -46,7 +46,7 @@ FetchContent_MakeAvailable(googletest)
 
 # 可执行文件
 add_executable(hpenet_trt_infer
-    src/test_rpc.c
+    src/test.c
     src/pipeline.cpp
     src/ply_reader.cpp
     src/trt_inference.cpp

@@ -32,7 +32,7 @@ from deploy.trt_utils import setup_trt_env, _TRT_LIB_PATH, _CUDA_LIB_PATH
 
 def build_engine(onnx_path, engine_path, fp16=False,
                  min_n=1024, opt_n=3500, max_n=6000,
-                 workspace_gb=2):
+                 workspace_gb=2,num_features=4):
     """Build a serialized TensorRT engine from an ONNX model.
 
     Args:
@@ -83,9 +83,9 @@ def build_engine(onnx_path, engine_path, fp16=False,
 
     # x: (1, 4, N) — dynamic on dim 2
     profile.set_shape("x",
-                      (1, 5, min_n),
-                      (1, 5, opt_n),
-                      (1, 5, max_n))
+                      (1, num_features, min_n),
+                      (1, num_features, opt_n),
+                      (1, num_features, max_n))
 
     # ---------- 4. Builder configuration ----------
     config = builder.create_builder_config()
@@ -143,6 +143,8 @@ def main():
                         help="Maximum point count for dynamic profile")
     parser.add_argument("--workspace", type=int, default=2,
                         help="GPU workspace in GiB")
+    parser.add_argument("--num_input_features", type=int, default=5,
+                            help="num of input features")
     args = parser.parse_args()
 
     if args.output is None:
@@ -168,6 +170,7 @@ def main():
         opt_n=args.opt_n,
         max_n=args.max_n,
         workspace_gb=args.workspace,
+        num_features=args.num_input_features
     )
 
     print("\nDone!")
