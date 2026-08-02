@@ -47,7 +47,7 @@ def build_engine(onnx_path, engine_path, fp16=False,
     Returns:
         bytes: The serialized engine.
     """
-    logger = trt.Logger(trt.Logger.WARNING)
+    logger = trt.Logger(trt.Logger.VERBOSE)
 
     # ---------- 1. Create builder & network ----------
     builder = trt.Builder(logger)
