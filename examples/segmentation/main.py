@@ -90,14 +90,14 @@ def load_data(data_path, cfg):
         # data = plydata["vertex"].data.view(np.float32).reshape(-1, 7)
         vertex = plydata["vertex"].data
         # 检查字段是否存在
-        required = ["x", "y", "z", "rcs", "snr", "v", "label"]
+        required = ["x", "y", "z", "mag", "rcs", "snr", "v", "label"]
         for f in required:
             if f not in vertex.dtype.names:
                 raise ValueError(f"字段 '{f}' 不存在于 PLY 文件中")
 
-        data = np.column_stack((vertex["x"], vertex["y"], vertex["z"], vertex["rcs"], vertex["snr"], vertex["v"], vertex["label"])).astype(np.float32)
+        data = np.column_stack((vertex["x"], vertex["y"], vertex["z"], vertex["mag"], vertex["rcs"], vertex["snr"], vertex["v"], vertex["label"])).astype(np.float32)
         data = np.nan_to_num(data, nan=0.0)
-        coord, feat, label = data[:, :3], data[:, 3:6], data[:, 6]
+        coord, feat, label = data[:, :3], data[:, 3:-1], data[:, -1]
         # feat = np.clip(feat / 255.0, 0, 1).astype(np.float32)
     elif 'scannet' in cfg.dataset.common.NAME.lower():
         data = torch.load(data_path)  # xyzrgbl, N*7
@@ -645,7 +645,7 @@ def test(model, data_list, cfg, num_votes=1):
         all_logits = []
         coord, feat, label, idx_points, voxel_idx, reverse_idx_part, reverse_idx  = load_data(data_path, cfg)
         if label is not None:
-            label = torch.from_numpy(label.astype(np.long).squeeze()).cuda(non_blocking=True)
+            label = torch.from_numpy(label.astype(np.int64).squeeze()).cuda(non_blocking=True)
 
         len_part = len(idx_points)
         nearest_neighbor = len_part == 1

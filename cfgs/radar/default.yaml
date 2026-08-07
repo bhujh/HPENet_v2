@@ -2,9 +2,9 @@
 dataset:
   common:
     NAME: RadarClassi
-    data_root: data/RadarClassi/radarfull
+    data_root: data/RadarClassi/radarfullwl
     test_area: 5
-    voxel_size: 0.1
+    voxel_size: 0.3 # 0.1
   train:
     split: train
     voxel_max: 3000
