@@ -1,3 +1,3 @@
 [submodule "deploy"]
 	path = deploy
-	url = http://192.168.50.3/wangpeng/deploy.git
+	url = http://192.168.50.3:5000/wangpeng/deploy.git
