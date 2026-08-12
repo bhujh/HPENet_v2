@@ -58,7 +58,7 @@ print_freq: 50
 save_freq: -1 # saving frequency for ckpt. -1 only saving the latest and the best.
 
 root_dir: log/
-pretrained_path: null # log/s3dis/s3dis-train-hpenet-xxl-ngpus1-20260508-120029-VP3mgbf4U4E87JCxkwtGEo/checkpoint/s3dis-train-hpenet-xxl-ngpus1-20260508-120029-VP3mgbf4U4E87JCxkwtGEo_ckpt_latest.pth
+pretrained_path: null # log/radar/radar-train-hpenet-ll-ngpus1-20260811-094126-6ubUjopjLbrXQ76EQYBxgX/checkpoint/radar-train-hpenet-ll-ngpus1-20260811-094126-6ubUjopjLbrXQ76EQYBxgX_ckpt_latest.pth
 
 
 # ---------------------------------------------------------------------------- #

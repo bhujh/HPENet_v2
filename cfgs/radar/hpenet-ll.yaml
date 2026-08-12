@@ -27,7 +27,7 @@ model:
     act_args:
       act: 'relu'
     norm_args:
-      norm: 'in'
+      norm: 'bn'
   decoder_args:
     NAME: HPENetV2Decoder
   cls_args:
@@ -35,6 +35,6 @@ model:
     num_classes: 2
     in_channels: null
     norm_args:
-      norm: 'in'
+      norm: 'bn'
 
 batch_size: 8

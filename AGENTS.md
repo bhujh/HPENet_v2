@@ -1,10 +1,10 @@
 # HPENet V2 — Project Knowledge Base
 
-**Generated:** 2026-05-29 | **Commit:** ba7c195 | **Branch:** main
+**Generated:** 2026-05-29 | **Last updated:** 2026-08-12 | **Branch:** main
 
 ## OVERVIEW
 
-Point cloud deep learning for radar + lidar segmentation. Built on OpenPoints (MMCV-style registry), PyTorch 1.10.1, CUDA 11.3. Primary task: custom radar binary segmentation.
+Point cloud deep learning for radar + lidar segmentation. Built on OpenPoints (MMCV-style registry). Primary task: custom radar binary segmentation.
 
 ## STRUCTURE
 ```
@@ -20,10 +20,10 @@ HPENet_v2/
 
 ## ENVIRONMENT
 
-- **Conda**: `openpoints` (Python 3.7, PyTorch 1.10.1, CUDA 11.3)
+- **Conda**: `hpenet` (Python 3.10, PyTorch 2.2.2+cu118, CUDA 11.8)
 - **Install**: `source install.sh` — **PyTorch MUST be installed first** (line 28), then `requirements.txt` (line 31), then CUDA extensions (lines 34-53). Reversing this order breaks all extension builds.
 - **GPU arch**: `TORCH_CUDA_ARCH_LIST="6.1;6.2;7.0;7.5;8.0"` — **missing 8.6 (RTX 30xx), 8.9 (RTX 40xx)**. Add `8.6;8.9` before building for newer GPUs.
-- **Extension builds are inconsistent**: `pointnet2_batch` uses `install`, `subsampling` uses `build_ext --inplace`, `chamfer_dist/emd` use `install --user`. `.so` files end up in different locations.
+- **CUDA extensions**: `pointnet2_batch` compiled as `pointnet2_batch_cuda.cpython-310-x86_64-linux-gnu.so` (Python 3.10), installed to site-packages. `subsampling` uses `build_ext --inplace`, `chamfer_dist/emd` use `install --user`. `.so` files end up in different locations.
 - **No CI/CD** — builds are manual. No `.github/workflows/`.
 - **Submodule**: `openpoints/` is NOT a git submodule (no `.gitmodules`). Checked in directly despite `install.sh` referencing submodule commands.
 
@@ -48,12 +48,15 @@ For HPENet V2 specifically: `cfg.model.NAME: BaseSeg` → `encoder_args.NAME: HP
 
 ## RADAR DATASET (Custom)
 
-- Binary segmentation (valid/invalid), PLY input: `x, y, z, rcs, snr, v, label`
-- `feature_keys: x,heights` — radar features + z-height
-- Voxel size: 0.1 (vs 0.04 for S3DIS), InstanceNorm (vs BatchNorm for S3DIS)
+- Binary segmentation (valid/invalid), PLY input: `x, y, z, mag, rcs, snr, v, label`
+- `feature_keys: x,heights` — radar features (mag/rcs/snr/v = 4 dims) + z-height (1 dim) = 5 dims
+- `in_channels: 5` in model config (encoder expects 5-dim input after `get_features_by_keys`)
+- Voxel size: 0.3, radius: 0.3, BatchNorm (`norm: bn`)
 - `dataset.train.loop: 10` — each sample seen 10× per epoch (multiplies `__len__`)
+- `voxel_max: 3000` (train/val), `None` (test)
 - Code in `openpoints/dataset/radar/s3disRadar.py` — **misleading filename** (named after S3DIS but is radar)
 - Launch: `script_me/main_segmentation_train.sh`, `script_me/main_segmentation_test.sh`
+- **Known issue**: 7 of 8 `rel_pos.conv.0.1` BN layers in HPENetV2Encoder have `running_var=5.61e-45` (underflow to 0), causing eval-mode output explosion (~316× amplification). Stage 5 (N=11) confirmed: FPS + ball_query → dp=0 → BN dead. Stage 2-4 cause not fully confirmed.
 
 ## ANTI-PATTERNS (DO NOT)
 
