@@ -2,7 +2,9 @@
 
 ## OVERVIEW
 
-5 compiled C++/CUDA extensions providing point cloud ops. Built via `python setup.py install` during `install.sh`. Must build AFTER PyTorch (depends on `torch.utils.cpp_extension`).
+5 compiled C++/CUDA extensions providing point cloud ops. Built via `python setup.py install` during `install.sh`. Must build AFTER PyTorch (depends on `torch.utils.cpp_extension`). 注意 install.sh 本身是过时上游脚本（py3.7），实际环境为 py3.10 手动构建。
+
+**当前编译状态** (py3.10 .so): pointnet2_batch / pointops / chamfer_dist / subsampling 已编译；**emd 未编译**（系统内无 emd_cuda .so）。
 
 ## EXTENSIONS
 

@@ -39,8 +39,8 @@
 cfg=cfgs/radar/hpenet-ll.yaml
 # PY_ARGS=${@:2}
 # echo ${PY_ARGS}
-CUDA_VISIBLE_DEVICES=7 python examples/segmentation/main.py --cfg $cfg wandb.use_wandb=False mode=test \
---pretrained_path log/radar/radar-train-hpenet-ll-ngpus1-20260625-144233-c5U2epnpA9JLFW53JxxUSj/checkpoint/radar-train-hpenet-ll-ngpus1-20260625-144233-c5U2epnpA9JLFW53JxxUSj_ckpt_best.pth
+CUDA_VISIBLE_DEVICES=4 python examples/segmentation/main.py --cfg $cfg wandb.use_wandb=False mode=test \
+--pretrained_path log/radar/radar-train-hpenet-ll-ngpus1-20260812-201051-gHBQ4DMy5jP2fZfkGkFcue/checkpoint/radar-train-hpenet-ll-ngpus1-20260812-201051-gHBQ4DMy5jP2fZfkGkFcue_ckpt_best.pth
 
 
 # how to run
