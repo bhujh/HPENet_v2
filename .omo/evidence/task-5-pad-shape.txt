@@ -1,0 +1,2 @@
+PAD PASS: N=10→padded=1024, x.size()=5120=5*1024
+SPLIT PASS: N=15000→chunks [10000,5000], each x=5*chunk_size

@@ -4,7 +4,7 @@ dataset:
     NAME: RadarClassi
     data_root: data/RadarClassi/radarfullwl
     test_area: 5
-    voxel_size: 0.3 # 0.1
+    voxel_size: 0.02 #0.05 #0.15 #0.1 #0.2 # 0.3 # 0.1
   train:
     split: train
     voxel_max: 4608

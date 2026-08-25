@@ -1,0 +1,32 @@
+[07/29/2026-16:01:01] [TRT] [W] onnx2trt_utils.cpp:374: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
+[07/29/2026-16:01:02] [TRT] [W] Detected layernorm nodes in FP16: , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 
+[07/29/2026-16:01:02] [TRT] [W] Running layernorm after self-attention in FP16 may cause overflow. Exporting the model to the latest available ONNX opset (later than opset 17) to use the INormalizationLayer, or forcing layernorm layers to run in FP32 precision can help with preserving accuracy.
+[07/29/2026-16:04:56] [TRT] [W] No valid obedient candidate choices for node PWN(/model/decoder/ddfc/Add, PWN(/model/decoder/ddfc/sigmoid/Sigmoid)) that meet the preferred precision. The remaining candidate choices will be profiled.
+[07/29/2026-16:05:24] [TRT] [W] No implementation of layer PWN(/model/decoder/ddfc/Add, PWN(/model/decoder/ddfc/sigmoid/Sigmoid)) obeys the requested constraints. I.e. no conforming implementation was found for requested layer computation precision and output precision. Using fastest implementation instead.
+[07/29/2026-16:05:24] [TRT] [W] No valid obedient candidate choices for node PWN(/model/decoder/ddfc/Mul_2, /model/decoder/ddfc/Add_1) that meet the preferred precision. The remaining candidate choices will be profiled.
+[07/29/2026-16:06:00] [TRT] [W] No implementation of layer PWN(/model/decoder/ddfc/Mul_2, /model/decoder/ddfc/Add_1) obeys the requested constraints. I.e. no conforming implementation was found for requested layer computation precision and output precision. Using fastest implementation instead.
+[07/29/2026-16:06:00] [TRT] [W] No valid obedient candidate choices for node PWN(/model/decoder/ddfc/Mul_3, /model/decoder/ddfc/Add_2) that meet the preferred precision. The remaining candidate choices will be profiled.
+[07/29/2026-16:06:37] [TRT] [W] No implementation of layer PWN(/model/decoder/ddfc/Mul_3, /model/decoder/ddfc/Add_2) obeys the requested constraints. I.e. no conforming implementation was found for requested layer computation precision and output precision. Using fastest implementation instead.
+[07/29/2026-16:08:57] [TRT] [W] TensorRT encountered issues when converting weights between types and that could affect accuracy.
+[07/29/2026-16:08:57] [TRT] [W] If this is not the desired behavior, please modify the weights or retrain with regularization to adjust the magnitude of the weights.
+[07/29/2026-16:08:57] [TRT] [W] Check verbose logs for the list of affected weights.
+[07/29/2026-16:08:57] [TRT] [W] - 93 weights are affected by this issue: Detected subnormal FP16 values.
+[07/29/2026-16:08:57] [TRT] [W] - 4 weights are affected by this issue: Detected values less than smallest positive FP16 subnormal value and converted them to the FP16 minimum subnormalized value.
+[07/29/2026-16:08:57] [TRT] [W] - 1 weights are affected by this issue: Detected finite FP32 values which would overflow in FP16 and converted them to the closest finite FP16 value.
+============================================================
+HPENet V2 → TensorRT Engine Builder (TRT 8.6)
+============================================================
+  ONNX:   deploy/onnx_model_feat5.onnx
+  Output: deploy/trt_model_feat5_fp16_fixed.engine
+  FP16:   True
+  Profile: min_n=1024, opt_n=3500, max_n=10000
+  Parsing ONNX: deploy/onnx_model_feat5.onnx
+  ONNX parsed OK.  Inputs: 2, outputs: 1
+  FP16 mode: ENABLED
+  Forced 607 LayerNorm layers to FP32 precision
+  Dynamic profile: min_n=1024, opt_n=3500, max_n=10000
+  Workspace: 2 GiB
+  Building engine (this may take several minutes)...
+  Engine saved: deploy/trt_model_feat5_fp16_fixed.engine (12.9 MB)
+
+Done!

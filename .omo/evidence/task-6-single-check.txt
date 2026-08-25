@@ -1,0 +1,14 @@
+======================================================================
+HPENet V2 — Precision Comparison (PyTorch vs FP32 vs FP16)
+======================================================================
+  voxel_size: 0.1 (from cfg.dataset.common)
+  num_classes: 2
+
+=== Single Check: FP32 TRT vs PyTorch logit max_diff ===
+  Patched 4 SetAbstraction.sample_fn: FPS → random sampling
+  Replaced 51 InstanceNorm1d → ONNXInstanceNorm1d
+  Patched 10 residual blocks (removed dynamic If)
+  Patched BaseSeg.forward (removed squeeze If)
+  File: 0000304.ply
+  FP32 vs PyTorch max_diff: 5.204372e-01
+  [WARN] max_diff >= 1e-4 — ONNX export or TRT optimization introduced divergence

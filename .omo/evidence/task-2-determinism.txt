@@ -1,0 +1,9 @@
+sha256_run1: 09b838e18577
+sha256_run2: 09b838e18577
+deterministic: True
+结论: preprocess_test(seed=100) 实现每文件独立确定性
+修改: common.py +seed 参数, trt_inference.py/onnx_inference.py 传入 seed=100
+sha256: 09b838e18577 vs 09b838e18577
+每文件 seed=100 确定性: True
+不同 seed 产生不同结果: True
+ALL PASS: per-file seed model works correctly

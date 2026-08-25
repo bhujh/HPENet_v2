@@ -1,0 +1,3 @@
+load() PASS: C++ vs Python point 0-2 values match exactly
+loadv2() PASS: C++ vs Python point 0-2 values match exactly
+Missing mag tolerance PASS: feat[0]=0.0f for PLY without mag field

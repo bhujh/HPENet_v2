@@ -1,0 +1,2 @@
+C++ 编译成功: cmake --build deploy/CPP_trt1/build -j4
+main.cpp:34 voxel_size = 0.3f (was 0.1f)

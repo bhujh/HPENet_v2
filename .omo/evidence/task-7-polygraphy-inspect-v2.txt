@@ -1,0 +1,1072 @@
+[W] 'colored' module is not installed, will not use colors when logging. To enable colors, please install the 'colored' module: python3 -m pip install colored
+[I] Loading bytes from /home/wangpeng/CODE/HPENet_v2-main/deploy/trt_model_feat5_fp16_fixed.engine
+[I] ==== TensorRT Engine ====
+    Name: Unnamed Network 0 | Explicit Batch Engine
+    
+    ---- 2 Engine Input(s) ----
+    {pos [dtype=float32, shape=(1, -1, 3)],
+     x [dtype=float32, shape=(1, 5, -1)]}
+    
+    ---- 1 Engine Output(s) ----
+    {output [dtype=float32, shape=(1, 2, -1)]}
+    
+    ---- Memory ----
+    Device Memory: 236084224 bytes
+    
+    ---- 1 Profile(s) (3 Tensor(s) Each) ----
+    - Profile: 0
+        Tensor: pos             (Input), Index: 0 | Shapes: min=(1, 1024, 3), opt=(1, 3500, 3), max=(1, 10000, 3)
+        Tensor: x               (Input), Index: 1 | Shapes: min=(1, 5, 1024), opt=(1, 5, 3500), max=(1, 5, 10000)
+        Tensor: output         (Output), Index: 2 | Shape: (1, 2, -1)
+    
+    ---- 225 Layer(s) ----
+    Layer 0    | [ShapeHostToDeviceCopy 0] [Op: ShapeHostToDevice]
+        {} -> {/model/encoder.4/encoder.4.0/grouper/Gather_output_0 [shape=()],
+     /model/encoder.3/encoder.3.0/grouper/Gather_output_0 [shape=()],
+     /model/encoder.2/encoder.2.0/grouper/Gather_output_0 [shape=()],
+     /model/encoder.1/encoder.1.0/grouper/Gather_output_0 [shape=()],
+     /model/encoder.1/encoder.1.0/Gather_output_0 [shape=()]}
+    
+    Layer 1    | {ForeignNode[/model/encoder.1/encoder.1.0/Range.../model/encoder.1/encoder.1.0/grouper/Div]} [Op: Myelin]
+        {pos [shape=(1, -1, 3)],
+         /model/encoder.1/encoder.1.0/Gather_output_0 [shape=()]}
+         -> {/model/encoder.1/encoder.1.0/GatherElements_output_0 [shape=(1, -1, 3)],
+             /model/encoder.1/encoder.1.0/grouper/Transpose_1_output_0 [shape=(1, 3, -1)],
+             /model/encoder.1/encoder.1.0/grouper/Unsqueeze_11_output_0 [shape=(1, 3, -1, 1)],
+             /model/encoder.1/encoder.1.0/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+             /model/encoder.1/encoder.1.0/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+    
+    Layer 2    | (Unnamed Layer* 103) [Shuffle] [Op: NoOp]
+        {x [shape=(1, 5, -1)]}
+         -> {(Unnamed Layer* 103) [Shuffle]_output [shape=(1, 5, -1, 1)]}
+    
+    Layer 3    | Reformatting CopyNode for Input Tensor 0 to shuffle_between_(Unnamed Layer* 103) [Shuffle]_output_and_/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv [Op: Reformat]
+        {(Unnamed Layer* 103) [Shuffle]_output [shape=(1, 5, -1, 1)]}
+         -> {Reformatted Input Tensor 0 to shuffle_between_(Unnamed Layer* 103) [Shuffle]_output_and_/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv [shape=(1, 5, -1, 1)]}
+    
+    Layer 4    | shuffle_between_(Unnamed Layer* 103) [Shuffle]_output_and_/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {Reformatted Input Tensor 0 to shuffle_between_(Unnamed Layer* 103) [Shuffle]_output_and_/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv [shape=(1, 5, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 103) [Shuffle]_output_and_/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 5, 1, -1)]}
+    
+    Layer 5    | /model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 103) [Shuffle]_output_and_/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 5, 1, -1)]}
+         -> {/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 32, 1, -1)]}
+    
+    Layer 6    | shuffle_after_(Unnamed Layer* 104) [Convolution]_output [Op: NoOp]
+        {/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 32, 1, -1)]}
+         -> {(Unnamed Layer* 104) [Convolution]_output [shape=(1, 32, -1, 1)]}
+    
+    Layer 7    | Reformatting CopyNode for Input Tensor 0 to /model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Reformat]
+        {/model/encoder.1/encoder.1.0/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+         -> {Reformatted Input Tensor 0 to /model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.0/Conv [shape=(1, 3, -1, 32)]}
+    
+    Layer 8    | /model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: CaskConvolution]
+        {Reformatted Input Tensor 0 to /model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.0/Conv [shape=(1, 3, -1, 32)]}
+         -> {/model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 8, -1, 32)]}
+    
+    Layer 9    | Reformatting CopyNode for Input Tensor 3 to {ForeignNode[/model/encoder.1/encoder.1.1/grouper/Unsqueeze_1.../model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.2/Relu]} [Op: Reformat]
+        {/model/encoder.1/encoder.1.0/grouper/Unsqueeze_11_output_0 [shape=(1, 3, -1, 1)]}
+         -> {Reformatted Input Tensor 3 to {ForeignNode[/model/encoder.1/encoder.1.1/grouper/Unsqueeze_1.../model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.2/Relu]} [shape=(1, 3, -1, 1)]}
+    
+    Layer 10   | {ForeignNode[/model/encoder.1/encoder.1.1/grouper/Unsqueeze_1.../model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.2/Relu]} [Op: Myelin]
+        {/model/encoder.1/encoder.1.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.1/encoder.1.0/grouper/Gather_output_0 [shape=()],
+         /model/encoder.1/encoder.1.0/grouper/Transpose_1_output_0 [shape=(1, 3, -1)],
+         Reformatted Input Tensor 3 to {ForeignNode[/model/encoder.1/encoder.1.1/grouper/Unsqueeze_1.../model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.2/Relu]} [shape=(1, 3, -1, 1)],
+         /model/encoder.1/encoder.1.0/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 104) [Convolution]_output [shape=(1, 32, -1, 1)],
+         /model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 8, -1, 32)]}
+         -> {/model/encoder.1/encoder.1.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+             /model/encoder.1/encoder.1.1/grouper/Div_output_0 [shape=(1, 3, -1, 32)],
+             /model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv_output_0 [shape=(1, 32, -1)],
+             /model/encoder.1/encoder.1.0/Reshape_2_output_0 [shape=(1, 32, -1, 32)],
+             /model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 8, -1, 32)]}
+    
+    Layer 11   | /model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.0/Conv [Op: CaskConvolution]
+        {/model/encoder.1/encoder.1.1/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+         -> {/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 16, -1, 32)]}
+    
+    Layer 12   | /model/encoder.1/encoder.1.0/rel_pos/conv/conv.1/conv.1.0/Conv + /model/encoder.1/encoder.1.0/Add [Op: CaskConvolution]
+        {/model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 8, -1, 32)],
+         /model/encoder.1/encoder.1.0/Reshape_2_output_0 [shape=(1, 32, -1, 32)]}
+         -> {/model/encoder.1/encoder.1.0/Add_output_0 [shape=(1, 32, -1, 32)]}
+    
+    Layer 13   | /model/encoder.1/encoder.1.0/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {/model/encoder.1/encoder.1.0/Add_output_0 [shape=(1, 32, -1, 32)]}
+         -> {/model/encoder.1/encoder.1.0/convs/convs.0/convs.0.0/Conv_output_0 [shape=(1, 64, -1, 32)]}
+    
+    Layer 14   | Reformatting CopyNode for Input Tensor 0 to {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [Op: Reformat]
+        {/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 16, -1, 32)]}
+         -> {Reformatted Input Tensor 0 to {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [shape=(1, 16, -1, 32)]}
+    
+    Layer 15   | Reformatting CopyNode for Input Tensor 1 to {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [Op: Reformat]
+        {/model/encoder.1/encoder.1.0/convs/convs.0/convs.0.0/Conv_output_0 [shape=(1, 64, -1, 32)]}
+         -> {Reformatted Input Tensor 1 to {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [shape=(1, 64, -1, 32)]}
+    
+    Layer 16   | {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [Op: Myelin]
+        {Reformatted Input Tensor 0 to {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [shape=(1, 16, -1, 32)],
+         Reformatted Input Tensor 1 to {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [shape=(1, 64, -1, 32)]}
+         -> {/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 16, -1, 32)],
+             /model/encoder.1/encoder.1.0/ReduceMax_output_0 [shape=(1, 64, -1)],
+             (Unnamed Layer* 579) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 17   | /model/encoder.1/encoder.1.1/rel_pos/conv/conv.1/conv.1.0/Conv [Op: CaskConvolution]
+        {/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 16, -1, 32)]}
+         -> {/model/encoder.1/encoder.1.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 64, -1, 32)]}
+    
+    Layer 18   | shuffle_between_(Unnamed Layer* 579) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 579) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 579) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 19   | /model/encoder.1/encoder.1.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 579) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/encoder.1/encoder.1.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 20   | shuffle_after_(Unnamed Layer* 580) [Convolution]_output [Op: NoOp]
+        {/model/encoder.1/encoder.1.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 580) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 21   | {ForeignNode[/model/encoder.1/encoder.1.1/layer/layer.0/convs/Expand...(Unnamed Layer* 643) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.1/encoder.1.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 580) [Convolution]_output [shape=(1, 64, -1, 1)],
+         /model/encoder.1/encoder.1.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 64, -1, 32)]}
+         -> {(Unnamed Layer* 643) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 22   | shuffle_between_(Unnamed Layer* 643) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 643) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 643) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 23   | /model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 643) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 24   | shuffle_after_(Unnamed Layer* 644) [Convolution]_output [Op: NoOp]
+        {/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 644) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 25   | {ForeignNode[(Unnamed Layer* 648) [Shuffle]...(Unnamed Layer* 668) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 644) [Convolution]_output [shape=(1, 64, -1, 1)]}
+         -> {(Unnamed Layer* 668) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 26   | shuffle_between_(Unnamed Layer* 668) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 668) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 668) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 27   | /model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 668) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 28   | shuffle_after_(Unnamed Layer* 669) [Convolution]_output [Op: NoOp]
+        {/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 669) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 29   | {ForeignNode[(Unnamed Layer* 673) [Shuffle]...(Unnamed Layer* 694) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 669) [Convolution]_output [shape=(1, 64, -1, 1)],
+         /model/encoder.1/encoder.1.0/ReduceMax_output_0 [shape=(1, 64, -1)]}
+         -> {/model/encoder.1/encoder.1.1/layer/layer.0/act/Relu_output_0 [shape=(1, 64, -1)],
+             (Unnamed Layer* 694) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 30   | shuffle_between_(Unnamed Layer* 694) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 694) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 694) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 31   | /model/encoder.1/encoder.1.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 694) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/encoder.1/encoder.1.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 32   | shuffle_after_(Unnamed Layer* 695) [Convolution]_output [Op: NoOp]
+        {/model/encoder.1/encoder.1.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 695) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 33   | {ForeignNode[/model/encoder.1/encoder.1.1/layer/layer.1/convs/Expand...(Unnamed Layer* 758) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.1/encoder.1.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 695) [Convolution]_output [shape=(1, 64, -1, 1)],
+         /model/encoder.1/encoder.1.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 64, -1, 32)]}
+         -> {(Unnamed Layer* 758) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 34   | shuffle_between_(Unnamed Layer* 758) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 758) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 758) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 35   | /model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 758) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 36   | shuffle_after_(Unnamed Layer* 759) [Convolution]_output [Op: NoOp]
+        {/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 759) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 37   | {ForeignNode[/model/encoder.2/encoder.2.0/grouper/Unsqueeze_1...(Unnamed Layer* 783) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.1/encoder.1.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.1/encoder.1.0/grouper/Gather_output_0 [shape=()],
+         /model/encoder.1/encoder.1.0/grouper/Transpose_1_output_0 [shape=(1, 3, -1)],
+         (Unnamed Layer* 759) [Convolution]_output [shape=(1, 64, -1, 1)]}
+         -> {/model/encoder.2/encoder.2.0/GatherElements_output_0 [shape=(1, -1, 3)],
+             /model/encoder.2/encoder.2.0/grouper/Transpose_output_0 [shape=(1, 3, -1)],
+             /model/encoder.2/encoder.2.0/grouper/Unsqueeze_11_output_0 [shape=(1, 3, -1, 1)],
+             /model/encoder.2/encoder.2.0/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+             /model/encoder.2/encoder.2.0/grouper/Div_output_0 [shape=(1, 3, -1, 32)],
+             (Unnamed Layer* 783) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 38   | /model/encoder.2/encoder.2.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: CaskConvolution]
+        {/model/encoder.2/encoder.2.0/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+         -> {/model/encoder.2/encoder.2.0/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 32, -1, 32)]}
+    
+    Layer 39   | shuffle_between_(Unnamed Layer* 783) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 783) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 783) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 40   | /model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 783) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 41   | shuffle_after_(Unnamed Layer* 784) [Convolution]_output [Op: NoOp]
+        {/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 784) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 42   | {ForeignNode[/model/encoder.2/encoder.2.1/grouper/Unsqueeze_1...(Unnamed Layer* 902) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.2/encoder.2.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.2/encoder.2.0/grouper/Gather_output_0 [shape=()],
+         /model/encoder.2/encoder.2.0/grouper/Transpose_output_0 [shape=(1, 3, -1)],
+         /model/encoder.2/encoder.2.0/grouper/Unsqueeze_11_output_0 [shape=(1, 3, -1, 1)],
+         /model/encoder.2/encoder.2.0/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 32, -1, 32)],
+         (Unnamed Layer* 784) [Convolution]_output [shape=(1, 64, -1, 1)],
+         /model/encoder.1/encoder.1.1/layer/layer.0/act/Relu_output_0 [shape=(1, 64, -1)]}
+         -> {/model/encoder.2/encoder.2.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+             /model/encoder.2/encoder.2.1/grouper/Div_output_0 [shape=(1, 3, -1, 32)],
+             /model/encoder.2/encoder.2.0/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 32, -1, 32)],
+             /model/encoder.1/encoder.1.1/layer/layer.1/act/Relu_output_0 [shape=(1, 64, -1)],
+             (Unnamed Layer* 902) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 43   | /model/encoder.2/encoder.2.1/rel_pos/conv/conv.0/conv.0.0/Conv [Op: CaskConvolution]
+        {/model/encoder.2/encoder.2.1/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+         -> {/model/encoder.2/encoder.2.1/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 32, -1, 32)]}
+    
+    Layer 44   | /model/encoder.2/encoder.2.0/rel_pos/conv/conv.1/conv.1.0/Conv [Op: CaskConvolution]
+        {/model/encoder.2/encoder.2.0/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 32, -1, 32)]}
+         -> {/model/encoder.2/encoder.2.0/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+    
+    Layer 45   | shuffle_between_(Unnamed Layer* 902) [Shuffle]_output_and_/model/encoder.2/encoder.2.0/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 902) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 902) [Shuffle]_output_and_/model/encoder.2/encoder.2.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 46   | /model/encoder.2/encoder.2.0/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 902) [Shuffle]_output_and_/model/encoder.2/encoder.2.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 47   | shuffle_after_(Unnamed Layer* 903) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 903) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 48   | {ForeignNode[/model/encoder.2/encoder.2.0/Expand_2...(Unnamed Layer* 1272) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.2/encoder.2.0/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         /model/encoder.2/encoder.2.1/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 32, -1, 32)],
+         (Unnamed Layer* 903) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.0/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+         -> {/model/encoder.2/encoder.2.1/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 32, -1, 32)],
+             /model/encoder.2/encoder.2.0/ReduceMax_output_0 [shape=(1, 128, -1)],
+             (Unnamed Layer* 1272) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 49   | /model/encoder.2/encoder.2.1/rel_pos/conv/conv.1/conv.1.0/Conv [Op: CaskConvolution]
+        {/model/encoder.2/encoder.2.1/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 32, -1, 32)]}
+         -> {/model/encoder.2/encoder.2.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+    
+    Layer 50   | shuffle_between_(Unnamed Layer* 1272) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1272) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1272) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 51   | /model/encoder.2/encoder.2.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1272) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 52   | shuffle_after_(Unnamed Layer* 1273) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1273) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 53   | {ForeignNode[/model/encoder.2/encoder.2.1/layer/layer.0/convs/Expand...(Unnamed Layer* 1336) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.2/encoder.2.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 1273) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+         -> {(Unnamed Layer* 1336) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 54   | shuffle_between_(Unnamed Layer* 1336) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1336) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1336) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 55   | /model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1336) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 56   | shuffle_after_(Unnamed Layer* 1337) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1337) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 57   | {ForeignNode[(Unnamed Layer* 1341) [Shuffle]...(Unnamed Layer* 1361) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 1337) [Convolution]_output [shape=(1, 128, -1, 1)]}
+         -> {(Unnamed Layer* 1361) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 58   | shuffle_between_(Unnamed Layer* 1361) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1361) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1361) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 59   | /model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1361) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 60   | shuffle_after_(Unnamed Layer* 1362) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1362) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 61   | {ForeignNode[(Unnamed Layer* 1366) [Shuffle]...(Unnamed Layer* 1387) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 1362) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.0/ReduceMax_output_0 [shape=(1, 128, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.0/act/Relu_output_0 [shape=(1, 128, -1)],
+             (Unnamed Layer* 1387) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 62   | shuffle_between_(Unnamed Layer* 1387) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1387) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1387) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 63   | /model/encoder.2/encoder.2.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1387) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 64   | shuffle_after_(Unnamed Layer* 1388) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1388) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 65   | {ForeignNode[/model/encoder.2/encoder.2.1/layer/layer.1/convs/Expand...(Unnamed Layer* 1451) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.2/encoder.2.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 1388) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+         -> {(Unnamed Layer* 1451) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 66   | shuffle_between_(Unnamed Layer* 1451) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1451) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1451) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 67   | /model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1451) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 68   | shuffle_after_(Unnamed Layer* 1452) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1452) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 69   | {ForeignNode[(Unnamed Layer* 1456) [Shuffle]...(Unnamed Layer* 1476) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 1452) [Convolution]_output [shape=(1, 128, -1, 1)]}
+         -> {(Unnamed Layer* 1476) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 70   | shuffle_between_(Unnamed Layer* 1476) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1476) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1476) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 71   | /model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1476) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 72   | shuffle_after_(Unnamed Layer* 1477) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1477) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 73   | {ForeignNode[(Unnamed Layer* 1481) [Shuffle]...(Unnamed Layer* 1502) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 1477) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.1/layer/layer.0/act/Relu_output_0 [shape=(1, 128, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.1/act/Relu_output_0 [shape=(1, 128, -1)],
+             (Unnamed Layer* 1502) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 74   | shuffle_between_(Unnamed Layer* 1502) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1502) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1502) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 75   | /model/encoder.2/encoder.2.1/layer/layer.2/convs/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1502) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.2/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 76   | shuffle_after_(Unnamed Layer* 1503) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.2/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1503) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 77   | {ForeignNode[/model/encoder.2/encoder.2.1/layer/layer.2/convs/Expand...(Unnamed Layer* 1566) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.2/encoder.2.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 1503) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+         -> {(Unnamed Layer* 1566) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 78   | shuffle_between_(Unnamed Layer* 1566) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1566) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1566) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 79   | /model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1566) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 80   | shuffle_after_(Unnamed Layer* 1567) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1567) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 81   | {ForeignNode[(Unnamed Layer* 1571) [Shuffle]...(Unnamed Layer* 1591) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 1567) [Convolution]_output [shape=(1, 128, -1, 1)]}
+         -> {(Unnamed Layer* 1591) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 82   | shuffle_between_(Unnamed Layer* 1591) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1591) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1591) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 83   | /model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1591) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 84   | shuffle_after_(Unnamed Layer* 1592) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1592) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 85   | {ForeignNode[(Unnamed Layer* 1596) [Shuffle]...(Unnamed Layer* 1617) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 1592) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.1/layer/layer.1/act/Relu_output_0 [shape=(1, 128, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.2/act/Relu_output_0 [shape=(1, 128, -1)],
+             (Unnamed Layer* 1617) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 86   | shuffle_between_(Unnamed Layer* 1617) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1617) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1617) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 87   | /model/encoder.2/encoder.2.1/layer/layer.3/convs/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 1617) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.3/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 88   | shuffle_after_(Unnamed Layer* 1618) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.3/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1618) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 89   | {ForeignNode[/model/encoder.2/encoder.2.1/layer/layer.3/convs/Expand...(Unnamed Layer* 1681) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.2/encoder.2.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 1618) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+         -> {(Unnamed Layer* 1681) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 90   | Reformatting CopyNode for Input Tensor 0 to shuffle_between_(Unnamed Layer* 1681) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Reformat]
+        {(Unnamed Layer* 1681) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {Reformatted Input Tensor 0 to shuffle_between_(Unnamed Layer* 1681) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [shape=(1, 128, -1, 1)]}
+    
+    Layer 91   | shuffle_between_(Unnamed Layer* 1681) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {Reformatted Input Tensor 0 to shuffle_between_(Unnamed Layer* 1681) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1681) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 92   | Reformatting CopyNode for Input Tensor 0 to /model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {shuffle_between_(Unnamed Layer* 1681) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {Reformatted Input Tensor 0 to /model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [shape=(1, 128, 1, -1)]}
+    
+    Layer 93   | /model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskGemmConvolution]
+        {Reformatted Input Tensor 0 to /model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 94   | shuffle_after_(Unnamed Layer* 1682) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1682) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 95   | {ForeignNode[/model/encoder.3/encoder.3.0/grouper/Unsqueeze_1...(Unnamed Layer* 1706) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.2/encoder.2.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.2/encoder.2.0/grouper/Gather_output_0 [shape=()],
+         /model/encoder.2/encoder.2.0/grouper/Transpose_output_0 [shape=(1, 3, -1)],
+         (Unnamed Layer* 1682) [Convolution]_output [shape=(1, 128, -1, 1)]}
+         -> {/model/encoder.3/encoder.3.0/GatherElements_output_0 [shape=(1, -1, 3)],
+             /model/encoder.3/encoder.3.0/grouper/Transpose_output_0 [shape=(1, 3, -1)],
+             /model/encoder.3/encoder.3.0/grouper/Unsqueeze_11_output_0 [shape=(1, 3, -1, 1)],
+             /model/encoder.3/encoder.3.0/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+             /model/encoder.3/encoder.3.0/grouper/Div_output_0 [shape=(1, 3, -1, 32)],
+             (Unnamed Layer* 1706) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 96   | /model/encoder.3/encoder.3.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: CaskConvolution]
+        {/model/encoder.3/encoder.3.0/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+         -> {/model/encoder.3/encoder.3.0/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 64, -1, 32)]}
+    
+    Layer 97   | shuffle_between_(Unnamed Layer* 1706) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1706) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1706) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 98   | /model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 1706) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 99   | shuffle_after_(Unnamed Layer* 1707) [Convolution]_output [Op: NoOp]
+        {/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 1707) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 100  | {ForeignNode[/model/encoder.3/encoder.3.1/grouper/Unsqueeze_1...(Unnamed Layer* 1825) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.3/encoder.3.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.3/encoder.3.0/grouper/Gather_output_0 [shape=()],
+         /model/encoder.3/encoder.3.0/grouper/Transpose_output_0 [shape=(1, 3, -1)],
+         /model/encoder.3/encoder.3.0/grouper/Unsqueeze_11_output_0 [shape=(1, 3, -1, 1)],
+         /model/encoder.3/encoder.3.0/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 64, -1, 32)],
+         (Unnamed Layer* 1707) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.2/encoder.2.1/layer/layer.2/act/Relu_output_0 [shape=(1, 128, -1)]}
+         -> {/model/encoder.3/encoder.3.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+             /model/encoder.3/encoder.3.1/grouper/Div_output_0 [shape=(1, 3, -1, 32)],
+             /model/encoder.3/encoder.3.0/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 64, -1, 32)],
+             /model/encoder.2/encoder.2.1/layer/layer.3/act/Relu_output_0 [shape=(1, 128, -1)],
+             (Unnamed Layer* 1825) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 101  | /model/encoder.3/encoder.3.1/rel_pos/conv/conv.0/conv.0.0/Conv [Op: CaskConvolution]
+        {/model/encoder.3/encoder.3.1/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+         -> {/model/encoder.3/encoder.3.1/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 64, -1, 32)]}
+    
+    Layer 102  | /model/encoder.3/encoder.3.0/rel_pos/conv/conv.1/conv.1.0/Conv [Op: CaskGemmConvolution]
+        {/model/encoder.3/encoder.3.0/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 64, -1, 32)]}
+         -> {/model/encoder.3/encoder.3.0/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 256, -1, 32)]}
+    
+    Layer 103  | shuffle_between_(Unnamed Layer* 1825) [Shuffle]_output_and_/model/encoder.3/encoder.3.0/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 1825) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 1825) [Shuffle]_output_and_/model/encoder.3/encoder.3.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 104  | /model/encoder.3/encoder.3.0/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 1825) [Shuffle]_output_and_/model/encoder.3/encoder.3.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/encoder.3/encoder.3.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 105  | shuffle_after_(Unnamed Layer* 1826) [Convolution]_output [Op: NoOp]
+        {/model/encoder.3/encoder.3.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 1826) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 106  | {ForeignNode[/model/encoder.3/encoder.3.0/Expand_2...(Unnamed Layer* 2195) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.3/encoder.3.0/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         /model/encoder.3/encoder.3.1/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 64, -1, 32)],
+         (Unnamed Layer* 1826) [Convolution]_output [shape=(1, 256, -1, 1)],
+         /model/encoder.3/encoder.3.0/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 256, -1, 32)]}
+         -> {/model/encoder.3/encoder.3.1/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 64, -1, 32)],
+             /model/encoder.3/encoder.3.0/ReduceMax_output_0 [shape=(1, 256, -1)],
+             (Unnamed Layer* 2195) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 107  | /model/encoder.3/encoder.3.1/rel_pos/conv/conv.1/conv.1.0/Conv [Op: CaskGemmConvolution]
+        {/model/encoder.3/encoder.3.1/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 64, -1, 32)]}
+         -> {/model/encoder.3/encoder.3.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 256, -1, 32)]}
+    
+    Layer 108  | shuffle_between_(Unnamed Layer* 2195) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2195) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2195) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 109  | /model/encoder.3/encoder.3.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2195) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+         -> {/model/encoder.3/encoder.3.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 110  | shuffle_after_(Unnamed Layer* 2196) [Convolution]_output [Op: NoOp]
+        {/model/encoder.3/encoder.3.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 2196) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 111  | {ForeignNode[/model/encoder.3/encoder.3.1/layer/layer.0/convs/Expand...(Unnamed Layer* 2259) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.3/encoder.3.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 2196) [Convolution]_output [shape=(1, 256, -1, 1)],
+         /model/encoder.3/encoder.3.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 256, -1, 32)]}
+         -> {(Unnamed Layer* 2259) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 112  | shuffle_between_(Unnamed Layer* 2259) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2259) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2259) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 113  | /model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2259) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+         -> {/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 114  | shuffle_after_(Unnamed Layer* 2260) [Convolution]_output [Op: NoOp]
+        {/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 2260) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 115  | {ForeignNode[(Unnamed Layer* 2264) [Shuffle]...(Unnamed Layer* 2284) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 2260) [Convolution]_output [shape=(1, 256, -1, 1)]}
+         -> {(Unnamed Layer* 2284) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 116  | shuffle_between_(Unnamed Layer* 2284) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2284) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2284) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 117  | /model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2284) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+         -> {/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 118  | shuffle_after_(Unnamed Layer* 2285) [Convolution]_output [Op: NoOp]
+        {/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 2285) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 119  | {ForeignNode[(Unnamed Layer* 2289) [Shuffle]...(Unnamed Layer* 2310) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 2285) [Convolution]_output [shape=(1, 256, -1, 1)],
+         /model/encoder.3/encoder.3.0/ReduceMax_output_0 [shape=(1, 256, -1)]}
+         -> {/model/encoder.3/encoder.3.1/layer/layer.0/act/Relu_output_0 [shape=(1, 256, -1)],
+             (Unnamed Layer* 2310) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 120  | shuffle_between_(Unnamed Layer* 2310) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2310) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2310) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 121  | /model/encoder.3/encoder.3.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2310) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+         -> {/model/encoder.3/encoder.3.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 122  | shuffle_after_(Unnamed Layer* 2311) [Convolution]_output [Op: NoOp]
+        {/model/encoder.3/encoder.3.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 2311) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 123  | {ForeignNode[/model/encoder.3/encoder.3.1/layer/layer.1/convs/Expand...(Unnamed Layer* 2374) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.3/encoder.3.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 2311) [Convolution]_output [shape=(1, 256, -1, 1)],
+         /model/encoder.3/encoder.3.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 256, -1, 32)]}
+         -> {(Unnamed Layer* 2374) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 124  | shuffle_between_(Unnamed Layer* 2374) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2374) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2374) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 125  | /model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2374) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+         -> {/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 126  | shuffle_after_(Unnamed Layer* 2375) [Convolution]_output [Op: NoOp]
+        {/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 2375) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 127  | {ForeignNode[/model/encoder.4/encoder.4.0/grouper/Unsqueeze_1...(Unnamed Layer* 2399) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.3/encoder.3.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.3/encoder.3.0/grouper/Gather_output_0 [shape=()],
+         /model/encoder.3/encoder.3.0/grouper/Transpose_output_0 [shape=(1, 3, -1)],
+         (Unnamed Layer* 2375) [Convolution]_output [shape=(1, 256, -1, 1)]}
+         -> {/model/encoder.4/encoder.4.0/GatherElements_output_0 [shape=(1, -1, 3)],
+             /model/encoder.4/encoder.4.0/grouper/Transpose_output_0 [shape=(1, 3, -1)],
+             /model/encoder.4/encoder.4.0/grouper/Unsqueeze_11_output_0 [shape=(1, 3, -1, 1)],
+             /model/encoder.4/encoder.4.0/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+             /model/encoder.4/encoder.4.0/grouper/Div_output_0 [shape=(1, 3, -1, 32)],
+             (Unnamed Layer* 2399) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 128  | /model/encoder.4/encoder.4.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: CaskGemmConvolution]
+        {/model/encoder.4/encoder.4.0/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+         -> {/model/encoder.4/encoder.4.0/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+    
+    Layer 129  | shuffle_between_(Unnamed Layer* 2399) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2399) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2399) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 130  | /model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2399) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+         -> {/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 131  | shuffle_after_(Unnamed Layer* 2400) [Convolution]_output [Op: NoOp]
+        {/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 2400) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 132  | {ForeignNode[/model/encoder.4/encoder.4.1/grouper/Unsqueeze_1...(Unnamed Layer* 2518) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.4/encoder.4.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.4/encoder.4.0/grouper/Gather_output_0 [shape=()],
+         /model/encoder.4/encoder.4.0/grouper/Transpose_output_0 [shape=(1, 3, -1)],
+         /model/encoder.4/encoder.4.0/grouper/Unsqueeze_11_output_0 [shape=(1, 3, -1, 1)],
+         /model/encoder.4/encoder.4.0/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 128, -1, 32)],
+         (Unnamed Layer* 2400) [Convolution]_output [shape=(1, 256, -1, 1)],
+         /model/encoder.3/encoder.3.1/layer/layer.0/act/Relu_output_0 [shape=(1, 256, -1)]}
+         -> {/model/encoder.4/encoder.4.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+             /model/encoder.4/encoder.4.1/grouper/Div_output_0 [shape=(1, 3, -1, 32)],
+             /model/encoder.4/encoder.4.0/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 128, -1, 32)],
+             /model/encoder.3/encoder.3.1/layer/layer.1/act/Relu_output_0 [shape=(1, 256, -1)],
+             (Unnamed Layer* 2518) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 133  | /model/encoder.4/encoder.4.1/rel_pos/conv/conv.0/conv.0.0/Conv [Op: CaskGemmConvolution]
+        {/model/encoder.4/encoder.4.1/grouper/Div_output_0 [shape=(1, 3, -1, 32)]}
+         -> {/model/encoder.4/encoder.4.1/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 128, -1, 32)]}
+    
+    Layer 134  | /model/encoder.4/encoder.4.0/rel_pos/conv/conv.1/conv.1.0/Conv [Op: CaskGemmConvolution]
+        {/model/encoder.4/encoder.4.0/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 128, -1, 32)]}
+         -> {/model/encoder.4/encoder.4.0/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 512, -1, 32)]}
+    
+    Layer 135  | shuffle_between_(Unnamed Layer* 2518) [Shuffle]_output_and_/model/encoder.4/encoder.4.0/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2518) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2518) [Shuffle]_output_and_/model/encoder.4/encoder.4.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 136  | /model/encoder.4/encoder.4.0/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2518) [Shuffle]_output_and_/model/encoder.4/encoder.4.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+         -> {/model/encoder.4/encoder.4.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 137  | shuffle_after_(Unnamed Layer* 2519) [Convolution]_output [Op: NoOp]
+        {/model/encoder.4/encoder.4.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+         -> {(Unnamed Layer* 2519) [Convolution]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 138  | {ForeignNode[/model/encoder.4/encoder.4.0/Expand_2...(Unnamed Layer* 2888) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.4/encoder.4.0/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         /model/encoder.4/encoder.4.1/rel_pos/conv/conv.0/conv.0.0/Conv_output_0 [shape=(1, 128, -1, 32)],
+         (Unnamed Layer* 2519) [Convolution]_output [shape=(1, 512, -1, 1)],
+         /model/encoder.4/encoder.4.0/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 512, -1, 32)]}
+         -> {/model/encoder.4/encoder.4.1/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 128, -1, 32)],
+             /model/encoder.4/encoder.4.0/ReduceMax_output_0 [shape=(1, 512, -1)],
+             (Unnamed Layer* 2888) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 139  | /model/encoder.4/encoder.4.1/rel_pos/conv/conv.1/conv.1.0/Conv [Op: CaskGemmConvolution]
+        {/model/encoder.4/encoder.4.1/rel_pos/conv/conv.0/conv.0.2/Relu_output_0 [shape=(1, 128, -1, 32)]}
+         -> {/model/encoder.4/encoder.4.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 512, -1, 32)]}
+    
+    Layer 140  | shuffle_between_(Unnamed Layer* 2888) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2888) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2888) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 141  | /model/encoder.4/encoder.4.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2888) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+         -> {/model/encoder.4/encoder.4.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 142  | shuffle_after_(Unnamed Layer* 2889) [Convolution]_output [Op: NoOp]
+        {/model/encoder.4/encoder.4.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+         -> {(Unnamed Layer* 2889) [Convolution]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 143  | {ForeignNode[/model/encoder.4/encoder.4.1/layer/layer.0/convs/Expand...(Unnamed Layer* 2952) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.4/encoder.4.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 2889) [Convolution]_output [shape=(1, 512, -1, 1)],
+         /model/encoder.4/encoder.4.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 512, -1, 32)]}
+         -> {(Unnamed Layer* 2952) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 144  | shuffle_between_(Unnamed Layer* 2952) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2952) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2952) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 145  | /model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2952) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+         -> {/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 146  | shuffle_after_(Unnamed Layer* 2953) [Convolution]_output [Op: NoOp]
+        {/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+         -> {(Unnamed Layer* 2953) [Convolution]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 147  | {ForeignNode[(Unnamed Layer* 2957) [Shuffle]...(Unnamed Layer* 2977) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 2953) [Convolution]_output [shape=(1, 512, -1, 1)]}
+         -> {(Unnamed Layer* 2977) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 148  | shuffle_between_(Unnamed Layer* 2977) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 2977) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 2977) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 149  | /model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 2977) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+         -> {/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 150  | shuffle_after_(Unnamed Layer* 2978) [Convolution]_output [Op: NoOp]
+        {/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+         -> {(Unnamed Layer* 2978) [Convolution]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 151  | {ForeignNode[(Unnamed Layer* 2982) [Shuffle]...(Unnamed Layer* 3003) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 2978) [Convolution]_output [shape=(1, 512, -1, 1)],
+         /model/encoder.4/encoder.4.0/ReduceMax_output_0 [shape=(1, 512, -1)]}
+         -> {/model/encoder.4/encoder.4.1/layer/layer.0/act/Relu_output_0 [shape=(1, 512, -1)],
+             (Unnamed Layer* 3003) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 152  | shuffle_between_(Unnamed Layer* 3003) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3003) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3003) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 153  | /model/encoder.4/encoder.4.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3003) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+         -> {/model/encoder.4/encoder.4.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 154  | shuffle_after_(Unnamed Layer* 3004) [Convolution]_output [Op: NoOp]
+        {/model/encoder.4/encoder.4.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+         -> {(Unnamed Layer* 3004) [Convolution]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 155  | {ForeignNode[/model/encoder.4/encoder.4.1/layer/layer.1/convs/Expand...(Unnamed Layer* 3067) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.4/encoder.4.1/grouper/Unsqueeze_5_output_0 [shape=(1, 1, -1)],
+         (Unnamed Layer* 3004) [Convolution]_output [shape=(1, 512, -1, 1)],
+         /model/encoder.4/encoder.4.1/rel_pos/conv/conv.1/conv.1.0/Conv_output_0 [shape=(1, 512, -1, 32)]}
+         -> {(Unnamed Layer* 3067) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 156  | shuffle_between_(Unnamed Layer* 3067) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3067) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3067) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 157  | /model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3067) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+         -> {/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 158  | shuffle_after_(Unnamed Layer* 3068) [Convolution]_output [Op: NoOp]
+        {/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+         -> {(Unnamed Layer* 3068) [Convolution]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 159  | {ForeignNode[(Unnamed Layer* 3072) [Shuffle]...(Unnamed Layer* 3092) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 3068) [Convolution]_output [shape=(1, 512, -1, 1)]}
+         -> {(Unnamed Layer* 3092) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 160  | shuffle_between_(Unnamed Layer* 3092) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3092) [Shuffle]_output [shape=(1, 512, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3092) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 161  | /model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3092) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_out_region [shape=(1, 512, 1, -1)]}
+         -> {/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+    
+    Layer 162  | shuffle_after_(Unnamed Layer* 3093) [Convolution]_output [Op: NoOp]
+        {/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv_new_out_region [shape=(1, 512, 1, -1)]}
+         -> {(Unnamed Layer* 3093) [Convolution]_output [shape=(1, 512, -1, 1)]}
+    
+    Layer 163  | {ForeignNode[/model/decoder/decoder.3.0/Unsqueeze...(Unnamed Layer* 3206) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.3/encoder.3.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.4/encoder.4.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         (Unnamed Layer* 3093) [Convolution]_output [shape=(1, 512, -1, 1)],
+         /model/encoder.4/encoder.4.1/layer/layer.0/act/Relu_output_0 [shape=(1, 512, -1)],
+         /model/encoder.3/encoder.3.1/layer/layer.1/act/Relu_output_0 [shape=(1, 256, -1)]}
+         -> {(Unnamed Layer* 3206) [Shuffle]_output [shape=(1, 768, -1, 1)]}
+    
+    Layer 164  | shuffle_between_(Unnamed Layer* 3206) [Shuffle]_output_and_/model/decoder/decoder.3.0/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3206) [Shuffle]_output [shape=(1, 768, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3206) [Shuffle]_output_and_/model/decoder/decoder.3.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 768, 1, -1)]}
+    
+    Layer 165  | /model/decoder/decoder.3.0/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3206) [Shuffle]_output_and_/model/decoder/decoder.3.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 768, 1, -1)]}
+         -> {/model/decoder/decoder.3.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 166  | shuffle_after_(Unnamed Layer* 3207) [Convolution]_output [Op: NoOp]
+        {/model/decoder/decoder.3.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 3207) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 167  | {ForeignNode[(Unnamed Layer* 3211) [Shuffle]...(Unnamed Layer* 3231) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 3207) [Convolution]_output [shape=(1, 256, -1, 1)]}
+         -> {(Unnamed Layer* 3231) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 168  | shuffle_between_(Unnamed Layer* 3231) [Shuffle]_output_and_/model/decoder/decoder.3.0/convs/convs.1/convs.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3231) [Shuffle]_output [shape=(1, 256, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3231) [Shuffle]_output_and_/model/decoder/decoder.3.0/convs/convs.1/convs.1.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 169  | /model/decoder/decoder.3.0/convs/convs.1/convs.1.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3231) [Shuffle]_output_and_/model/decoder/decoder.3.0/convs/convs.1/convs.1.0/Conv_out_region [shape=(1, 256, 1, -1)]}
+         -> {/model/decoder/decoder.3.0/convs/convs.1/convs.1.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+    
+    Layer 170  | shuffle_after_(Unnamed Layer* 3232) [Convolution]_output [Op: NoOp]
+        {/model/decoder/decoder.3.0/convs/convs.1/convs.1.0/Conv_new_out_region [shape=(1, 256, 1, -1)]}
+         -> {(Unnamed Layer* 3232) [Convolution]_output [shape=(1, 256, -1, 1)]}
+    
+    Layer 171  | {ForeignNode[/model/decoder/decoder.2.0/Unsqueeze...(Unnamed Layer* 3344) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.2/encoder.2.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.3/encoder.3.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         (Unnamed Layer* 3232) [Convolution]_output [shape=(1, 256, -1, 1)],
+         /model/encoder.2/encoder.2.1/layer/layer.3/act/Relu_output_0 [shape=(1, 128, -1)]}
+         -> {(Unnamed Layer* 3344) [Shuffle]_output [shape=(1, 384, -1, 1)]}
+    
+    Layer 172  | shuffle_between_(Unnamed Layer* 3344) [Shuffle]_output_and_/model/decoder/decoder.2.0/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3344) [Shuffle]_output [shape=(1, 384, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3344) [Shuffle]_output_and_/model/decoder/decoder.2.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 384, 1, -1)]}
+    
+    Layer 173  | /model/decoder/decoder.2.0/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3344) [Shuffle]_output_and_/model/decoder/decoder.2.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 384, 1, -1)]}
+         -> {/model/decoder/decoder.2.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 174  | shuffle_after_(Unnamed Layer* 3345) [Convolution]_output [Op: NoOp]
+        {/model/decoder/decoder.2.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 3345) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 175  | {ForeignNode[(Unnamed Layer* 3349) [Shuffle]...(Unnamed Layer* 3369) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 3345) [Convolution]_output [shape=(1, 128, -1, 1)]}
+         -> {(Unnamed Layer* 3369) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 176  | shuffle_between_(Unnamed Layer* 3369) [Shuffle]_output_and_/model/decoder/decoder.2.0/convs/convs.1/convs.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3369) [Shuffle]_output [shape=(1, 128, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3369) [Shuffle]_output_and_/model/decoder/decoder.2.0/convs/convs.1/convs.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 177  | /model/decoder/decoder.2.0/convs/convs.1/convs.1.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3369) [Shuffle]_output_and_/model/decoder/decoder.2.0/convs/convs.1/convs.1.0/Conv_out_region [shape=(1, 128, 1, -1)]}
+         -> {/model/decoder/decoder.2.0/convs/convs.1/convs.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+    
+    Layer 178  | shuffle_after_(Unnamed Layer* 3370) [Convolution]_output [Op: NoOp]
+        {/model/decoder/decoder.2.0/convs/convs.1/convs.1.0/Conv_new_out_region [shape=(1, 128, 1, -1)]}
+         -> {(Unnamed Layer* 3370) [Convolution]_output [shape=(1, 128, -1, 1)]}
+    
+    Layer 179  | {ForeignNode[/model/decoder/decoder.1.0/Unsqueeze...(Unnamed Layer* 3482) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.1/encoder.1.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         /model/encoder.2/encoder.2.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         (Unnamed Layer* 3370) [Convolution]_output [shape=(1, 128, -1, 1)],
+         /model/encoder.1/encoder.1.1/layer/layer.1/act/Relu_output_0 [shape=(1, 64, -1)]}
+         -> {(Unnamed Layer* 3482) [Shuffle]_output [shape=(1, 192, -1, 1)]}
+    
+    Layer 180  | shuffle_between_(Unnamed Layer* 3482) [Shuffle]_output_and_/model/decoder/decoder.1.0/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3482) [Shuffle]_output [shape=(1, 192, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3482) [Shuffle]_output_and_/model/decoder/decoder.1.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 192, 1, -1)]}
+    
+    Layer 181  | /model/decoder/decoder.1.0/convs/convs.0/convs.0.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3482) [Shuffle]_output_and_/model/decoder/decoder.1.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 192, 1, -1)]}
+         -> {/model/decoder/decoder.1.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 182  | shuffle_after_(Unnamed Layer* 3483) [Convolution]_output [Op: NoOp]
+        {/model/decoder/decoder.1.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 3483) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 183  | {ForeignNode[(Unnamed Layer* 3487) [Shuffle]...(Unnamed Layer* 3507) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 3483) [Convolution]_output [shape=(1, 64, -1, 1)]}
+         -> {(Unnamed Layer* 3507) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 184  | shuffle_between_(Unnamed Layer* 3507) [Shuffle]_output_and_/model/decoder/decoder.1.0/convs/convs.1/convs.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3507) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3507) [Shuffle]_output_and_/model/decoder/decoder.1.0/convs/convs.1/convs.1.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 185  | /model/decoder/decoder.1.0/convs/convs.1/convs.1.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3507) [Shuffle]_output_and_/model/decoder/decoder.1.0/convs/convs.1/convs.1.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/decoder/decoder.1.0/convs/convs.1/convs.1.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 186  | shuffle_after_(Unnamed Layer* 3508) [Convolution]_output [Op: NoOp]
+        {/model/decoder/decoder.1.0/convs/convs.1/convs.1.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 3508) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 187  | {ForeignNode[/model/decoder/decoder.0.0/Unsqueeze_1...(Unnamed Layer* 3620) [Shuffle]]} [Op: Myelin]
+        {/model/encoder.1/encoder.1.0/GatherElements_output_0 [shape=(1, -1, 3)],
+         pos [shape=(1, -1, 3)],
+         (Unnamed Layer* 3508) [Convolution]_output [shape=(1, 64, -1, 1)],
+         /model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv_output_0 [shape=(1, 32, -1)]}
+         -> {/model/decoder/decoder.0.0/TopK_output_1 [shape=(1, -1, 3)],
+             /model/decoder/decoder.0.0/Unsqueeze_8_output_0 [shape=(1, 1, -1, 3)],
+             /model/decoder/decoder.1.0/convs/convs.1/convs.1.2/Relu_output_0 [shape=(1, 64, -1)],
+             (Unnamed Layer* 3620) [Shuffle]_output [shape=(1, 96, -1, 1)]}
+    
+    Layer 188  | shuffle_between_(Unnamed Layer* 3620) [Shuffle]_output_and_/model/decoder/decoder.0.0/convs/convs.0/convs.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3620) [Shuffle]_output [shape=(1, 96, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3620) [Shuffle]_output_and_/model/decoder/decoder.0.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 96, 1, -1)]}
+    
+    Layer 189  | /model/decoder/decoder.0.0/convs/convs.0/convs.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 3620) [Shuffle]_output_and_/model/decoder/decoder.0.0/convs/convs.0/convs.0.0/Conv_out_region [shape=(1, 96, 1, -1)]}
+         -> {/model/decoder/decoder.0.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 32, 1, -1)]}
+    
+    Layer 190  | shuffle_after_(Unnamed Layer* 3621) [Convolution]_output [Op: NoOp]
+        {/model/decoder/decoder.0.0/convs/convs.0/convs.0.0/Conv_new_out_region [shape=(1, 32, 1, -1)]}
+         -> {(Unnamed Layer* 3621) [Convolution]_output [shape=(1, 32, -1, 1)]}
+    
+    Layer 191  | {ForeignNode[(Unnamed Layer* 3670) [Shuffle]...(Unnamed Layer* 3645) [Shuffle]]} [Op: Myelin]
+        {/model/decoder/decoder.1.0/convs/convs.1/convs.1.2/Relu_output_0 [shape=(1, 64, -1)],
+         (Unnamed Layer* 3621) [Convolution]_output [shape=(1, 32, -1, 1)]}
+         -> {(Unnamed Layer* 3670) [Shuffle]_output [shape=(1, 64, -1, 1)],
+             (Unnamed Layer* 3645) [Shuffle]_output [shape=(1, 32, -1, 1)]}
+    
+    Layer 192  | shuffle_between_(Unnamed Layer* 3670) [Shuffle]_output_and_/model/decoder/fc_all/fc_all.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3670) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3670) [Shuffle]_output_and_/model/decoder/fc_all/fc_all.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 193  | /model/decoder/fc_all/fc_all.0/Conv [Op: CaskGemmConvolution]
+        {shuffle_between_(Unnamed Layer* 3670) [Shuffle]_output_and_/model/decoder/fc_all/fc_all.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/decoder/fc_all/fc_all.0/Conv_new_out_region [shape=(1, 32, 1, -1)]}
+    
+    Layer 194  | shuffle_after_(Unnamed Layer* 3671) [Convolution]_output [Op: NoOp]
+        {/model/decoder/fc_all/fc_all.0/Conv_new_out_region [shape=(1, 32, 1, -1)]}
+         -> {(Unnamed Layer* 3671) [Convolution]_output [shape=(1, 32, -1, 1)]}
+    
+    Layer 195  | shuffle_between_(Unnamed Layer* 3645) [Shuffle]_output_and_/model/decoder/decoder.0.0/convs/convs.1/convs.1.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3645) [Shuffle]_output [shape=(1, 32, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3645) [Shuffle]_output_and_/model/decoder/decoder.0.0/convs/convs.1/convs.1.0/Conv_out_region [shape=(1, 32, 1, -1)]}
+    
+    Layer 196  | /model/decoder/decoder.0.0/convs/convs.1/convs.1.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 3645) [Shuffle]_output_and_/model/decoder/decoder.0.0/convs/convs.1/convs.1.0/Conv_out_region [shape=(1, 32, 1, -1)]}
+         -> {/model/decoder/decoder.0.0/convs/convs.1/convs.1.0/Conv_new_out_region [shape=(1, 32, 1, -1)]}
+    
+    Layer 197  | shuffle_after_(Unnamed Layer* 3646) [Convolution]_output [Op: NoOp]
+        {/model/decoder/decoder.0.0/convs/convs.1/convs.1.0/Conv_new_out_region [shape=(1, 32, 1, -1)]}
+         -> {(Unnamed Layer* 3646) [Convolution]_output [shape=(1, 32, -1, 1)]}
+    
+    Layer 198  | {ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]} [Op: Myelin]
+        {/model/decoder/decoder.0.0/TopK_output_1 [shape=(1, -1, 3)],
+         (Unnamed Layer* 3671) [Convolution]_output [shape=(1, 32, -1, 1)],
+         /model/decoder/decoder.0.0/Unsqueeze_8_output_0 [shape=(1, 1, -1, 3)],
+         (Unnamed Layer* 3646) [Convolution]_output [shape=(1, 32, -1, 1)]}
+         -> {/model/decoder/ReduceSum_output_0 [shape=(1, 32, -1)],
+             /model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0 [shape=(1, 32, -1)],
+             (Unnamed Layer* 3735) [Shuffle]_output [shape=(1, 32, 1, 1)],
+             (Unnamed Layer* 3728) [Shuffle]_output [shape=(1, 32, 1, 1)]}
+    
+    Layer 199  | Reformatting CopyNode for Input Tensor 0 to unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0 [Op: Reformat]
+        {/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0 [shape=(1, 32, -1)]}
+         -> {Reformatted Input Tensor 0 to unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0 [shape=(1, 32, -1)]}
+    
+    Layer 200  | unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0 [Op: NoOp]
+        {Reformatted Input Tensor 0 to unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0 [shape=(1, 32, -1)]}
+         -> {unsqueeze_tensor_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0_out_tensor [shape=(1, 32, -1, 1)]}
+    
+    Layer 201  | Reformatting CopyNode for Input Tensor 0 to unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/ReduceSum_output_0 [Op: Reformat]
+        {/model/decoder/ReduceSum_output_0 [shape=(1, 32, -1)]}
+         -> {Reformatted Input Tensor 0 to unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/ReduceSum_output_0 [shape=(1, 32, -1)]}
+    
+    Layer 202  | unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/ReduceSum_output_0 [Op: NoOp]
+        {Reformatted Input Tensor 0 to unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/ReduceSum_output_0 [shape=(1, 32, -1)]}
+         -> {unsqueeze_tensor_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/ReduceSum_output_0_out_tensor [shape=(1, 32, -1, 1)]}
+    
+    Layer 203  | /model/decoder/ddfc/fc1/fc1.0/fc1.0.0/Conv + /model/decoder/ddfc/fc1/fc1.0/fc1.0.1/Relu [Op: CaskGemmConvolution]
+        {(Unnamed Layer* 3728) [Shuffle]_output [shape=(1, 32, 1, 1)]}
+         -> {/model/decoder/ddfc/fc1/fc1.0/fc1.0.1/Relu_out_tensor [shape=(1, 256, 1, 1)]}
+    
+    Layer 204  | /model/decoder/ddfc/fc2/fc2.0/fc2.0.0/Conv + /model/decoder/ddfc/fc2/fc2.0/fc2.0.1/Relu [Op: CaskGemmConvolution]
+        {(Unnamed Layer* 3735) [Shuffle]_output [shape=(1, 32, 1, 1)]}
+         -> {/model/decoder/ddfc/fc2/fc2.0/fc2.0.1/Relu_out_tensor [shape=(1, 256, 1, 1)]}
+    
+    Layer 205  | Reformatting CopyNode for Input Tensor 0 to /model/decoder/ddfc/fc1/fc1.1/fc1.1.0/Conv + /model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle]_(Unnamed Layer* 3743) [Shuffle]_output + /model/decoder/ddfc/Mul [Op: NoOp]
+        {/model/decoder/ddfc/fc1/fc1.0/fc1.0.1/Relu_out_tensor [shape=(1, 256, 1, 1)]}
+         -> {Reformatted Input Tensor 0 to /model/decoder/ddfc/fc1/fc1.1/fc1.1.0/Conv + /model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle]_(Unnamed Layer* 3743) [Shuffle]_output + /model/decoder/ddfc/Mul [shape=(1, 256, 1, 1)]}
+    
+    Layer 206  | /model/decoder/ddfc/fc1/fc1.1/fc1.1.0/Conv + /model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle]_(Unnamed Layer* 3743) [Shuffle]_output + /model/decoder/ddfc/Mul [Op: CaskGemmConvolution]
+        {Reformatted Input Tensor 0 to /model/decoder/ddfc/fc1/fc1.1/fc1.1.0/Conv + /model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle]_(Unnamed Layer* 3743) [Shuffle]_output + /model/decoder/ddfc/Mul [shape=(1, 256, 1, 1)]}
+         -> {/model/decoder/ddfc/Mul_out_tensor [shape=(1, 32, 1, 1)]}
+    
+    Layer 207  | Reformatting CopyNode for Input Tensor 1 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [Op: NoOp]
+        {/model/decoder/ddfc/Mul_out_tensor [shape=(1, 32, 1, 1)]}
+         -> {Reformatted Input Tensor 1 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [shape=(1, 32, 1, 1)]}
+    
+    Layer 208  | /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [Op: CaskConvolution]
+        {/model/decoder/ddfc/fc2/fc2.0/fc2.0.1/Relu_out_tensor [shape=(1, 256, 1, 1)],
+         Reformatted Input Tensor 1 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [shape=(1, 32, 1, 1)]}
+         -> {Reformatted Output Tensor 0 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [shape=(1, 32, 1, 1)]}
+    
+    Layer 209  | Reformatting CopyNode for Output Tensor 0 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [Op: NoOp]
+        {Reformatted Output Tensor 0 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [shape=(1, 32, 1, 1)]}
+         -> {/model/decoder/ddfc/sigmoid/Sigmoid_out_tensor [shape=(1, 32, 1, 1)]}
+    
+    Layer 210  | PWN(/model/decoder/ddfc/Mul_2, /model/decoder/ddfc/Add_1) [Op: PointWiseV2]
+        {/model/decoder/ddfc/sigmoid/Sigmoid_out_tensor [shape=(1, 32, 1, 1)],
+         unsqueeze_tensor_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/ReduceSum_output_0_out_tensor [shape=(1, 32, -1, 1)],
+         unsqueeze_tensor_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0_out_tensor [shape=(1, 32, -1, 1)]}
+         -> {/model/decoder/ddfc/Add_1_out_tensor [shape=(1, 32, -1, 1)]}
+    
+    Layer 211  | copied_squeeze_after_/model/decoder/ddfc/Add_1 [Op: NoOp]
+        {/model/decoder/ddfc/Add_1_out_tensor [shape=(1, 32, -1, 1)]}
+         -> {copied_squeeze_after_/model/decoder/ddfc/Add_1_copy_output [shape=(1, 32, -1)]}
+    
+    Layer 212  | copied_squeeze_after_/model/decoder/ddfc/Add_1_copy_output [Op: Reformat]
+        {copied_squeeze_after_/model/decoder/ddfc/Add_1_copy_output [shape=(1, 32, -1)]}
+         -> {/model/decoder/ddfc/Concat_output_0 [shape=(1, 32, -1)]}
+    
+    Layer 213  | PWN(/model/decoder/ddfc/Mul_3, /model/decoder/ddfc/Add_2) [Op: PointWiseV2]
+        {/model/decoder/ddfc/sigmoid/Sigmoid_out_tensor [shape=(1, 32, 1, 1)],
+         unsqueeze_tensor_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0_out_tensor [shape=(1, 32, -1, 1)]}
+         -> {/model/decoder/ddfc/Add_2_out_tensor [shape=(1, 32, -1, 1)]}
+    
+    Layer 214  | copied_squeeze_after_/model/decoder/ddfc/Add_2 [Op: NoOp]
+        {/model/decoder/ddfc/Add_2_out_tensor [shape=(1, 32, -1, 1)]}
+         -> {copied_squeeze_after_/model/decoder/ddfc/Add_2_copy_output [shape=(1, 32, -1)]}
+    
+    Layer 215  | copied_squeeze_after_/model/decoder/ddfc/Add_2_copy_output [Op: Reformat]
+        {copied_squeeze_after_/model/decoder/ddfc/Add_2_copy_output [shape=(1, 32, -1)]}
+         -> {/model/decoder/ddfc/Concat_output_0 [shape=(1, 32, -1)]}
+    
+    Layer 216  | (Unnamed Layer* 3760) [Shuffle] [Op: NoOp]
+        {/model/decoder/ddfc/Concat_output_0 [shape=(1, 64, -1)]}
+         -> {(Unnamed Layer* 3760) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 217  | shuffle_between_(Unnamed Layer* 3760) [Shuffle]_output_and_/model/head/head/head.0/head.0.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3760) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3760) [Shuffle]_output_and_/model/head/head/head.0/head.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 218  | /model/head/head/head.0/head.0.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 3760) [Shuffle]_output_and_/model/head/head/head.0/head.0.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/head/head/head.0/head.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 219  | shuffle_after_(Unnamed Layer* 3761) [Convolution]_output [Op: NoOp]
+        {/model/head/head/head.0/head.0.0/Conv_new_out_region [shape=(1, 64, 1, -1)]}
+         -> {(Unnamed Layer* 3761) [Convolution]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 220  | {ForeignNode[(Unnamed Layer* 3765) [Shuffle]...(Unnamed Layer* 3785) [Shuffle]]} [Op: Myelin]
+        {(Unnamed Layer* 3761) [Convolution]_output [shape=(1, 64, -1, 1)]}
+         -> {(Unnamed Layer* 3785) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+    
+    Layer 221  | shuffle_between_(Unnamed Layer* 3785) [Shuffle]_output_and_/model/head/head/head.2/head.2.0/Conv [Op: NoOp]
+        {(Unnamed Layer* 3785) [Shuffle]_output [shape=(1, 64, -1, 1)]}
+         -> {shuffle_between_(Unnamed Layer* 3785) [Shuffle]_output_and_/model/head/head/head.2/head.2.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+    
+    Layer 222  | /model/head/head/head.2/head.2.0/Conv [Op: CaskConvolution]
+        {shuffle_between_(Unnamed Layer* 3785) [Shuffle]_output_and_/model/head/head/head.2/head.2.0/Conv_out_region [shape=(1, 64, 1, -1)]}
+         -> {/model/head/head/head.2/head.2.0/Conv_new_out_region [shape=(1, 2, 1, -1)]}
+    
+    Layer 223  | shuffle_after_(Unnamed Layer* 3786) [Convolution]_output [Op: NoOp]
+        {/model/head/head/head.2/head.2.0/Conv_new_out_region [shape=(1, 2, 1, -1)]}
+         -> {(Unnamed Layer* 3786) [Convolution]_output [shape=(1, 2, -1, 1)]}
+    
+    Layer 224  | (Unnamed Layer* 3790) [Shuffle] [Op: NoOp]
+        {(Unnamed Layer* 3786) [Convolution]_output [shape=(1, 2, -1, 1)]}
+         -> {output [shape=(1, 2, -1)]}

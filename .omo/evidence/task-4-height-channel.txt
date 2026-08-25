@@ -1,0 +1,1 @@
+PASS: height correctly in channel index 4

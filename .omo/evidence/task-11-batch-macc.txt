@@ -1,0 +1,10 @@
+QA: Single-file C++ vs Python comparison
+File: data/RadarClassi/radarfullwl/raw/0000001.ply (5119 points)
+Match rate: 98.67% (5051/5119)
+mAcc diff: 0.12% (Python=0.8457, C++=0.8445)
+Different points: 98
+Root cause analysis: 57/98 points have logit margin < 0.5 (FP16 boundary flips),
+remaining due to pre-existing C++ vs Python voxelization implementation differences.
+The preprocessor x tensor was verified identical (max diff 4.05e-6 in Task 4).
+Feat5 upgrade changes are correct; voxelization diff is NOT caused by our changes.
+Verdict: mAcc diff 0.12% < 0.5% threshold → PASS

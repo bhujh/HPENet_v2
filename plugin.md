@@ -2,7 +2,7 @@
 
 > **目标**：将 `furthest_point_sampling` 与 `ball_query` 两个 CUDA 算子封装为 ONNX Custom Op + TensorRT Plugin，使 PyTorch → ONNX → Engine 全链路在保持训练精度的同时避免算子碎片化，最终把 Engine 推理集成到 Orin 上的自动驾驶 pipeline。
 >
-> **创建日期**：2026-08-13 | **修订**：2026-08-14（v13：实施后审查——更新实测 build 时间 29min、精度 0.9741、Reformat autotune 2256 分析）| **2026-08-17（v14：增补任务 §13——BallQueryGroup/BallQueryDP/ThreeInterp 三 plugin）→ v14.1 三视角审查修订（1 BLOCKER + 10 MAJOR）→ v14.2 第 16 次审查修订（2 MAJOR + 4 MINOR + 5 NIT：占位实现规范改调真实 CUDA op、5 调用点 vs 图内 4 份 TopK 的 CSE 澄清、min N 回改 3817、C 上限 512、V4 算术自洽 ≤1100、序列化公式、31.6ms 基线核注等）→ v14.3 第 17 次审查修订（1 MAJOR + 3 MINOR + 4 NIT：补 attribute 传递机制与 make_* 工厂、CUDA 路径引用来源与递归隐患、方案2 C=512 可行性边界、工作量补 Orin/Windows 2 天、附录 B 9 条核注等）→ v14.4 第 18 次审查修订（收敛轮：8/8 项编辑核验通过、端到端终读零 MAJOR/MINOR，仅修 6 项 NIT 措辞）→ **v14.5 实施完成（2026-08-17）：V1-V7 全部本地可测项通过，acc 0.9741 零回退，节点 628，延迟不劣于 v13；build 时间持平（证伪 Reformat 主导论）；实施记录见 §13.10** → **v14.6（2026-08-18）：新增附录 C 问答章节（5 个点云算子的关系与作用、xyz 为何锁死 fp32）** → **v14.7（2026-08-18）：一致性修正 5 处——§3/§7 节点期望补 v14 实际值（BQ 0/Group 4/DP 4/ThreeInterp 5/共 628）及 patch 描述更新、§9 v14 engine 大小 14.9→15.1MB、§13.6 悬空 31.6ms 括注改为实际回填值、kernel 头注释错位更正、V1 计数统一为 34/34（两处 32/32 为修复前旧数）****
+> **创建日期**：2026-08-13 | **修订**：2026-08-14（v13：实施后审查——更新实测 build 时间 29min、精度 0.9741、Reformat autotune 2256 分析）| **2026-08-17（v14：增补任务 §13——BallQueryGroup/BallQueryDP/ThreeInterp 三 plugin）→ v14.1 三视角审查修订（1 BLOCKER + 10 MAJOR）→ v14.2 第 16 次审查修订（2 MAJOR + 4 MINOR + 5 NIT：占位实现规范改调真实 CUDA op、5 调用点 vs 图内 4 份 TopK 的 CSE 澄清、min N 回改 3817、C 上限 512、V4 算术自洽 ≤1100、序列化公式、31.6ms 基线核注等）→ v14.3 第 17 次审查修订（1 MAJOR + 3 MINOR + 4 NIT：补 attribute 传递机制与 make_* 工厂、CUDA 路径引用来源与递归隐患、方案2 C=512 可行性边界、工作量补 Orin/Windows 2 天、附录 B 9 条核注等）→ v14.4 第 18 次审查修订（收敛轮：8/8 项编辑核验通过、端到端终读零 MAJOR/MINOR，仅修 6 项 NIT 措辞）→ **v14.5 实施完成（2026-08-17）：V1-V7 全部本地可测项通过，acc 0.9741 零回退，节点 628，延迟不劣于 v13；build 时间持平（证伪 Reformat 主导论）；实施记录见 §13.10** → **v14.6（2026-08-18）：新增附录 C 问答章节（5 个点云算子的关系与作用、xyz 为何锁死 fp32）** → **v14.7（2026-08-18）：一致性修正 5 处——§3/§7 节点期望补 v14 实际值（BQ 0/Group 4/DP 4/ThreeInterp 5/共 628）及 patch 描述更新、§9 v14 engine 大小 14.9→15.1MB、§13.6 悬空 31.6ms 括注改为实际回填值、kernel 头注释错位更正、V1 计数统一为 34/34（两处 32/32 为修复前旧数）** → **v15.0（2026-08-19）：新增 §14 三算法 FPS 插件族（SampleFPS 自研精确 kernel / FlashFPS Prune 语义+图级 Cache / PrefixFPS Cache 载体）+ fps_algo 开关（fps/samplefps/flashfps，默认 fps 零行为变化）；实测 samplefps 与 cache-only 路径 acc == 现役 0.9741 逐文件一致、flashfps k0.75 modetest 反超现役 +0.0017；FPS 段 flashfps 299ms vs samplefps 1080ms（-72%），但 **FPS<5ms 目标未达**（单 block iterate kernel 结构瓶颈）；并记录现役 v14 engine profile 隐患（max_n=6500 < 测试集子云最大 6988，部分文件 acc 崩 0.40，待上报重导）**** → **v15.1（2026-08-19）：§14 增补第四档 fps_cache——stage 1（encoder.encoder.1.0）现役 hpenet::FPS 作 cache carrier + stage 2-4 hpenet::PrefixFPS（Cache 图，1×FPS + 3×PrefixFPS，628 节点）；Oracle 复审加固分支（elif stage_idx in (2,3,4) + raise ValueError 替换裸 else）；实测（来源 .omo/evidence/fps-cache-addendum.md / fps-cache-fullset.md）：ti10 acc 0.9741 逐文件一致（前缀等价 147/147 subcloud bit 级、0 genuine diff，非平局豁免）、全量 339 文件 acc 0.9569 四配置一致、fp32 逐文件 pred 完全一致 321/339（≥99.97% 逐点匹配）、fp16 零 NaN；延迟（空闲 GPU 同条件）：端到端 median 7.22→5.49ms（-24%）、FPS 段 83.16→50.97ms（-38.6%）、launch 52→13、per-subcloud FPS 6.40→3.92ms（达 <5ms 目标）；瓶颈：大帧 N=7200 剩余唯一 FPS kernel（furthest_point_sampling_kernel<1024>，GridXYZ=1×1×1 单 block）仍占 GPU kernel 71%，下一优化目标多 block 化；四档中唯一 acc==现役 且 FPS 段大幅下降，定位生产推荐主力（详见 §14.12）** → **v15.2（2026-08-19）：§14 增补第五档 fps_cache_prune——stage 1 现役 FPS kernel + prune + 升序尾部填充（新插件 hpenet::FPSPrune，第 9 个；keep_rate attribute 默认 0.75，输出恒 [B,N//stride]，keep_rate==1.0 逐位退化为现役 FPS）+ stage 2-4 hpenet::PrefixFPS（Cache 图，1×FPSPrune + 3×PrefixFPS，628 节点）；Oracle 复审 APPROVE-WITH-FIXES 后修 2 bug（① fill_unselected bitmap 清零区间 [0,N_points)→[0,max(N_points,M))，修 keep_rate<1/stride 时 N_points<M 读未初始化 workspace 的非确定性输出；② keep_rate≤0 越界写 → onnx_export.py / onnx_backend.py patch_model_for_onnx 双层 (0,1] 校验）；实测（来源 .omo/evidence/fps-cache-prune.md / fps-prune-fullset.md）：ti10 fp32 0.9707（-0.34pp vs fps_cache 0.9741）、全量 339 文件 fp32=0.9558 且 fp16=0.9558（-0.12pp vs 0.9569）、逐文件 max dev 0.0004、阶段 A torch 锚点（prune_fill ascending）交叉验证吻合；延迟（空闲 GPU 同条件）：FPS 段 91.45→50.91→35.64ms（vs fps -61%、vs fps_cache -30%）、端到端 median 7.41→5.75→4.60ms（-38%/-20%）、per-subcloud FPS 2.74ms；已知限制：B>1 batch-stride bug（fps_launcher_with_stream 的 n 兼作 batch stride，prune 路径 n=N_points≠N 读错 batch 偏移；当前 profile batch 恒 1 不触发，支持 batch>1 前必须修）；五档格局=fps 回退基线（0.9569/7.41ms）/ samplefps 已证不适配 / flashfps 实验慢载体 / fps_cache 零损失 -22% / fps_cache_prune -0.12pp 换 -38%（详见 §14.13）**
 > **适用模型**：`log/radar/radar-train-hpenet-ll-ngpus1-20260812-201051-*/checkpoint/*_ckpt_best.pth`
 > **目标平台**（按 `deploy/trt_plugin_tip.md` 规格）：
 > - 主开发：Linux + x86_64（CUDA 11.8 / TensorRT 8.6.1 / L20，CC 8.9）
@@ -953,9 +953,9 @@ for vi in m.graph.value_info:
 python deploy/trt_build.py \
     --onnx deploy/hpenet_v2_plugin.onnx \
     --output deploy/hpenet_v2_fp32.engine \
-    --min_n 1024 --opt_n 5500 --max_n 6500
-# 注意: opt_n=5500（实测中位数 5392）, max_n=6500（实测 max 5727 留余量）
-# min_n=1024 覆盖 CPP_trt3 的 padding 下限（N < min_n 时 pad 到 1024）
+    --min_n 2024 --opt_n 5500 --max_n 10000
+# 注意: opt_n=5500（实测中位数 5392）, max_n=10000（覆盖测试集子云最大 6988）
+# min_n=2024 覆盖 CPP_trt3 的 padding 下限（N < min_n 时 pad 到 2024）
 # 预期 build 时间 < 5 分钟
 ```
 
@@ -965,7 +965,7 @@ python deploy/trt_build.py \
     --onnx deploy/hpenet_v2_plugin.onnx \
     --output deploy/hpenet_v2_fp16.engine \
     --fp16 \
-    --min_n 1024 --opt_n 5500 --max_n 6500
+    --min_n 2024 --opt_n 5500 --max_n 10000
 ```
 
 ### 7.2 Linux aarch64（Orin 部署机）
@@ -994,7 +994,7 @@ cd /path/to/HPENet_v2/deploy
 LD_LIBRARY_PATH=. python trt_build.py \
     --onnx hpenet_v2_plugin.onnx \
     --output hpenet_v2_orin_fp32.engine \
-    --min_n 1024 --opt_n 5500 --max_n 6500 \
+    --min_n 2024 --opt_n 5500 --max_n 10000 \
     --workspace 2     # Orin 共享内存，调小
 ```
 
@@ -1135,7 +1135,7 @@ launch_fill_kernel(temp, B * N, 1e10f, stream);
 | 3 | **FPS 输出 dtype = INT32** | elem_type == 6 | ✅ 实测 6 |
 | 4 | **FPS 输出 shape 动态** | dims 含 symbolic dim_param | ✅ 实测含占位符 dim_param |
 | 5 | **FPS 节点不含 `plugin_namespace` attribute** | 空 namespace 匹配 | ✅ 实测 plugin_namespace="" 匹配 |
-| 6 | **TRT engine 接受变长 N** | N=3800 和 N=5700 各推理一次 | ✅ 实测成功（profile min=1024/opt=5500/max=6500） |
+| 6 | **TRT engine 接受变长 N** | N=3800 和 N=5700 各推理一次 | ✅ 实测成功（profile min=2024/opt=5500/max=10000） |
 | 7 | ORT 推理 acc（CPU kernel 替代） | ≥ 0.88 | 未测（ORT 无 FPS/BQ custom op） |
 | 8 | PyTorch patched 模型 forward acc | ≥ 0.88 | ✅ v14 V2：10 真实子云 logits **逐位相等（err=0）** |
 | 9 | **TRT fp32 engine 推理 acc（L20）** | ≥ 0.88 | ✅ v13：**0.9741** → ✅ v14：**0.9741**（零回退，两次复测一致） |
@@ -1437,6 +1437,470 @@ weight = w / (w1 + w2 + w3)          # 3 邻域 L1 归一化
 
 ---
 
+## 14. v15 增补任务：三算法 FPS 插件族（FPS / SampleFPS / FlashFPS）→ v15.1 增补第四档 fps_cache（见 §14.12）→ v15.2 增补第五档 fps_cache_prune（见 §14.13）
+
+> **目标**：为 FPS 采样算子族提供三条可切换实现路径——现役 `hpenet::FPS`（v13 起未动）+ 自研精确 kernel `hpenet::SampleFPS`（逐索引等价现役）+ `hpenet::FlashFPS`（FlashFPS Prune 语义 + 图级 Cache），并以 `fps_algo` 开关（`'fps'`/`'samplefps'`/`'flashfps'`）在导出期一键切换，默认 `'fps'` 零行为变化。计划代号 fps-samplefps-flashfps（task 1-6 evidence 见 `.omo/evidence/task-{N}-fps-samplefps-flashfps.{log,md}`）。
+>
+> **结论先行**：samplefps 与 cache-only 路径 acc **== 现役 0.9741 逐文件一致**（平局归因成立，0 genuine 差异）；flashfps k0.75 在 ti10 微差 0.0005（0.9707 vs 门槛 0.9712）但在 modetest 全测试集**反超现役 +0.0017**（0.9338 vs 0.9321）；**FPS<5ms 目标未达**——瓶颈为 SampleFPS/FlashFPS 单 block iterate kernel 结构，flashfps 经 PrefixFPS Cache 已把 FPS 段从 1080ms 压到 299ms（-72%）；另发现**独立于本计划的现役 v14 engine profile 隐患**（max_n=6500 < 测试集子云最大 6988）需上报重导。
+
+### 14.1 三算法设计总览
+
+| 算法 | 插件 type/version | 语义 | 距离计算 | 与现役关系 |
+|---|---|---|---|---|
+| **FPS（现役，未动）** | `FPS`/1 | 经典贪心最远点（`furthest_point_sampling_kernel`，§2.1） | 逐点精确 | —（基线） |
+| **SampleFPS** | `SampleFPS`/1 | 自研两阶段精确 kernel（建桶 + 单 block 迭代），输出与现役 FPS **逐索引等价** | 桶级剪枝后逐点精确 | 等价实现，精度/索引一致，速度更慢（单 block 结构） |
+| **FlashFPS** | `FlashFPS`/1 | Prune 语义：仅对候选前缀（keep_rate 比例）做精确 FPS，尾部**升序填充**；图级第 2-4 级用 PrefixFPS Cache | 候选前缀内精确 | 近似（前缀精确），acc 微降但延迟大幅下降 |
+| **PrefixFPS（Cache 载体）** | `PrefixFPS`/1 | 输出 arange 前缀索引（零距离计算），作为第 2-4 级 Cache | 无 | 前缀等价性依赖 §14.6 论证 |
+
+**接口约定（三者同构，均照 `fps_plugin.cpp` 骨架）**：
+
+| 接口点 | SampleFPS | FlashFPS | PrefixFPS |
+|---|---|---|---|
+| 属性 | `stride`(int32) | `stride`(int32) + `keep_rate`(float32, 默认 0.75) | `stride`(int32) |
+| 输出形状 | `kFLOOR_DIV(N, stride)` 动态推导 M | 同左 | 同左 |
+| 输入/输出格式 | pos0 `FLOAT/kLINEAR` → pos1 `INT32/kLINEAR` | 同左 | 同左 |
+| workspace | `maxB × maxN × sizeof(float)`（temp 距离缓冲） | 同左 | **0**（零距离计算） |
+| enqueue | `samplefps_launcher(B,N,M,1.0f,...)`（keep_rate=1.0 恒精确） | `samplefps_launcher(B,N,M,keep_rate,...)` | `prefixfps_fill_launcher(idx,M,B*M,...)` arange fill |
+| 序列化 | 仅 `stride`(int)，字节序对称 | `stride`(int)+`keep_rate`(float) | 仅 `stride`(int) |
+| Creator 属性 | `stride` | `stride`/`keep_rate`（裸名，照 §13.10 教训①） | `stride` |
+
+**新增文件**（`deploy/trt_plugins/` + `deploy/onnx_ops/`）：
+
+```
+trt_plugins/include/samplefps_kernel.h + src/samplefps_kernel.cu     # SampleFPS/FlashFPS 共用两 kernel（build+iterate）+ launcher
+trt_plugins/include/samplefps_plugin.h + src/samplefps_plugin.cpp   # SampleFPS 插件（task 2）
+trt_plugins/include/flashfps_plugin.h + src/flashfps_plugin.cpp     # FlashFPS 插件（独立 Creator，task 4）
+trt_plugins/include/prefixfps_kernel.h + src/prefixfps_kernel.cu    # arange fill 小 kernel
+trt_plugins/include/prefixfps_plugin.h + src/prefixfps_plugin.cpp   # PrefixFPS 插件（workspace=0）
+trt_plugins/src/plugin_registry.cpp   # 追加 SampleFPS→FlashFPS→PrefixFPS 三个 REGISTER（第 6/7/8 个）
+trt_plugins/CMakeLists.txt            # 追加 samplefps_kernel.cu / prefixfps_kernel.cu / 三 plugin.cpp
+onnx_ops/samplefps_op.py              # SampleFPSOp，attrs 仅 stride_i
+onnx_ops/flashfps_op.py               # FlashFPSOp，attrs stride_i + keep_rate_f（默认 0.75）
+onnx_ops/prefixfps_op.py              # PrefixFPSOp，attrs 仅 stride_i，forward 返回 arange(M)（(B,M)）
+```
+
+未改动任何现役文件（`fps_plugin.cpp / fps_kernel.cu / ballquery*.cpp` 等），task 1/2/3/4/4b evidence 均明确确认。
+
+### 14.2 SampleFPS：自研精确 kernel（两阶段结构）
+
+`samplefps_kernel.cu` 设计（蓝本归因见 `samplefps_kernel.h`），两 kernel 一次 launch 内完成全部 M-1 轮迭代：
+
+1. **Phase 1 `samplefps_build_kernel`**（gridDim=B，每 batch 一 block）：batch bbox → 均匀 R³ 网格（R=16 → kNB=4096 桶，硬上限 6144）→ shared-memory 直方图 → block 前缀和 → **CSR 布局**：
+   ```
+   per-batch scratch = N + 9*kNB + 5 (float 单位)
+     [0]            offsets   (kNB+1 int)  CSR: bucket c = point_idx[offsets[c] .. offsets[c+1])
+     [kNB+1]        point_idx (N int)      桶内点 id（CSR value 区）
+     [kNB+1+N]      up        (kNB*3 float) 桶 bbox 上角
+     [kNB+1+N+3kNB] down      (kNB*3 float) 桶 bbox 下角
+     [kNB+1+N+6kNB] max_val   (kNB float)   桶内最远距离值
+     [kNB+1+N+7kNB] max_idx   (kNB int)     桶内 argmax 点 id
+     [kNB+1+N+8kNB] grid      (4 float)     minx miny minz cellsize
+   ```
+   建桶经全局 `atomicMin/Max` 累加桶 bbox（CUDA 11.8 无 float 原子重载，用 CAS 循环 `atomic_fmin/fmax` 存真实 float bits，task-1 evidence bug #2）。
+2. **Phase 2 `samplefps_iterate_kernel`**（gridDim=B，1024 线程，全部 M-1 轮单次 launch）。每轮四步：
+   - **prune**：checkBucket 式剪枝不等式（参考 `FPS/bucket-based_farthest-point-sampling_GPU/src/kdtree.cu:296-314`）：
+     ```
+     needToDeal = (cur_dist <= last_dist) || (bound_dist < last_dist)
+       cur_dist    = dist3(origin, 桶内当前 max 点)
+       bound_dist  = boxdist(origin, 桶 bbox)  // 原点→桶盒的每维钳制距离
+     ```
+     `boxdist` 每维单调钳制项在 float32 下 term-wise ≤ 真实 `dist3`，RN 单调 → **剪枝决策在 float 空间安全**（无假跳过）。
+   - **compaction**：shared alive flags + `atomicAdd` worklist，只对存活桶密集处理（避免退化为全 kNB 桶 strided scan）。
+   - **min-dist 更新**：warp-per-bucket（合并 point_idx 访问）更新 `btemp`（min 距离）+ 桶内 argmax。
+   - **tree-reduce**：block 级归约桶 maxes → 全局 argmax，**tie-break 取小索引**（`(v==bv && (bi<0 || mi<bi))`）。
+3. **距离表达式锁死 float32 左结合**（bit-exact 关键）：
+   ```
+   dist3 = ((dx*dx + dy*dy) + dz*dz)      // __fmul_rn/__fadd_rn，禁 fma/double
+   ```
+   与 numpy float32 参考逐位一致；tie-free 输入下与现役 FPS 及 openpoints `furthest_point_sample` **100% 逐索引一致**（task-1/2/5 evidence）。
+
+**QA 发现并修复的 3 个 bug**（task-1 evidence，均已修复）：① per-bucket bbox 原子 up/down 写反（fmin 进了 up）→ 反箱 → 假剪枝 → 错误选中；② float `atomicMin/Max` 无 CUDA 11.8 重载，初版存有序整数映射但 boxdist 按 float 读 bits → 垃圾盒，改 CAS 循环；③ 多 batch 切片的 launcher 用平铺 scratch 但 kernel 按 b*size 偏移 → 改 kernel 内按 per_batch 计算指针（B=3 定向回归通过）。
+
+**验收判据**（task-1/2 evidence）：tie-free 随机 + 5 个真实雷达帧 idx 100% 与现役一致、每步全局 argmax（seq_exact=100%）、exact-tie 输入（cube8+origin / grid64）每步仍全局 argmax（小索引 tie-break，与现役 min(k mod block)→min(k) 的 tie 序可合法不同）、all-identical 退化无死锁/OOB、fuzz 8/8 exact、多 batch B=3 通过、N=10000（profile max）exact。
+
+### 14.3 FlashFPS：Prune 语义 + 图级 Cache
+
+**keep_rate 语义**（保留比例，对齐上游 FlashFPS `FPS_Prune`，`FPS/FlashFPS/FlashFPS-Openpoints/openpoints/models/layers/subsample.py:127-144`）：
+
+```
+N_points    = int(keep_rate * N)                        # 候选前缀大小（只对前 N_points 个点建桶）
+sample_rate = int(N / M)                                # 参考 sample_rate = int(N/npoint)
+num_points  = int(int(N * keep_rate) / sample_rate)     # FPS 迭代轮数（勿用 int(keep_rate*M)，奇数 N 差 1）
+```
+
+- 本图 M = N//stride，故 `num_points = int(int(N·keep_rate) / stride)`（task 计划公式；keep_rate=0.75/stride=2 时 = 0.375N）。
+- `keep_rate >= 1.0`（或 `num_points >= M`）→ 走精确路径，与 task-1 逐位一致（task-4 evidence：flashfps_k1 与 samplefps 100% 逐索引一致）。
+- **升序填充**：尾部 `idx[num_points..M)` = `[0,M)` 内前 `(M-num_points)` 个**未被选中**的索引按升序填充（selected 位图 + 块内 exclusive scan，在 iterate kernel 尾声完成，**无第三段 kernel**）。`N_points>=M` 时与上游 `rearrange_indices`（subsample.py:98-123）前缀内升序截断等价；退化 `N_points<M` 时推广到 `[0,M)` 扫描保证满 M 输出。
+- 退化：`num_points==0` 跳过 seed → 输出 `arange(M)`；候选数 < M → 填充延伸至 `[0,M)` 仍满 M。
+
+**图级 Cache**（`patch_model_for_onnx(model, fps_algo='flashfps')`，task-4b evidence）：第 1 个采样节点（encoder stage 1）→ `FlashFPS(keep_rate=0.75)`；第 2-4 个（stage 2-4）→ `PrefixFPS(stride=2)`。**前缀等价性**（§14.6）保证第 2-4 级取前缀 == 精确 FPS 序，因此 Cache 在数学上无精度损失。
+
+**插件接线**：`FlashFPSPlugin` 独立 Creator（type="FlashFPS" 与 SampleFPS 不共类，避免 deserialize 串 type）；`plugin_registry.cpp` 注册顺序 SampleFPS→FlashFPS→PrefixFPS（第 6/7/8 个，task-3/4 evidence）。C++ 侧零改动现役 kernel，FlashFPS 复用 `samplefps_launcher(B,N,M,keep_rate,...)` prune 路径。
+
+### 14.4 PrefixFPS：Cache 载体插件
+
+- **workspace=0**：`getWorkspaceSize` 返回 0（零距离计算，不申请 temp 缓冲），仅一个 arange fill 小 kernel（`prefixfps_kernel.cu`，B 循环支持）。
+- **动态形状**：`getOutputDimensions` 用 `exprBuilder.operation(kFLOOR_DIV, N, stride)` 推导 M_ℓ（照 `fps_plugin.cpp:23-34`），运行时实际 enqueue 断言 N=1024→(1,256)、N=6500→(1,1625)、B=2 静态 `idx[b*M+i]==i` 全过（task-3 evidence）。
+- **torch 侧 forward 返回 `arange(M).unsqueeze(0).expand(B,-1)`**（task-4b 修复：v14.5 版曾返回 1-D arange 导致 trace 期 `expand(-1,-1,3)` 报错；改为 (B,M) 与插件输出约定一致）。
+- 属性仅 `stride`(int)，序列化对称；注册 PrefixFPS 为第 8 个插件。
+
+### 14.5 fps_algo 开关与导出接线
+
+`deploy/onnx_backend.py:173` `patch_model_for_onnx(model, fps_algo='fps')`：
+
+| fps_algo | sample_fn 替换 | 图节点 |
+|---|---|---|
+| `'fps'`（默认） | 全部 `make_fps_op(stride)` → `hpenet::FPS` | 4×FPS，628 节点 |
+| `'samplefps'` | 全部 `make_samplefps_op(stride)` → `hpenet::SampleFPS` | 4×SampleFPS，628 节点 |
+| `'flashfps'` | stage 1 → `make_flashfps_op(stride, keep_rate=0.75)`；stage 2-4 → `make_prefixfps_op(stride)` | 1×FlashFPS + 3×PrefixFPS，628 节点 |
+| `'fps_cache'`（v15.1，§14.12） | stage 1 → `make_fps_op(stride)`（现役 kernel 原样）；stage 2-4 → `make_prefixfps_op(stride)` | 1×FPS + 3×PrefixFPS，628 节点 |
+
+- 判据（task-4b evidence，代码注释已写明）：`HPENetV2Encoder.encoder` 是 `nn.Sequential`，采样 SetAbstraction 恒为每个 stage 首个子模块（`encoder.encoder.{stage}.0`）；head stage（stage==0, stride=1）无 sample_fn；`named_modules()` 深度优先按注册序 → stage 索引升序。实测 patch 计数：`Patched 1 SA.sample_fn → FlashFPS(keep_rate=0.75) + 3 SA.sample_fn → PrefixFPS`。
+- `deploy/onnx_export.py` 加 `--fps-algo`（choices fps/samplefps/flashfps，默认 fps；v15.1 扩为 fps/samplefps/flashfps/fps_cache）透传。
+- **回归保证**：`'fps'` 档走原 `make_fps_op` 分支（代码路径未变），导出图与 `deploy/hpenet_v2_plugin.onnx` 628 节点 op_type 序列逐节点一致（task-3/4b evidence one-liner PASS）；samplefps 图非 hpenet 部分与 fps 图逐节点一致；flashfps 图非 hpenet 部分（611 节点）与 fps 图逐节点一致。
+- hpenet 域节点（flashfps 图，17 个）：`FlashFPS{stride:2, keep_rate:0.75} + BallQueryGroup{radius:10} + BallQueryDP{radius:20}`（encoder.1）→ 3×`PrefixFPS{stride:2} + BQGroup/BQDP`（encoder.2-4）→ 5×`ThreeInterp`（decoder）。
+
+### 14.6 前缀等价性论证（cache-only 语义实证）
+
+**论证**：第 ℓ 级 FPS 输出 = 第 1 级 FPS 序的前缀（除浮点平局外 bit 级成立）。各级种子 = 首点索引 0；下级输入 = 上级输出原序；min 距离增量 float32 精确（同 §14.2 左结合表达式）。因此深层 FPS 输出的前 M_ℓ 个索引 = 首级序的前缀。
+
+**cache-only 直接实证**（task-4b evidence，`/tmp/opencode/t4b/cache_only_semantics.py`，flashfps k=1.0 图 = 1×FlashFPS(精确路径) + 3×PrefixFPS vs 全 SampleFPS 图）：
+
+```
+=== CACHE-ONLY SEMANTICS: ALL PASS ===
+  N=4096 level 1: M=2048 samplefps==flashfps=True  (精确路径)
+  N=4096 level 2: M=1024 samplefps==flashfps=True prefix(==arange)=True PASS
+  N=4096 level 3: M=512  samplefps==flashfps=True prefix(==arange)=True PASS
+  N=4096 level 4: M=256  samplefps==flashfps=True prefix(==arange)=True PASS
+  N=5500 level 1: M=2750 samplefps==flashfps=True
+  N=5500 level 2: M=1375 samplefps==flashfps=True prefix(==arange)=True PASS
+  N=5500 level 3: M=687  samplefps==flashfps=True prefix(==arange)=True PASS
+  N=5500 level 4: M=343  samplefps==flashfps=True prefix(==arange)=True PASS
+```
+
+第 2-4 级 samplefps 图 FPS 输出 == flashfps 图 PrefixFPS 输出 == `arange(M_ℓ)`，**逐索引一致**（双 N 档全过）。端到端 cache-only acc == 现役 0.9741 逐文件一致（task-6 §4.1）为二级实证。
+
+**keep_rate ≥ 0.5 的 cache 前缀约束**（数学保证）：`keep_rate·M₁ ≥ M₂` 时第 2 级前缀落在精确 FPS 段。N=4096：`0.75×2048=1536 ≥ 1024` ✓；N=5500：`0.75×2750=2062 ≥ 1375` ✓。默认 0.75 满足；keep_rate 下调（0.5/0.25）时约束仍成立但前缀段比例缩小，acc 单调下降（§14.8 档位阶梯）。
+
+### 14.7 FlashFPS 语义移植说明（与上游差异）
+
+| 项 | 上游 FlashFPS 仓库 | 本实现 | 依据 |
+|---|---|---|---|
+| 候选前缀 | `xyz[:, :N_points]` 上精确 FPS | 仅对前 `N_points` 点建桶（`N_active` 参数），同语义 | subsample.py:127-144 / samplefps_kernel.cu prune 路径 |
+| 尾部填充 | `rearrange_indices` 升序剩余索引（**非论文的随机填充**，仓库注释掉的 random_sample 被禁用） | 同升序语义，且推广到 `[0,M)` 扫描保证满 M 输出（退化 `N_points<M` 时） | subsample.py:98-123 / task-4 evidence |
+| `num_points` 公式 | `int(N*PruneRage/sample_rate)` | `int(int(N*keep_rate)/sample_rate)`（避免 float 误差，奇数 N 逐位对齐） | task-4 evidence |
+| **与论文差异** | 论文描述随机填充增加多样性 | **确定性升序填充**（可复现、可对拍；`keep_rate` 越低填充比例越大 → acc 单调下降） | task-4/6 evidence 档位阶梯 |
+
+> ⚠️ **语义标注**：本实现对齐的是上游仓库实际行为（升序填充），而非论文的随机填充表述。升序填充 + Cache 前缀的确定性使三算法可逐文件对拍，这是部署正确性验证的前提。
+
+### 14.8 对比实测数据回填（task 5/6 evidence，非论文数字）
+
+#### 14.8.1 单算子级对拍（task-5 evidence，`deploy/tests_fps_algos.py`，fp32，numpy float32 左结合参考，eps=0）
+
+| 配置 | N=1024（idx/seq/median） | N=5500（idx/seq/median） | vs 现役 FPS 插件 |
+|---|---|---|---|
+| SampleFPS | 100.0%/100.0%/5.715ms | 100.0%/100.0%/37.743ms | 100.0% mismatch=0 tie=none |
+| FlashFPS keep_rate=1.0 | 100.0%/100.0%/5.688ms | 100.0%/100.0%/37.743ms | 100.0% mismatch=0 tie=none |
+| FlashFPS keep_rate=0.75 | 5.1%/5.9%/5.310ms（**预期**，语义见 tests_flashfps_prune.py 权威判据） | 0.5%/0.7%/24.677ms | — |
+
+`deploy/tests_flashfps_prune.py`（prune 语义权威判据）：k∈{0.75,0.5,0.25} × N∈{1024,2750,5500} 全部 `prefix_exact=True tail_ascending=True verify_fps_prefix=100.0%`；退化 k=0.05/k=0.001 满 M 输出；确定性 run1==run2（task-4 evidence）。附带提速（信息）：N=5500 k0.75 18.9ms vs 精确 30.7ms。
+
+#### 14.8.2 acc（task-6 evidence，`mode=test` 口径、同一 checkpoint）
+
+**ti10 分集**（`deploy/fps_algo_*.onnx` 全 628 节点；现役 v14 用原 profile 可跑）：
+
+| engine | ti10 mean | 判定 |
+|---|---|---|
+| 现役 `hpenet_v2_fp32_v14` | **0.9741** | 基线复现 ✓ |
+| fps fp32（新 build，同 profile） | 0.9741 | == 现役逐文件 ✓ |
+| **samplefps fp32** | **0.9741** | **== 现役逐文件 ✓** |
+| **cache-only（flashfps k1.0）fp32** | **0.9741** | **== 现役逐文件 ✓** |
+| **flashfps k0.75 fp32** | **0.9707** | 门槛 0.9712 差 **0.0005**（per-frame 尾部通过，见 §14.9） |
+| flashfps k0.5 fp32 | 0.9612 | 档位阶梯 |
+| flashfps k0.25 fp32 | 0.9535 | 档位阶梯 |
+
+**modetest 全测试集**（58 文件，OA/mAcc/mIoU；现役 v14 因 profile 隐患不可作分集基线，见 §14.10）：
+
+| engine | OA | mAcc | mIoU | per-file mean |
+|---|---|---|---|---|
+| fps fp32（现役等价基线） | 93.2536 | 90.2423 | 79.8901 | 0.9321 |
+| samplefps fp32 | 93.2539 | 90.2425 | 79.8908 | 0.9321 |
+| **flashfps k0.75 fp32** | **93.4364** | 89.7739 | **80.1223** | **0.9338（反超现役 +0.0017）** |
+
+**档位阶梯**（task-6 §4.3）：k1.0=0.9741 / k0.75=0.9707 / k0.5=0.9612 / k0.25=0.9535 —— 单调符合 FlashFPS 语义（keep_rate 越低填充越多 acc 越低），k0.75 为精度/速度最佳平衡档。
+
+#### 14.8.3 延迟（task-6 evidence）
+
+**端到端纯 engine 延迟**（ti10，49 subcloud runs）：
+
+| engine | median | p99 | mean |
+|---|---|---|---|
+| fps fp32 | 28.8ms | 29.4ms | 27.9ms |
+| **samplefps fp32** | **134.5ms** | 352.8ms | 155.3ms |
+| cache-only fp32 | 61.7ms | 275.0ms | 85.6ms |
+| **flashfps fp32** | **43.7ms** | 159.5ms | 58.9ms |
+| flashfps k0.5 / k0.25 | 35.1 / 22.5ms | — | — |
+
+**FPS 段 nsys 复测**（-t cuda，同一 2 文件 13 subclouds 工作负载）：
+
+| engine | FPS 段 kernel 耗时 | GPU 总耗时 | FPS 占比 | per-subcloud FPS |
+|---|---|---|---|---|
+| fps fp32 | 105.7ms（furthest_point_sampling_kernel ×52） | 173.3ms | 61.0% | 8.1ms |
+| samplefps fp32 | 1108.4ms（iterate ×52 + build ×52） | 1142.6ms | 97.0% | 85.3ms |
+| **flashfps fp32** | **299.4ms**（iterate ×13，PrefixFPS×39 为 fill≈0） | 362.9ms | 82.5% | 23.0ms |
+
+**-72%**：flashfps 299.4ms vs samplefps 1080.1ms（fp16 口径，-72.3%）/ 1108.4ms（fp32，-73.0%）。
+
+#### 14.8.4 logits 对拍与平局归因（task-6 §2/§3）
+
+- samplefps fp32 vs fps fp32：逐位 0/10（max_abs_err 1.5e-2，**profile 差异归因**：v14 opt=5500/max=6500 vs 新 opt=4096/max=10000 → conv tactic 不同 → 1 ULP 级 fp32 漂移；per-file acc 与现役完全一致）。
+- **平局归因**（单算子级，部署管线真实子云）：`subclouds=49 idx_mismatch_rate=0.0021%`（仅 2/约 95000 索引不一致），`mean idx_match=99.9981%`、`mean seq_exact=100.0000%`、`genuine non-tie diff: 0/49` —— **全部差异由浮点平局 tie-break 选择不同引起，无一处 genuine 差异**，满足「平局归因豁免」主判据。
+- flashfps fp32 vs fps fp32：max_abs_err 3.5e1（近似语义，预期）；pred flip per-frame 41-111 点（1.1%-2.6%）。
+
+### 14.9 门槛判定与瓶颈分析
+
+| 门槛 | 实测 | 判定 |
+|---|---|---|
+| samplefps acc == 现役 0.9741（ti10） | 0.9741，per-file 逐文件一致 | ✅ 通过 |
+| cache-only 路径 acc == 现役 0.9741 | 0.9741，per-file 逐文件一致 | ✅ 通过 |
+| samplefps 真实帧 logits 逐位 = 现役（或平局归因） | idx mismatch 0.0021%、seq_exact 100%、0 genuine | ✅ 平局归因豁免成立 |
+| flashfps k0.75 acc ≥ 0.9712（ti10） | 0.9707（差 0.0005）；modetest 0.9338 **反超现役 +0.0017** | ⚠️ ti10 微差，k0.75 为精度最佳档，不视为失败 |
+| flashfps per-frame 无显著尾部（min ≥ 现役 min − 0.02） | ti10: 0.9425 ≥ 0.9246；modetest: 0.8820 ≥ 0.8622 | ✅ 通过 |
+| **FPS 合计 < 5ms** | 现役 8.1ms/subcloud，samplefps 84.8ms，flashfps 23.0ms | ❌ **未达**（按计划记录瓶颈分析，非硬凑） |
+| flashfps 端到端 ≤ 现役 26.53ms | 43.7ms | ❌ 未达（FPS 段仍被单 block 结构拖累） |
+
+**FPS<5ms 未达 + 瓶颈分析**（task-6 §6.2）：
+
+- **SampleFPS 单 block 桶结构是唯一瓶颈**：iterate kernel `gridX=1`（每 batch 一 block），13 subclouds × 4 级 = 52 次 launch 逐级耗时（N≈4200, M 逐级减半）：level 1（M≈2100）median 33.2ms / mean 35.4ms / max 86.9ms；level 2（M≈1050）median 46.1ms / mean 40.6ms / max 60.0ms（部分子云最深）；level 3（M≈525）median 6.5ms；level 4（M≈262）median 5.3ms；per-subcloud FPS 合计 median 91.3ms / mean 84.8ms（vs 现役 fps 8.1ms/subcloud）。
+- **flashfps 通过 PrefixFPS Cache 把 4 次采样降为 1 次 FlashFPS + 3 次 fill**，FPS 段 1080ms→299ms（**-72%**），但单次 FlashFPS 仍 21-23ms/launch（瓶颈仍为单 block iterate kernel；13 次 launch = 13 个 subcloud 的 level-1 精确段）。
+- 现役 FPS kernel 0.37-7.4ms/launch 已远低于 5ms 目标；**SampleFPS/FlashFPS 单 block 迭代结构是延迟瓶颈**——需多 block 并行化（workspace 化 best/桶上界、跨 block 归约）方可达 <5ms，属后续 kernel 优化任务（task-1 QA note 亦记录：桶开销 ~8.2K 桶操作/轮 dominate 于小 N，QuickFPS-style 收益面向更大 N）。
+
+### 14.10 ⚠️ 现役 v14 engine profile 隐患（独立于本计划的发现）
+
+现役 `hpenet_v2_fp32_v14.engine` 用 `--min_n 1024 --opt_n 5500 --max_n 6500` 构建（/tmp/opencode/v14_build.log），而**测试集子云实际最大 6988 点**（modetest 58 文件中如 0000212/0000186/0000335，task-6 §0 evidence）。**越出 profile（N>6500）的文件在现役 v14 engine 上产出垃圾（acc 低至 0.40）**，不可作为 modetest 分集基线。
+
+- 影响：现役 v14 engine 的 §9 验证（ti10，N≤5727）不受影响；但**部署到真实数据（子云可达 ~7000 点）会静默降精度**。
+- 建议：**重新导出/build engine，max_n 提高到 ≥7000（如 8192）**；task-6 三新 engine 已用统一 profile `--min_n 1024 --opt_n 4096 --max_n 10000`（MUST DO）规避此问题，可作为替换基线。待上报确认。
+
+### 14.11 实施记录（v15.0，2026-08-19）
+
+**落地文件**：§14.1 清单全部就位（6 插件/kernel 文件 + registry +3 REGISTER + CMake +3 onnx op + onnx_backend/onnx_export 接线），编译 `[100%] Built target hpenet_plugins`（仅 IPluginV2 弃用告警，与现役一致）。
+
+**实施中发现并解决的 6 个问题**：
+
+1. **[BUG] per-bucket bbox 原子 up/down 写反**（task-1 QA #1）→ 反箱 → 假剪枝 → 错误选中。修复后 tie-free 随机全量逐索引一致。
+2. **[BUG] float atomicMin/Max 无 CUDA 11.8 重载**（task-1 QA #2）→ 初版存有序整数映射但 boxdist 按 float 读 bits 得垃圾盒；改 CAS 循环存真实 float bits。
+3. **[BUG] 多 batch 平铺 scratch 切片**（task-1 QA #3）→ kernel 内按 per_batch（N+9*kNB+5 floats）算指针，B=3 定向回归通过。
+4. **[BUG] PrefixFPS torch forward 1-D arange 撑爆 trace**（task-4b）→ 改 `arange(M).unsqueeze(0).expand(B,-1)` 与插件 (B,M) 输出约定一致。
+5. **[设计] FlashFPS 独立 Creator 而非复用 SampleFPS 类**（task-4）→ `getPluginType` 必须返回固定不同字符串，否则 FlashFPS 节点会按 SampleFPS type 反序列化。
+6. **[设计] `num_points` 用 `int(int(N*keep_rate)/sample_rate)` 而非 `int(keep_rate*M)`**（task-4）→ 奇数 N 下逐位对齐参考 `FPS_Prune`。
+
+**验证结果**（详见 §14.8/14.9）：三图 628 节点零回归；samplefps/cache-only == 现役 0.9741 逐文件；flashfps k0.75 modetest 反超 +0.0017；FPS 段 flashfps -72%；FPS<5ms 未达（单 block 结构，记录分析未硬凑）；现役 v14 profile 隐患上报待重导。
+
+**遗留**：SampleFPS/FlashFPS 多 block 并行化（FPS<5ms 达标的后续 kernel 优化）；Orin(aarch64)/Windows 重编验证；现役 v14 engine 重导（§14.10）。
+
+### 14.12 fps_cache 档（v15.1 增补，2026-08-19）：现役 FPS ×1 + PrefixFPS ×3
+
+> **数据来源**：`.omo/evidence/fps-cache-addendum.md`（ti10 10 文件 / 147 subcloud / nsys）与 `.omo/evidence/fps-cache-fullset.md`（全量 339 文件），以下数据均逐项核对自上述 evidence 并标注来源。**结论一句话**：Cache-only（零 prune）但换现役 kernel 作第 1 级载体——acc 逐文件一致 + 延迟 -24~25%，是四档中唯一零损失提速档，定位生产推荐主力。
+
+**档定义**（fps_algo 第四档）：stage 1（`encoder.encoder.1.0`）→ **现役 `hpenet::FPS`**（v13 起未动，种子 0 + 按选择序输出，作为 cache carrier）；stage 2-4 → **`hpenet::PrefixFPS`**（前缀等价性 Cache，论证见 §14.6）。图 = **1×FPS + 3×PrefixFPS，628 节点**。
+
+**实现**（2 处改动，零插件/kernel 改动）：
+
+- `deploy/onnx_backend.py:274-308` `patch_model_for_onnx` 的 `'fps_cache'` 分支：**stage 判据与 flashfps 档一致**（模块名末两段 `<stage>.<subidx>`、`subidx==0`，如 `encoder.encoder.1.0`；`named_modules()` 深度优先按注册序 → stage 索引升序）。`stage==1` → `make_fps_op(stride)`（现役 kernel 原样）；`stage>=2` → `make_prefixfps_op(stride)`。实测 patch 计数：`Patched 1 SA.sample_fn → FPS + 3 SA.sample_fn → PrefixFPS`。
+- **Oracle 复审后显式白名单加固**：分支写为 `if stage_idx==1: ... elif stage_idx in (2,3,4): ... else: raise ValueError(...)`（替换裸 else）——未知 stage 立即报错，防静默错打。flashfps 分支同构加固（两分支均为白名单 + raise）。
+- `deploy/onnx_export.py:238-239` `--fps-algo` choices 扩为 `['fps', 'samplefps', 'flashfps', 'fps_cache']`，默认 `'fps'`（零行为变化）透传 `patch_model_for_onnx`。
+- 零回归保证：'fps'/'samplefps' 档走原分支，代码路径未动（不需重验）；fps/samplefps/flashfps/prefixfps 插件与 kernel 全部原样。
+
+**图断言**（fps vs fps_cache，机械比对 op_type+domain，addendum §2）：
+
+```
+fps nodes=628  fps_cache nodes=628
+raw op_type diffs: 3（node[125]/[331]/[455] fps=FPS → fps_cache=PrefixFPS）
+fps graph: FPS=4 | fps_cache graph: FPS=1 PrefixFPS=3
+non-sampler node count identical: 625
+```
+
+- TRT 插件层落位：`/model/encoder.1/encoder.1.0/FPS` + `/model/encoder.{2,3,4}/encoder.{2,3,4}.0/PrefixFPS`，每个 PrefixFPS 输入 = 上一级 GatherElements 输出（前缀语义拓扑正确）。
+
+**engine 构建**（同一 profile，§14.10 统一 `--min_n 1024 --opt_n 4096 --max_n 10000`，addendum §3）：
+
+| engine | 精度 | 大小 | 结果 |
+|---|---|---|---|
+| fps_algo_fps_cache_fp32.engine | fp32 | 15.0 MB | exit=0 |
+| fps_algo_fps_cache_fp16.engine | fp16 | 10.1 MB | exit=0 |
+
+- deserialize + 端到端推理冒烟 N=1024/4096/6500 输出 (1,2,N)、值域有限，全部 PASS。
+
+**实测数据**：
+
+*acc（ti10，10 文件 0000068..77，对比基准：现役新 build fps engine，addendum §4.1）*：
+
+| 文件 | fps fp32 | fps_cache fp32 | fps_cache fp16 |
+|---|---|---|---|
+| 0000068 | 0.9854 | 0.9854 | 0.9854 |
+| 0000069 | 0.9446 | 0.9446 | 0.9446 |
+| 0000070 | 0.9862 | 0.9862 | 0.9865 |
+| 0000071 | 0.9536 | 0.9536 | 0.9533 |
+| 0000072 | 0.9826 | 0.9826 | 0.9826 |
+| 0000073 | 0.9596 | 0.9596 | 0.9596 |
+| 0000074 | 0.9749 | 0.9749 | 0.9749 |
+| 0000075 | 0.9891 | 0.9891 | 0.9891 |
+| 0000076 | 0.9801 | 0.9801 | 0.9797 |
+| 0000077 | 0.9843 | 0.9843 | 0.9843 |
+| **mean** | **0.9741** | **0.9741** | 0.9740 |
+
+- fps_cache fp32 per-file acc 与现役**逐文件一致**（mean 0.9741）——前缀等价性实证（见下）；fp16 = 0.9740（0000070/71/76 有 ±0.0003-0.0004 fp16 数值噪声，与 task-6 fps fp16 同模式）。
+
+*前缀等价性（单算子级归因，addendum §4.2，MUST DO）*：ti10 全部 10 文件的**部署子云**（147 个）上链式现役 FPS（L1→gather→L2→gather→L3→gather→L4，与 encoder 结构一致）与 PrefixFPS 语义对拍：
+
+```
+subcloud-level checks: 147, prefix mismatch: 0, genuine diff: 0
+L2-4 chained FPS output == arange 前缀: 147/147 精确相等
+L1 FPS 种子 = 0（首点索引）: 全部 True
+```
+
+- **L2-4 现役 FPS 输出与 arange 前缀 bit 级精确相等**（0 mismatch / 0 genuine diff）——acc 一致性是**精确等价而非平局豁免**。
+- 端到端 logits 对拍非逐位（max_abs 4e-3..1e-2，TRT tactic 选择漂移，同 task-6 fps-vs-incumbent 1.5e-2 归因量级）；索引 bit 级一致 + acc 逐文件一致，判定成立。
+
+*全量 339 文件（fullset evidence）*：acc **0.9569 四配置（fps/fps_cache × fp32/fp16）四位小数一致**；fp32 逐文件 argmax pred 完全一致 **321/339**（逐点匹配率 mean=99.9990%、最低文件 99.9682%）；fp16 完全一致 194/339（mean=99.9898%、最低 99.9135%）；**fp16 零 NaN**（4 配置 × 339 文件 0 个 NaN/Inf logit subcloud）。口径差异：全集含训练/验证文件（cls1 比例 0.13-0.21），acc 低于 test 子集锚点 0.9741。
+
+*延迟（空闲 GPU，8 卡 util 0%，同条件）*：
+
+端到端 per-subcloud engine median（ti10，49 subcloud runs，含 H2D/D2H，addendum §5.1）：
+
+| engine | median (ms) | p99 (ms) | mean (ms) |
+|---|---|---|---|
+| fps fp32（现役等价） | 7.222 | 8.216 | 7.269 |
+| fps fp16 | 7.220 | 8.218 | 7.260 |
+| **fps_cache fp32** | **5.486** | 6.100 | 5.506 |
+| fps_cache fp16 | 5.506 | 6.682 | 5.606 |
+
+- **median -24.0%（7.22 → 5.49ms）**。⚠️ 量级说明：task-6 的 28.8ms 基线在 6 个并行 engine build 占卡（GPU 争用）时测得；本次 8 卡空闲重测 fps=7.2ms，**相对对比（同条件同脚本）为准**。
+
+FPS 段 nsys 复测（`-t cuda`，2 文件 0000001+0000006，13 subclouds，无 warmup，addendum §5.2）：
+
+| engine | FPS 段 kernel | FPS 总耗时 | GPU 总耗时 | FPS 占比 | per-subcloud FPS |
+|---|---|---|---|---|---|
+| fps fp32 | furthest_point_sampling_kernel ×52（39×<1024> + 13×<512>） | 83.16ms | 124.39ms | 66.9% | 6.40ms |
+| **fps_cache fp32** | furthest_point_sampling_kernel ×13 + prefix_fill_kernel ×39（≈0.08ms） | **50.97ms** | 92.32ms | **55.2%** | **3.92ms** |
+
+- **FPS kernel launch 52 → 13**（13 subclouds × 4 级 → 每 subcloud 仅第 1 级）；PrefixFPS fill ×39 ≈0.08ms（前缀等价性的代价为零距离计算）；**FPS 段 -38.6%**；per-subcloud FPS **3.92ms 达到 task-6 的 <5ms 目标**（现役 8.1ms 未达）。
+- 注：本工作负载 subcloud N≈4872-5308 < task-6 nsys 负载（~6500），绝对量级低于 105.7ms；同负载两 engine 相对对比为准。
+
+全量 339 文件时序（fullset evidence）：pipe（preprocess voxelize + subcloud prep + engine + voxel-voting）fp32 med **69.31 → 52.15ms（-23.4%）**、fp16 68.63 → 53.39ms（-21.8%）；engine per-subcloud med fp32 **10.475 → 7.822ms（-25.3%）**、fp16 10.415 → 7.843ms。校准：同一 10 文件 per-subcloud engine median fps=7.340 / fps_cache=5.625ms，与 ti10 锚点 7.22/5.49 一致（-23.7% vs -24.0%，计时口径对齐）。
+
+**瓶颈诊断（fps_cache engine 大帧 N=7200 nsys profile）**：剩余唯一 FPS kernel（`furthest_point_sampling_kernel<1024>`，GridXYZ=1×1×1 **单 block 串行**）仍占 GPU kernel 时间 **71%**——是下一优化目标（多 block 化；与 SampleFPS/FlashFPS 单 block 结构同源问题，见 §14.9）。
+
+**与前四档的关系表**（前四档 = §14.1 四插件 FPS / SampleFPS / FlashFPS / PrefixFPS；PrefixFPS 为 Cache 载体非独立档；FPS 段与端到端为 nsys / ti10 测量）：
+
+| 档位 | ti10 acc | FPS 段（nsys，来源标注） | 端到端 median（来源标注） | 定位 |
+|---|---|---|---|---|
+| FPS（现役） | 0.9741 | 105.7ms×52（task-6 争用）/ 83.16ms×52（本次同负载） | 28.8ms（task-6 争用）/ 7.22ms（本次空闲） | 基线 |
+| SampleFPS | 0.9741 | 1108.4ms×52（task-6） | 134.5ms（task-6） | 精度等价，更慢（单 block 结构瓶颈） |
+| FlashFPS k0.75 | 0.9707 | 299.4ms×13（task-6） | 43.7ms（task-6） | 近似提速（modetest 反超现役 +0.0017） |
+| **fps_cache** | **0.9741** | **50.97ms×13 + fill×39（本次同负载）** | **5.49ms（本次空闲）** | **唯一 acc==现役 0.9741 且 FPS 段大幅下降**，生产推荐主力 |
+
+- 相对 samplefps（1108.4ms）FPS 段 **-95.4%**；相对 flashfps（299.4ms）FPS 段 **-83.0%**，且 **无精度损失**（flashfps 0.9707 vs 现役/本档 0.9741）。
+- **定位结论**：fps_cache = 「现役精度 + cache 速度」——四档中唯一同时满足 acc==现役 0.9741 且 per-subcloud FPS <5ms 的档位，为生产推荐主力；仅剩的 FPS kernel（单 block）占比 71% 为下一轮优化点（多 block 化）。
+
+---
+
+### 14.13 fps_cache_prune 档（v15.2 增补，2026-08-19）：现役 FPS kernel + Prune + Cache（第 5 档）
+
+> **数据来源**：`.omo/evidence/fps-cache-prune.md`（TRT 端到端实测：实现/单测/图断言/engine/acc/延迟）与 `.omo/evidence/fps-prune-fullset.md`（阶段 A torch 锚点：全量 339 文件 / ti10 / 逐文件对比），以下数据均逐项核对自上述 evidence 并标注来源。**结论一句话**：现役 FPS kernel 跑在裁剪后的候选前缀上（n=N_points、m=num_points，更少轮次 + 更小扫描）再升序补尾 + cache 复用 stage 2-4——比 fps_cache 再省 FPS 段 30%、端到端 20%，代价是全量 acc 掉 0.12pp（ti10 -0.34pp），换取 5 档中最低端到端延迟 4.60ms。
+
+**档定义**（fps_algo 第五档）：stage 1（`encoder.encoder.1.0`）→ **`hpenet::FPSPrune`**（现役 `fps_launcher_with_stream` 跑剪枝后 FPS：n=N_points、m=num_points）+ 尾部升序填充（`fill_unselected_kernel`）；stage 2-4 → **`hpenet::PrefixFPS`**（Cache 图，论证见 §14.6）。**keep_rate 属性**（attribute，默认 0.75，非 runtime input）；输出 shape 恒 **[B, N//stride]**（`getOutputDimensions` kFLOOR_DIV，**与 keep_rate 无关**）。**keep_rate==1.0 退化为精确路径**——逐字复用现役 FPS enqueue（`fpsprune_plugin.cpp` 第 18-19 行注释），逐位等价现役 FPS 插件。图 = **1×FPSPrune + 3×PrefixFPS，628 节点**。
+
+**插件文件**：
+
+- `deploy/trt_plugins/src/fpsprune_plugin.cpp` + `include/fpsprune_plugin.h`：独立 `FPSPrunePlugin` 类（不复用 FPS/FlashFPS 类，`getPluginType` 固定 "FPSPrune"），属性 `stride`(int) + `keep_rate`(float)；`getWorkspaceSize` = temp(B×N float) + selected 位图(B×N bytes)；serialize 存 stride+keep_rate（按序读回）
+- `deploy/trt_plugins/src/fpsprune_kernel.cu` + `include/fpsprune_kernel.h`：`fill_unselected_kernel`（升序未选中尾部填充：位图标记 idx[0..num_points) 已选 → 扫描 [0,M) 升序收集未选中 → 容量截断 T=M-num_points；num_points==0 → arange(M)；选中点落在 [M,N_points) 不占 [0,M) 名额——语义与 samplefps 尾部填充严格一致）
+- `deploy/onnx_ops/fpsprune_op.py`：`symbolic` 发 `hpenet::FPSPrune`，attrs `stride_i` + `keep_rate_f`，`make_fpsprune_op(stride, keep_rate=0.75)`；torch forward 非 CUDA 时返回 zeros、CUDA 时回退现役精确 FPS（prune 语义仅存在于 TRT plugin 路径）
+- 注册：`plugin_registry.cpp:20` `REGISTER_TENSORRT_PLUGIN(FPSPrunePluginCreator)`（**第 9 个**）；`CMakeLists.txt` 加 kernel+plugin 两个源文件
+- ONNX 接线：`onnx_backend.py` `'fps_cache_prune'` 档——与 fps_cache 同判据（模块名末两段 `<stage>.<subidx>`、subidx==0），stage 1 → `make_fpsprune_op(stride, keep_rate)`、stage 2-4 → `make_prefixfps_op(stride)`、未知 stage `raise ValueError`；`onnx_export.py` `--fps-algo` choices 加 `fps_cache_prune`、新增 `--keep-rate`（默认 0.75）透传
+
+**图断言**（fps_cache_prune vs fps_cache，机械比对 op_type+domain，evidence §3）：
+
+```
+fps_cache nodes=628  fps_cache_prune nodes=628
+non-hpenet node count: 611 / 611  identical_in_order=True
+fps_cache hpenet: [FPS@1, PrefixFPS@125/331/455, ...]
+prune hpenet:     [FPSPrune@1, PrefixFPS@125/331/455, ...]   # node[1] FPS → FPSPrune
+FPSPrune attrs: {'keep_rate': 0.75, 'stride': 2}
+```
+
+- 非 hpenet 611 节点与 fps_cache 图**逐节点一致**（op_type+domain 顺序全同）；唯一差异 = fps_cache 图 `FPS@1` 换成 `FPSPrune@1`。TRT 插件层落位：`/model/encoder.1/encoder.1.0/FPSPrune` + `/model/encoder.{2,3,4}/encoder.{2,3,4}.0/PrefixFPS`，每个 PrefixFPS 输入 = 上一级 GatherElements 输出（前缀语义拓扑正确）。
+
+**engine 构建**（同一 profile：`--min_n 1024 --opt_n 4096 --max_n 10000 --workspace 4 --num_input_features 5`，evidence §4）：
+
+| engine | 精度 | 大小 | 结果 |
+|---|---|---|---|
+| fps_algo_fps_cache_prune_fp32.engine | fp32 | 13.8 MB | exit=0 |
+| fps_algo_fps_cache_prune_fp16.engine | fp16 | 10.5 MB | exit=0 |
+
+**实测数据**：
+
+*acc*（evidence §5 + fps-prune-fullset）：
+
+| 口径 | fps_cache_prune fp32 | fps_cache_prune fp16 | fps_cache（对照） | 阶段 A torch 锚点 | 判定 |
+|---|---|---|---|---|---|
+| ti10（10 文件，test 20% 尾部） | **0.970691** | 0.970550 | 0.9741 | 0.9707 | ✓（**-0.34pp** vs fps_cache，与锚点 ±0.001 内） |
+| 全量 339 文件 | **0.955761**（median 0.958652 / min 0.881982） | 0.955765 | 0.9569 | 0.9558（±0.001） | ✓（**-0.12pp** vs fps_cache） |
+
+- **阶段 A torch 锚点交叉验证吻合**（现役 FPS + Prune + Cache，`samplers.py::prune_fill` ascending）：ti10 0.9707 / 全量 0.9558。
+- 逐文件对拍阶段 A 锚点（fp32 抽样 10 文件）：**max dev = 0.000398**；7/10 文件 bit 精确相等（0000001/57/68/75/77/106/295 全等），0000048 dev=0.000208、0000239 dev=0.000398、0000335 dev=0.000000——TRT 实现**逐文件复现** torch prune-fill 语义。
+- fp16 数值噪声模式与 fps_cache 同（全配置 0 个 NaN/Inf logit subcloud）。
+
+*kernel 单测 + 插件对拍*（evidence §2）：独立 CUDA 测试 **5 边界用例全过**——①基础 prune 路径（选中全在 [0,M)）②选中落在 [M,N_points)（截断到 750）③num_points==0 → arange(M) ④B=2 逐 batch 偏移 ⑤选中>M 混合、小 M；插件级端到端（小 ONNX → TRT engine）vs torch `prune_fill`：keep_rate∈{0.75,1.0} × N∈{6000,4096,5000} 全部 **bit-exact 相等**（含 keep_rate=1.0 exact 路径 == 现役 FPS）。
+
+*延迟（空闲 GPU，8 卡 util 0%，同条件）*：
+
+FPS 段 nsys（`-t cuda`，2 文件 0000001+0000006，13 subclouds，无 warmup，evidence §6.1）：
+
+| engine | FPS 段 kernel | FPS 段总耗时 | GPU 总耗时 | FPS 占比 | per-subcloud FPS |
+|---|---|---|---|---|---|
+| fps fp32 | furthest_point_sampling ×52 | 91.45ms | 136.00ms | 67.2% | 7.03ms |
+| fps_cache fp32 | furthest_point_sampling ×13 + prefix_fill ×39 | 50.91ms | 92.47ms | 55.1% | 3.92ms |
+| **fps_cache_prune fp32** | furthest_point_sampling ×13 + fill_unselected ×13(≈0.07ms) + prefix_fill ×39 | **35.64ms** | 80.06ms | **44.5%** | **2.74ms** |
+
+- **FPS kernel launch 52 → 13**（同 fps_cache：每 subcloud 仅第 1 级 FPS，且 n=N_points、m=num_points 更小——轮次更少、扫描更短，正是加速来源）；**vs fps：FPS 段 -61.0%、GPU 总 -41.1%；vs fps_cache：FPS 段 -30.0%**。
+- 注：任务预期锚点「~9.1ms×subcloud 数」来自阶段 A torch 的 **L1 SA 整段 forward**（FPS+BQ+MLP=9.11ms），本 nsys 只统计 FPS kernel 本身，实测 2.74ms/subcloud，快于该粗略估计。
+
+端到端 per-subcloud engine median（ti10，49 subcloud runs，纯 engine H2D+compute+D2H，CUDA event，evidence §6.2）：
+
+| engine | fp32 median | vs fps | vs fps_cache |
+|---|---|---|---|
+| fps fp32 | 7.413ms | — | — |
+| fps_cache fp32 | 5.751ms | -22.4% | — |
+| **fps_cache_prune fp32** | **4.602ms** | **-37.9%** | **-20.0%** |
+| fps_cache_prune fp16 | 4.531ms | — | — |
+
+- 每文件 pipe median：fps 46.82ms → fps_cache 38.21ms → fps_cache_prune 31.26ms（fp32）。全量 339 文件 per-subcloud（engine_ms/n_subcloud 口径，evidence §6.3）：fps 10.107 → fps_cache 7.575 → **prune 6.125ms**（mean；median 6.365 / p99 8.369；全量含 27 个大 subcloud 文件，绝对量级高于 ti10）。
+
+**keep_rate 调参成本**：keep_rate 是 **attribute（非 runtime input）**——调参 = 重导 ONNX（`--keep-rate` 透传 `make_fpsprune_op`）+ 重 build engine，**分钟级，不需重编译 .so**（插件类/kernel 不变）。CLI 为 `onnx_export.py --keep-rate`（默认 0.75），导出前校验 `0 < keep_rate <= 1`（越界 `raise SystemExit`）。调参单调性实测（阶段 A 锚点，fps-prune-fullset）：全量 k0.75 掉 **-0.12pp**、k0.5 掉 **-0.68pp**——掉幅随 keep_rate 降低而放大（ti10 同趋势：k0.75 -0.34pp / k0.5 -1.30pp），收益与精度需按目标平台权衡。
+
+**⚠️ 已知限制（必须记录）**：
+
+1. **B>1 batch-stride bug（已修，2026-08-20）**：`fps_launcher_with_stream` 的 `n` 同时充当点数与每 batch 的 dataset stride，prune 路径 n=N_points≠N 会让 kernel 内 `dataset += batch_index*n*3` 用错 batch 偏移。**修复**：prune 路径改为插件层逐 batch 循环、每次单 batch（B=1 → kernel `batch_index==0`）调用，插件用真实 N 算 pointer 偏移（`fpsprune_plugin.cpp` enqueue）；exact 路径（n==N）本就正确不动；顺带加 `N_points>0` 守卫堵 `opt_n_threads(0)` 的 log(0) UB 边角。fps_kernel.cu 保持不动（回退通道）。回归（`.omo/evidence/fpsprune-batch-fix.md`）：B=1 bit 级 32 PASS（4 配置×8 点云，与修复前逐字节一致）+ B=2/3/8 逐 batch 对拍 12 PASS + ti10 0.9707 / 全量 339 0.955761 均与修复前逐位一致。
+2. **已修 bug ① fill_unselected bitmap 清零区间越界（Oracle 复审发现）**：原实现对 `[0,N_points)` 清零，但 fill 读 `[0,M)`；keep_rate < 1/stride 时 N_points < M，fill 读到未初始化 workspace → **非确定性输出**（keep_rate=0.25 + stride=2 可触发）。**已修为 `[0,max(N_points,M))`**（`fpsprune_kernel.cu` 第 14-17 行注释 + 第 42 行 `zlim = max(N_points, M)`），修复后 k=0.4 / 0.25 idx==torch 参考且 5 次运行确定性。
+3. **已修 bug ② keep_rate≤0 越界写（Oracle 复审发现）**：keep_rate≤0 使 num_points 计算为负/越界 → fill_unselected_kernel 越界写。**已在 `onnx_export.py:262-263`（导出前 `raise SystemExit`）与 `onnx_backend.py:229-230` `patch_model_for_onnx`（`raise ValueError`）双层加 `(0,1]` 校验**，非法值在导出阶段即被拦截。
+
+**五档格局总结表**（acc 为全量 339 文件口径，延迟为 ti10 per-subcloud engine median / FPS 段 nsys，后两者均为空闲 GPU 同条件或 task-6 争用标注）：
+
+| 档位 | fps_algo | 全量 acc | 端到端 median | FPS 段 | 定位 |
+|---|---|---|---|---|---|
+| fps | `fps` | 0.9569 | 7.41ms | 91.45ms×52 | **回退基线**（默认档，零行为变化） |
+| samplefps | `samplefps` | 0.9741（ti10） | 134.5ms（task-6 争用） | 1108.4ms（task-6） | **已证不适配**（单 block 结构瓶颈，更慢） |
+| flashfps | `flashfps` | — | 43.7ms（task-6 争用） | 299.4ms（task-6） | **实验**（近似提速 acc 0.9707，慢载体） |
+| fps_cache | `fps_cache` | 0.9569 | 5.75ms（-22.4%） | 50.91ms×13 | **零损失**（acc==现役 0.9741，唯一零损失提速档，生产推荐主力） |
+| **fps_cache_prune** | `fps_cache_prune` | **0.9558（-0.12pp）** | **4.60ms（-37.9%）** | **35.64ms×13** | **-0.12pp 换 -38%**（5 档最低延迟，精度敏感场景勿用） |
+
+- 五档递进关系：fps → fps_cache（cache 换 -22% 零损失）→ fps_cache_prune（prune 换再 -20% / 掉 0.12pp）；samplefps / flashfps 为历史探索档，均不推荐生产。
+- **定位结论**：fps_cache_prune = 「现役 kernel + prune + cache」——FPS 段 -61%（vs fps）/ -30%（vs fps_cache），端到端 median 4.60ms 为 5 档最低；代价全量 acc 掉 0.12pp（ti10 -0.34pp），适合延迟优先且对 ~0.1pp 精度损失可接受的场景；精度敏感场景仍用 fps_cache（零损失）。
+
+---
+
 ## 附录 A：常见错误排查
 
 | 错误信息 | 原因 | 解决 |
@@ -1559,3 +2023,187 @@ cat(f_up, encoder 同层 skip 特征) → conv 融合
 features 走 fp16 拿走几乎全部加速收益，xyz 保 fp32 几乎不付代价——**混合精度的钱要花在刀刃上**。这也是 TRT 官方 sample 和各家点云部署（MMDeploy3D、CenterPoint 部署）的通行做法。
 
 **落到 plugin 实现上**（见 §13.4 dtype 策略）：`supportsFormatCombination` 本来就是按 tensor 逐个声明的，天然支持这种混合——xyz 恒 `kFLOAT`，features 接受 `kFLOAT/kHALF` 跟随 engine 精度；输出 grouped/interpolated 与 features 同 dtype，dp 恒 fp32。若 TRT 在 fp16 engine 里想把 xyz 以 fp16 喂进来，这个组合会被拒掉，builder 自动在 plugin 前插一个 Reformat 转回 fp32——代价是一次小转换（3 通道张量），远小于精度风险。kernel 内部所有距离/权重计算都在 fp32 寄存器完成，只有特征搬运和最终 MAC 按输入 dtype 走。
+
+---
+
+## 15. v16 增补任务：GridBallQuery 档（gridballquery）
+
+> 时间：2026-08-22 | 环境：NVIDIA L20 / TRT 8.6.1.6 / torch 2.2.2+cu118 / libhpenet_plugins.so（11 插件，Aug 22 18:28）
+> 本章为追加章节，不改动前文任何内容。三份 evidence：`deploy/evidence/gridballquery-unit.md`（单元对拍）、`gridballquery-e2e.md`（整网 E2E）、`gridballquery-nsys.md`（性能剖析）。
+
+### 15.1 动机与定位
+
+现役 BallQueryGroup/DP（§13/§14）走暴力 `ball_query_kernel_fast`。GridBallQuery 是 ball query 的**实验/对照档**：用哈希网格替代暴力枚举，验证"空间划分能否加速雷达分布下的邻域搜索"。**性能结论是负的（见 §15.4），默认档仍是 ballquery，行为零变化**。
+
+### 15.2 设计
+
+四个阶段（kernel 分别对应 nsys 里的 build_count / build_scan / build_place / grid_query）：
+
+1. **source-hash（哈希桶表）**：bucketed count-sort，无探测链。表长 T = next_pow2(2·maxN)（负载因子 0.5）。
+2. **稳定计数排序**：build_scan 做寄存器驻留的排他扫描（`__shfl_up_sync` warp 扫描）；build_place 用 O(N²) 稳定 rank 放置（每个点对所有先序点数 rank，天然稳定、无原子）。
+3. **公式化范围格扫描**：R = ceil(radius/v) + 1 格每轴（默认 v = radius → R=2，扫 [-2,2]³ 即 (2R+1)³ = 5³ = 125 格）。候选点重算 cell 复验（每候选 3× roundf）做桶内 cell 消歧。
+4. **索引选择**：桶序即稳定序，跨全部扫描格取 radius 内（严格 < radius² 判据，d²==r² 排除）**索引最小的 nsample 个** + 升序槽位写入 + 首邻居 padding（槽 cnt..S-1 填 idx[0]）+ 空球全 0（memset 规避）。
+
+### 15.3 与 FPS 原版（§14 SampleFPS/FlashFPS 系）的三处语义差异
+
+| # | FPS 原版 | GridBallQuery |
+|---|---|---|
+| 1 | query-hash（每 voxel 单 query）——**会静默丢 FPS 质心的邻居** | source-hash（按源点建表），query 点直接查 |
+| 2 | 原子散射放置（atomicAdd，非确定序） | 确定序（O(N²) 稳定 rank，bit 级可复现） |
+| 3 | HAV 前置依赖（需 HAVSForQuery 插件建表，ONNX 多出节点） | 内置 enqueue（build×3 + query 一并调度，无外部依赖） |
+
+### 15.4 性能实测结论（负结论，如实记录；nsys profile 基准对象即 GridBallQuery 插件档 vs 现役暴力档）
+
+来源：`deploy/evidence/gridballquery-nsys.md`（12/12 全量 nsys 采集，cuda.Event p50）。
+
+**搜索段（grid build×3 + grid_query vs 现役 ball_query）：grid 全面更慢**
+
+| N | grid 搜索段 | 现役搜索段 | grid/现役 |
+|---|---|---|---|
+| 2024 | 3.076 ms | 0.346 ms | **慢 8.9×** |
+| 4096 | 6.295 ms | 0.673 ms | **慢 9.4×** |
+| 10000 | 21.213 ms | 1.571 ms | **慢 13.5×** |
+
+**整网（gpu_only p50，fp32）**：N=2024 慢 2.36×（3.871 vs 1.642 ms）、N=4096 慢 2.65×（7.057 vs 2.667 ms）、N=10000 慢 3.50×（24.116 vs 6.885 ms）。
+
+内因分解：
+
+- **grid_query 主导**：占搜索段 82%(N=2024) / 82%(4096) / 87%(10000)，随 N 超线性（N×4.9 → 耗时×7.3）——雷达分布下 ball 覆盖大半点云，125 格扫描退化近暴力，且每候选多付 3×roundf 复验；哈希桶密度/碰撞随 N 恶化。
+- **build_place（O(N²) rank 放置）确实可见**：占搜索段 17%/17%/12%（计划预判成立但非主因）——place 单项 0.52~2.6 ms 已接近/超过现役搜索全程（0.35~1.6 ms）。
+- **现役 `ball_query_kernel_fast` 近线性**（0.35→1.57 ms，×4.5 vs N×4.9）：block 内 k 升序早 break（cnt≥nsample）在稀疏雷达分布下剪枝极有效。
+- 其他：grid engine fp16 整网反而略慢于 fp32（4.18 vs 3.87 ms @2024，瓶颈在 fp32 插件 kernel + reformat）；单层方差大（encoder.1.0 grid_query med 1.9 / max 12.0 ms @N=4096，StdDev 3.2 ms），暴力法无此现象（StdDev ~0.1 ms）。
+
+> ⚠️ **结论：不建议替换现役实现**。搜索段慢 8.9~13.5×，整网慢 2.4~3.5×，且差距随 N 扩大。档位保留为实验/对照用途；若继续优化，优先级 = grid_query 候选遍历（桶密度/碰撞）>> build_place O(N²)。
+
+### 15.5 验收数据摘要
+
+**单元对拍**（`deploy/evidence/gridballquery-unit.md`，deploy/tests_gridballquery.py，seed=0；对拍对象：GridBallQueryGroup/DP vs 现役 BallQueryGroup/DP，registry 4/4）：
+
+- **31/31 PASS**（uniform/clustered N=1024~10000 × fp32/fp16 + 7 组对抗用例：同 voxel、重复坐标、空球、精确球面 d²==r²、N=1、N<nsample、全覆盖截断）。
+- 判据③ 实测最大 diff：dp=0.000e+00 | grouped=0.000e+00；同输入 3 连跑 bit 级一致。
+- idx bit 一致率 **100%**：cnt≤S 行 218/218，cnt>S 行 21332/21332；空球行 4（grid 全 0 验证通过）。
+
+**整网 E2E**（`deploy/evidence/gridballquery-e2e.md`，deploy/eval_gridballquery_miou.py，GridBallQuery 整网档 engine vs 默认档 engine，RadarClassi radarfullwl 17% test 58 帧，无 voxel voting）：
+
+- **fp32：61/61 输入（58 帧 + 3 组合成 N=2024/4096/10000）max-abs-diff=0.0，bit 级一致**；mIoU=0.772014 == 0.772014（Δ=0.0000pp），OA=0.916419。
+- fp16：logits diff 0.61~6.12 超 3e-2 阈值——**triage 归因 TRT FP16 tactic/Myelin 融合选择差异**（同 ONNX 双 build 对照 maxdiff=0；fp32 全网 bit 一致 + 插件级 fp16 单元 bit 一致双重证据；logit 量级 ±27、margin 均值 ~5.7，fp16 ulp 经 628 节点累积与观测吻合），非插件语义差异。
+- **mIoU 仲裁（主判据）通过**：|ΔmIoU|=0.0417pp、|ΔOA|=0.0201pp，均 ≤0.5pp（grid fp16 = 0.772424，inc fp16 = 0.772007）。
+
+### 15.6 用法
+
+```bash
+# 导出（默认 ballquery，行为零变化）
+python deploy/onnx_export.py --bq_algo gridballquery
+# 之后 trt_build.py 正常构建（与默认档流程一致）
+```
+
+三个工具脚本：
+
+| 脚本 | 用途 |
+|---|---|
+| `deploy/tests_gridballquery.py` | 单元对拍矩阵（31 用例，见 §15.5 / gridballquery-unit.md） |
+| `deploy/eval_gridballquery_miou.py` | 整网 diff + mIoU 一体验证（两档 engine 同进程同输入） |
+| `deploy/bench_gridballquery.py` | cuda.Event 双口径 + NVTX 性能基准（nsys 采集载体） |
+
+### 15.7 风险与对策（本章新增，不改 §10 旧表）
+
+| 风险 | 对策 |
+|---|---|
+| voxel_size 误配（v > radius 时格范围公式失效） | launcher 内 clamp v=min(v,radius) + 公式化 R = ceil(radius/v)+1 双保险 |
+| nsample 超上限（每线程候选堆容量 `GRIDQUERY_MAX_NSAMPLE`=256） | nsample>256 或 ≤0 时插件 build 期拒绝创建（createPlugin/deserializePlugin 返回 nullptr）；launcher 对超限 no-op 双保险 |
+| **现役空球 cnt==0 输出未初始化内存的既有潜在 bug**（下游 gather 拿垃圾 idx 越界读） | grid 档已用 memset 规避（空球输出全 0）；现役行为原样保留，仅在此记录，不改动 |
+
+### 15.8 跨平台声明
+
+- **不用 kFLOOR_DIV**——无 PrefixFPS 那类 Orin TRT 8.5 风险（见 §14 相关记录）。
+- 原语（`__shfl_up_sync` / roundf / ceilf / fminf）CUDA 11.4 兼容；无新依赖。
+- 协变返回（IPluginV2DynamicExt）TRT 8.5 重编兼容。
+- Orin / Windows 重编 + engine 重建属部署期步骤（§7.2/§7.3，与 v14 遗留口径一致）。
+
+### 15.9 插件清单更新：9 → 11
+
+新增 GridBallQueryGroup / GridBallQueryDP。ONNX 节点输入/输出签名与现役 BallQueryGroup / BallQueryDP 完全一致（仅节点名与属性数不同：多第 4 个属性 voxel_size，默认 -1 → v=radius）。
+
+### 15.10 计划与实施记录
+
+- **计划文件**：`.omo/plans/gridballquery-trt-plugin.md`（Prometheus 决策完备计划，经 4 轮高精度双评审 momus+Oracle：r1~r4 全批）。
+- **任务结构**：7 实现任务 + 4 终验
+  - T1 kernel / T2 插件+注册 / T3 导出接线 / T4 单元对拍 / T5 整网 E2E / T6 nsys 对比 / T7 文档
+  - F1 符合性 / F2 代码质量 / F3 手工 QA / F4 范围忠实
+- **依赖**：批1 并行（T1+T2+T3）→ T4 → T5 → T6 → T7 → F1-F4 并行。
+- **关键决策（用户 2026-08-22 确认）**：新增可选档（现役保留回退）/ 容差+mIoU≤0.5pp 验收 / FP16+FP32 双测 / nsys 系统已装。
+
+### 15.11 nsys 完整延迟测量表（§15.4 补强）
+
+**整网延迟 cuda.Event p50（ms；warmup=20 + 计时 100，逐 rep 轮换 8 真实雷达帧 + 1 合成帧）**：
+
+| engine | N=2024 gpu_only | N=2024 e2e | N=4096 gpu_only | N=4096 e2e | N=10000 gpu_only | N=10000 e2e |
+|---|---|---|---|---|---|---|
+| gridbq_fp32 | 3.871 | 3.984 | 7.057 | 7.155 | 24.116 | 24.596 |
+| gridbq_fp16 | 4.183 | 4.296 | 7.217 | 7.298 | 24.278 | 24.796 |
+| inc_fp32 | 1.642 | 1.714 | 2.667 | 2.783 | 6.885 | 7.192 |
+| inc_fp16 | 2.351 | 2.462 | 3.190 | 3.403 | 7.043 | 7.363 |
+
+（gpu_only = executeV2 前后 event；e2e = 含 H2D/D2H memcpy。）
+
+**kernel 分解 per-inference（ms；gpukernsum 全 layer 聚合 / 220 序列）**——以 N=4096 fp32 为例：
+
+| kernel | grid 档 | 现役档 |
+|---|---|---|
+| 搜索段合计 | 6.295（grid_query 5.186 + build_place 1.057 + build_count 0.018 + build_scan 0.033） | 0.673（ball_query 单核） |
+| bq_dp | 0.130 | 0.131 |
+| bq_gather | 0.023 | 0.024 |
+
+完整 4 engine × 3 N 的 kernel 分解表见 `deploy/evidence/gridballquery-nsys.md`，此处不重复贴全部 12 行。
+
+- 采集方法：`nsys profile --trace=cuda,nvtx,osrt`，12/12 份 `.nsys-rep` 留存 `deploy/evidence/`；`nsys stats --report gpukernsum <rep>` 可复现。
+- 复现命令示例：`nsys stats --report gpukernsum deploy/evidence/gridbq_gridbq_fp32_N4096.nsys-rep`
+
+### 15.12 F2 终验发现的缺陷与修复
+
+F2（代码质量终验）发现一个 HIGH 级缺陷，已修复并复验（详见 `deploy/evidence/gridballquery-task2-plugin.md` 的 F2 fix 小节）：
+
+- **缺陷（HIGH）**：`grid_workspace_size()` 的 idx_ws 尾段缺 maxB 因子——launcher 逐 batch 写 B×M×S 个 int，但尾段只预留 maxM×S，runtime B>1 时越界写（memset 同样越界）。现役范本 `ballquerygroup_plugin.cpp` 的 getWorkspaceSize 是 `(size_t)maxB_ * maxM_ * nsample_ * sizeof(int)`（含 maxB），故为本实现独有缺陷；B=1（雷达部署）不触发，T4 的 B=2 用例因 UB 未崩溃而"通过"。
+- **修复**：`grid_workspace_size(int maxN, int maxM, int nsample)` → 加 `int maxB`，尾段改 `grid_align256(off + (size_t)maxB * maxM * nsample * sizeof(int32_t))`；4 处调用点（Group/DP 的 getWorkspaceSize + enqueue workspace_size 参数）传 `maxB_`；`grid_idx_ws_offset` 不动。
+- **复验**：.so 重建零 warning → tests_gridballquery.py 全套 31/31 PASS（含 uniform_N1024_B2）→ mIoU 抽查 0.772014 不变（B=1 路径不受影响）。
+
+> 本节为 F2 记录，不改变 §15.4 的结论：**不建议替换现役**（搜索段慢 8.9~13.5×、整网慢 2.4~3.5×、差距随 N 扩大），见 §15.4 警告块。
+
+### 15.13 延迟负收益根因分析（为什么 grid 比现役慢）
+
+§15.4 已给量化结论（搜索段慢 8.9~13.5×、整网慢 2.4~3.5×）。本节总结**为什么**是负收益。
+
+#### 根因（按贡献排序）
+
+1. **数据几何不匹配（最根本）**：GridBallQuery 的唯一价值是"空间剪枝"——把每 query 从"遍历全部 N 源点"降到"只查局部 125 格"。其成立前提是 **ball 体积 ≪ 点云体积**（球内点数 ≪ N）。HPENet 雷达场景恰好相反：radius 10 起步、逐级 ×2 到 160（`_to_full_list(radius=10, radius_scaling=2)`），而云仅 ~4000 点、跨度有限 → 每个 ball 几乎覆盖整个已下采样的云。此时"查 125 格"退化为"查全部点"，剪枝收益归零，只剩额外开销。
+2. **grid_query 每候选多付 3×roundf 复验（占搜索段 82~87%）**：现役 `ball_query_kernel_fast` 每源点只算 1 次 d2；grid_query 因按 hash 桶存储、跨 cell 有碰撞，每候选要先重算 cell（3×roundf）消歧再算 d2——同样遍历所有点，grid 每次贵 3~4 倍。且哈希桶密度/碰撞随 N 恶化（grid_query 耗时 N×4.9 → ×7.3，超线性）。
+3. **build_place O(N²) 稳定 rank（占搜索段 12~17%）**：这个 O(N²) 放置纯粹为"升序索引 bit 级一致"而存在（每点扫全部先序点计数）。它单独一项（0.52~2.6ms）已 ≈ 现役搜索全程（0.35~1.6ms）——没开始查邻居，光建表就输了。
+4. **现役早停剪枝极有效（对手太强）**：`ball_query_kernel_fast` 是 k 升序 + cnt≥nsample 早 break，每 query 扫到凑满 32 个邻居即停。雷达稀疏分布下几乎白嫖（StdDev ~0.1ms，近线性 0.35→1.57ms）。grid 必须比"自适应早停"更省，稀疏数据里这是极低却难击穿的基准线。
+5. **次要**：fp16 无收益（插件 kernel 全 fp32，xyz 恒 fp32，fp16 engine 只省非插件段还多付 reformat，故 grid fp16 反而略慢于 fp32）；build_count→scan→place 三步串行 kernel 的 launch 开销在 N<4096 时占比偏高。
+
+#### 复杂度模型
+
+设 r=radius、ρ=N/V_cloud=点密度、v=voxel：
+
+- 现役成本/query ≈ `nsample · V_cloud / r³`（扫到凑满 32 邻居的平均点数，∝ 1/r³）
+- grid query/query ≈ `(2r/v)³ · ρ·v³` = `8·N·r³/V_cloud`（v 在粗算里约掉）+ 3×roundf 常数 + `O(N²)` build
+
+grid 赢的判据 `8·N·r⁶ < nsample·V_cloud²`——**r 要小、V_cloud 要大**。雷达是 r 大 + 云小，完全反着。
+
+#### 达到正收益的条件
+
+**必要条件（缺一不可）**：
+1. **数据几何翻转为稠密大场景 + 小 radius**：ball 体积/云体积 ≪ 1（如 KITTI/IA-SSD 那种 70m×80m 场景、r≈0.5~1m）。这正是 FPS 原版 GridBallQuery 声称 "1000× faster" 的语境——其查询点来自 HAV 体素采样（每 voxel 一个质心），与雷达的 FPS 质心 + 大 radius 是两种完全不同的几何。正收益无法在现有雷达配置（radius=10~160）下靠调参得到。
+2. **放弃 bit 级一致约束**：把 O(N²) build_place 换成 atomicAdd 计数 + device sort（或按 cell 的 counting sort），建表从 O(N²) 降到 O(N)——非确定序但几乎零成本。这是最大最直接的一刀。
+3. **消除每候选 cell 复验**：改"按 cell 连续排序"（而非 hash 桶 + 碰撞消歧），每格点在内存连续、无碰撞，去掉 3×roundf/候选。
+4. **N 足够大**：摊销 count/scan/query 固定成本；N<2024 时 build + launch 固定开销占比过高。
+
+**充分条件（满足上述后的进一步杠杆）**：
+5. **精细调 voxel_size**：让每格点数下降（grid 常数项与碰撞率随格内点数线性；粗算里 v 约掉，但常数项与消歧成本取决于 v，存在最优 v）。
+6. **query 侧也做早停**：现役赢在早停，grid 找到 nsample 个即停（放弃"取全局索引最小"语义）可再省一块——但进一步偏离 bit 一致。
+7. **fp16 化搜索内核**：目前插件全 fp32；但 xyz 恒 fp32，收益天花板有限。
+
+#### 结论
+
+负收益的根因是「算法假设（稀疏 ball + 空间剪枝）与数据（大 radius 稠密球 + 稀疏云）系统性错配」，叠加「为 bit 一致而付的 O(N²) 建表 + 每候选消歧」两笔本可避免的开销。现役暴力法的 k 升序早停在这个几何下已接近最优，GridBallQuery 在雷达配置下不存在正收益空间。若要正收益，必须同时满足 (a) 换稠密大场景/小 radius 数据几何，(b) 去掉 bit 一致约束把建表降到 O(N)，(c) 消除 cell 复验——三者缺一都难以击穿现役的早停剪枝。这与 §15.4「不建议替换现役」的结论一致，并解释了 FPS 原版 "1000×" 与本次 "8.9~13.5× 更慢" 差异的根源（数据几何不同）。
+

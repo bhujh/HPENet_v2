@@ -1,0 +1,48 @@
+  File "<string>", line 14
+    m = re.search(r"--cfgPath.*?default=['"]?([^'"]+)['"]?", trt_src)
+                                           ^
+SyntaxError: closing parenthesis ']' does not match opening parenthesis '('
+[trt_inference.py] default cfgPath = cfgs/radar/hpenet-ll.yaml
+[YAML] Loading: /home/wangpeng/CODE/HPENet_v2-main/cfgs/radar/hpenet-ll.yaml
+[YAML] model.encoder_args.radius = 0.3
+[对照] cfgs/radar/hpenet-s.yaml -> radius = 0.1
+[对照] cfgs/radar/hpenet-b.yaml -> radius = 0.1
+
+[C++] deploy/CPP_trt1/src/main.cpp 关键行:
+
+[C++] deploy/CPP_trt1/src/pipeline.cpp test_start 关键行:
+
+
+[Python] deploy/common.py preprocess_test 函数签名片段:
+def preprocess_test(coord, feat, voxel_size=0.3):
+    """Voxelize → split into sub-clouds (one point per voxel per shift)."""
+    coord = coord - coord.min(0)
+
+    idx_points = []
+    voxel_idx = None
+    reverse_idx_part = None
+    reverse_idx_sort = None
+
+    if voxel_size is not None:
+        idx
+
+=== 诊断结论 ===
+Python 部署默认 voxel_size = 0.3 (来自 cfgs/radar/hpenet-ll.yaml)
+C++ 部署默认 voxel_size = 0.1f (来自 deploy/CPP_trt1/src/main.cpp:34)
+差倍: 0.3/0.1 = 3x
+对齐目标: C++ main.cpp 默认值 0.1f -> 0.3f
+
+=== C++ 验证 (grep 确认) ===
+=== main.cpp ===
+34:  float voxel_size = 0.1f;
+61:        << "  --voxel_size=<float>    Voxel size for preprocessing\n"
+99:            else if (key == "--voxel_size")cfg.voxel_size = std::stof(val);
+118:        else if (arg == "--voxel_size") { cfg.voxel_size = std::stof(argv[++i]); }
+159:        config.min_n, config.max_n, config.voxel_size, config.seed
+=== pipeline.cpp test_start ===
+491:    const int test_start = static_cast<int>(n_total * 0.0f);
+492:    int n_test = n_total - test_start;
+502:        const fs::path& p = ply_paths[test_start + i];
+
+=== 最终确认 ===
+部署 voxel_size = 0.3 (hpenet-ll.yaml) | C++ 默认 = 0.1f (main.cpp:34) | test_start = 0.0f (pipeline.cpp:491) | 对齐: main.cpp 0.1f→0.3f, pipeline.cpp 0.0f→0.2f

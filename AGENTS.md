@@ -101,7 +101,8 @@ For HPENet V2 specifically: `cfg.model.NAME: BaseSeg` → `encoder_args.NAME: HP
 
 - **deploy/ 是 git 子模块**（内部有未提交的暂存改动，勿在未经允许时执行 git 操作）
 - Python 侧: `deploy/onnx_export.py` → `deploy/onnx_inference.py` (has `deploy.md` with full docs)；`deploy/trt_build.py` → `deploy/trt_inference.py` (TensorRT FP16/FP32)。辅助库 `onnx_backend.py`（FPS/ball_query 已改为自定义 ONNX 算子）、`trt_utils.py`（TRTSession 自动 ctypes 加载 libhpenet_plugins.so）、`common.py`。Shell 包装: `onnx_deployment.sh`, `trt_deployment.sh`, `trt_cpp.sh`, `cmake_tensor.sh`。
-- **自定义算子/插件迁移中**（`trt_plugin_tip.md`）: `onnx_ops/`（fps_op.py, ballquery_op.py 自定义 ONNX 算子）+ `trt_plugins/`（C++ libhpenet_plugins.so: fps/ballquery TRT plugin）。目标 linux-x86/aarch64/win-x86, CUDA≥11.4, TRT≥8.5.3。
+- **自定义算子/插件迁移中**（`trt_plugin_tip.md`）: `onnx_ops/`（fps_op.py, ballquery_op.py 自定义 ONNX 算子）+ `trt_plugins/`（C++ libhpenet_plugins.so: fps/ballquery TRT plugin，共 11 插件——含 GridBallQueryGroup/GridBallQueryDP 实验档，详见 plugin.md §15）。目标 linux-x86/aarch64/win-x86, CUDA≥11.4, TRT≥8.5.3。
+- **`--bq_algo gridballquery` 可选档**: `python deploy/onnx_export.py --bq_algo gridballquery`（导出侧开关，默认 ballquery 行为零变化）；实测整网慢 2.4~3.5×，保留作实验对照——见 plugin.md §15。
 - **5 个 C++ 推理工程**（均产 `hpenet_trt_infer` / `hpenet_onnx_infer`；build/ output/ lib/ 均被 gitignore）:
   - `CPP_trt` — 原始 C++ CLI 版（--engine/--stats/--data_dir），唯一带 gtest CUDA 测试（test_voxelize/fnv_hash/scatter_mean.cu）
   - `CPP_trt1` — extern "C" C-API 封装版，入口 `src/test.c`（main.cpp 未接 CMake），feat5 模型 (RAW_FEAT_DIM=4/FEAT_DIM=5)，FP16，radarfullwl 硬编码路径

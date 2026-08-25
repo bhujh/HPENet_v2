@@ -1,0 +1,24 @@
+[07/29/2026-15:23:27] [TRT] [W] onnx2trt_utils.cpp:374: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
+[07/29/2026-15:23:28] [TRT] [E] 2: [shapeContext.cpp::op::1908] Error Code 2: Internal Error (Assertion x->type() == signature.operandType(0) failed. )
+============================================================
+HPENet V2 → TensorRT Engine Builder (TRT 8.6)
+============================================================
+  ONNX:   deploy/onnx_model_feat5.onnx
+  Output: deploy/trt_model_feat5_fp16_fixed.engine
+  FP16:   True
+  Profile: min_n=1024, opt_n=3500, max_n=10000
+  Parsing ONNX: deploy/onnx_model_feat5.onnx
+  ONNX parsed OK.  Inputs: 2, outputs: 1
+  FP16 mode: ENABLED
+  Forced 607 LayerNorm layers to FP32 precision
+  Dynamic profile: min_n=1024, opt_n=3500, max_n=10000
+  Workspace: 2 GiB
+  Building engine (this may take several minutes)...
+Traceback (most recent call last):
+  File "/home/wangpeng/CODE/HPENet_v2-main/deploy/trt_build.py", line 229, in <module>
+    main()
+  File "/home/wangpeng/CODE/HPENet_v2-main/deploy/trt_build.py", line 212, in main
+    build_engine(
+  File "/home/wangpeng/CODE/HPENet_v2-main/deploy/trt_build.py", line 154, in build_engine
+    raise RuntimeError("Engine build failed (returned None). "
+RuntimeError: Engine build failed (returned None). This may be caused by an unsupported ONNX op, insufficient workspace, or driver mismatch.

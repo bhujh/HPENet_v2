@@ -1,0 +1,28 @@
+======================================================================
+HPENet V2 — Precision Comparison (PyTorch vs FP32 vs FP16)
+======================================================================
+  voxel_size: 0.1 (from cfg.dataset.common)
+  num_classes: 2
+  Test files: 20
+
+[2/3] FP32 TRT engine...
+fp32:   0%|          | 0/20 [00:00<?, ?it/s]fp32:   5%|▌         | 1/20 [00:00<00:06,  2.77it/s]fp32:  15%|█▌        | 3/20 [00:00<00:02,  6.58it/s]fp32:  20%|██        | 4/20 [00:00<00:02,  7.28it/s]fp32:  30%|███       | 6/20 [00:00<00:01,  9.08it/s]fp32:  40%|████      | 8/20 [00:00<00:01, 10.33it/s]fp32:  50%|█████     | 10/20 [00:01<00:00, 10.53it/s]fp32:  60%|██████    | 12/20 [00:01<00:00, 11.96it/s]fp32:  70%|███████   | 14/20 [00:01<00:00, 12.31it/s]fp32:  80%|████████  | 16/20 [00:01<00:00, 10.90it/s]fp32:  90%|█████████ | 18/20 [00:01<00:00, 10.14it/s]fp32: 100%|██████████| 20/20 [00:02<00:00,  9.84it/s]fp32: 100%|██████████| 20/20 [00:02<00:00,  9.60it/s]
+  fp32:   mIoU=59.40  mAcc=67.27  OA=87.24  IoU/cls=[86.40 32.40]
+
+[3/3] FP16 TRT engine...
+fp16:   0%|          | 0/20 [00:00<?, ?it/s]fp16:   0%|          | 0/20 [00:00<?, ?it/s]
+  [WARN] NaN/Inf in TRT logits, skipping subcloud
+  [WARN] NaN/Inf in TRT logits, skipping subcloud
+  [WARN] NaN/Inf in TRT logits, skipping subcloud
+Traceback (most recent call last):
+  File "/home/wangpeng/CODE/HPENet_v2-main/deploy/compare_precision.py", line 416, in <module>
+    main()
+  File "/home/wangpeng/CODE/HPENet_v2-main/deploy/compare_precision.py", line 376, in main
+    results["fp16"] = run_backend_on_testset(
+  File "/home/wangpeng/CODE/HPENet_v2-main/deploy/compare_precision.py", line 155, in run_backend_on_testset
+    logits = infer_fn(
+  File "/home/wangpeng/CODE/HPENet_v2-main/deploy/compare_precision.py", line 138, in infer_cloud_trt
+    return scatter_merge(all_logits, all_idx)
+  File "/home/wangpeng/CODE/HPENet_v2-main/deploy/compare_precision.py", line 81, in scatter_merge
+    torch.cat(all_logits, dim=1).transpose(0, 1),
+RuntimeError: torch.cat(): expected a non-empty list of Tensors

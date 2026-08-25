@@ -1,0 +1,700 @@
+[W] 'colored' module is not installed, will not use colors when logging. To enable colors, please install the 'colored' module: python3 -m pip install colored
+[I] Loading bytes from /home/wangpeng/CODE/HPENet_v2-main/deploy/trt_model_feat5_fp16_fixed.engine
+[W] This engine was created with a profiling verbosity of: ProfilingVerbosity.LAYER_NAMES_ONLY. Some layer information may be missing. Try setting a higher profiling verbosity to see more detailed layer information. 
+[I] ==== TensorRT Engine ====
+    Name: Unnamed Network 0 | Explicit Batch Engine
+    
+    ---- 2 Engine Input(s) ----
+    {pos [dtype=float32, shape=(1, -1, 3)],
+     x [dtype=float32, shape=(1, 5, -1)]}
+    
+    ---- 1 Engine Output(s) ----
+    {output [dtype=float32, shape=(1, 2, -1)]}
+    
+    ---- Memory ----
+    Device Memory: 236084224 bytes
+    
+    ---- 1 Profile(s) (3 Tensor(s) Each) ----
+    - Profile: 0
+        Tensor: pos             (Input), Index: 0 | Shapes: min=(1, 1024, 3), opt=(1, 3500, 3), max=(1, 10000, 3)
+        Tensor: x               (Input), Index: 1 | Shapes: min=(1, 5, 1024), opt=(1, 5, 3500), max=(1, 5, 10000)
+        Tensor: output         (Output), Index: 2 | Shape: (1, 2, -1)
+    
+    ---- 226 Layer(s) ----
+    Layer 0    | [ShapeHostToDeviceCopy 0] [Op: Unknown]
+        {} -> {}
+    
+    Layer 1    | {ForeignNode[/model/encoder.1/encoder.1.0/Range.../model/encoder.1/encoder.1.0/grouper/Div]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 2    | (Unnamed Layer* 103) [Shuffle] [Op: Unknown]
+        {} -> {}
+    
+    Layer 3    | shuffle_between_(Unnamed Layer* 103) [Shuffle]_output_and_/model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 4    | Reformatting CopyNode for Input Tensor 0 to /model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 5    | /model/encoder.0/encoder.0.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 6    | shuffle_after_(Unnamed Layer* 104) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 7    | Reformatting CopyNode for Input Tensor 0 to /model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 8    | /model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 9    | Reformatting CopyNode for Input Tensor 3 to {ForeignNode[/model/encoder.1/encoder.1.1/grouper/Unsqueeze_1.../model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.2/Relu]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 10   | {ForeignNode[/model/encoder.1/encoder.1.1/grouper/Unsqueeze_1.../model/encoder.1/encoder.1.0/rel_pos/conv/conv.0/conv.0.2/Relu]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 11   | /model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 12   | /model/encoder.1/encoder.1.0/rel_pos/conv/conv.1/conv.1.0/Conv + /model/encoder.1/encoder.1.0/Add [Op: Unknown]
+        {} -> {}
+    
+    Layer 13   | /model/encoder.1/encoder.1.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 14   | Reformatting CopyNode for Input Tensor 0 to {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 15   | Reformatting CopyNode for Input Tensor 1 to {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 16   | {ForeignNode[/model/encoder.1/encoder.1.1/rel_pos/conv/conv.0/conv.0.1/ReduceMean...(Unnamed Layer* 579) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 17   | /model/encoder.1/encoder.1.1/rel_pos/conv/conv.1/conv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 18   | shuffle_between_(Unnamed Layer* 579) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 19   | /model/encoder.1/encoder.1.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 20   | shuffle_after_(Unnamed Layer* 580) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 21   | {ForeignNode[/model/encoder.1/encoder.1.1/layer/layer.0/convs/Expand...(Unnamed Layer* 643) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 22   | shuffle_between_(Unnamed Layer* 643) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 23   | /model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 24   | shuffle_after_(Unnamed Layer* 644) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 25   | {ForeignNode[(Unnamed Layer* 648) [Shuffle]...(Unnamed Layer* 668) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 26   | shuffle_between_(Unnamed Layer* 668) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 27   | /model/encoder.1/encoder.1.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 28   | shuffle_after_(Unnamed Layer* 669) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 29   | {ForeignNode[(Unnamed Layer* 673) [Shuffle]...(Unnamed Layer* 694) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 30   | shuffle_between_(Unnamed Layer* 694) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 31   | /model/encoder.1/encoder.1.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 32   | shuffle_after_(Unnamed Layer* 695) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 33   | {ForeignNode[/model/encoder.1/encoder.1.1/layer/layer.1/convs/Expand...(Unnamed Layer* 758) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 34   | shuffle_between_(Unnamed Layer* 758) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 35   | /model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 36   | shuffle_after_(Unnamed Layer* 759) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 37   | {ForeignNode[/model/encoder.2/encoder.2.0/grouper/Unsqueeze_1...(Unnamed Layer* 783) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 38   | /model/encoder.2/encoder.2.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 39   | shuffle_between_(Unnamed Layer* 783) [Shuffle]_output_and_/model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 40   | /model/encoder.1/encoder.1.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 41   | shuffle_after_(Unnamed Layer* 784) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 42   | {ForeignNode[/model/encoder.2/encoder.2.1/grouper/Unsqueeze_1...(Unnamed Layer* 902) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 43   | /model/encoder.2/encoder.2.1/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 44   | /model/encoder.2/encoder.2.0/rel_pos/conv/conv.1/conv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 45   | shuffle_between_(Unnamed Layer* 902) [Shuffle]_output_and_/model/encoder.2/encoder.2.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 46   | /model/encoder.2/encoder.2.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 47   | shuffle_after_(Unnamed Layer* 903) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 48   | {ForeignNode[/model/encoder.2/encoder.2.0/Expand_2...(Unnamed Layer* 1272) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 49   | /model/encoder.2/encoder.2.1/rel_pos/conv/conv.1/conv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 50   | shuffle_between_(Unnamed Layer* 1272) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 51   | /model/encoder.2/encoder.2.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 52   | shuffle_after_(Unnamed Layer* 1273) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 53   | {ForeignNode[/model/encoder.2/encoder.2.1/layer/layer.0/convs/Expand...(Unnamed Layer* 1336) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 54   | shuffle_between_(Unnamed Layer* 1336) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 55   | /model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 56   | shuffle_after_(Unnamed Layer* 1337) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 57   | {ForeignNode[(Unnamed Layer* 1341) [Shuffle]...(Unnamed Layer* 1361) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 58   | shuffle_between_(Unnamed Layer* 1361) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 59   | /model/encoder.2/encoder.2.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 60   | shuffle_after_(Unnamed Layer* 1362) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 61   | {ForeignNode[(Unnamed Layer* 1366) [Shuffle]...(Unnamed Layer* 1387) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 62   | shuffle_between_(Unnamed Layer* 1387) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 63   | /model/encoder.2/encoder.2.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 64   | shuffle_after_(Unnamed Layer* 1388) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 65   | {ForeignNode[/model/encoder.2/encoder.2.1/layer/layer.1/convs/Expand...(Unnamed Layer* 1451) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 66   | shuffle_between_(Unnamed Layer* 1451) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 67   | /model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 68   | shuffle_after_(Unnamed Layer* 1452) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 69   | {ForeignNode[(Unnamed Layer* 1456) [Shuffle]...(Unnamed Layer* 1476) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 70   | shuffle_between_(Unnamed Layer* 1476) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 71   | /model/encoder.2/encoder.2.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 72   | shuffle_after_(Unnamed Layer* 1477) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 73   | {ForeignNode[(Unnamed Layer* 1481) [Shuffle]...(Unnamed Layer* 1502) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 74   | shuffle_between_(Unnamed Layer* 1502) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 75   | /model/encoder.2/encoder.2.1/layer/layer.2/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 76   | shuffle_after_(Unnamed Layer* 1503) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 77   | {ForeignNode[/model/encoder.2/encoder.2.1/layer/layer.2/convs/Expand...(Unnamed Layer* 1566) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 78   | shuffle_between_(Unnamed Layer* 1566) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 79   | /model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 80   | shuffle_after_(Unnamed Layer* 1567) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 81   | {ForeignNode[(Unnamed Layer* 1571) [Shuffle]...(Unnamed Layer* 1591) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 82   | shuffle_between_(Unnamed Layer* 1591) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 83   | /model/encoder.2/encoder.2.1/layer/layer.2/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 84   | shuffle_after_(Unnamed Layer* 1592) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 85   | {ForeignNode[(Unnamed Layer* 1596) [Shuffle]...(Unnamed Layer* 1617) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 86   | shuffle_between_(Unnamed Layer* 1617) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 87   | /model/encoder.2/encoder.2.1/layer/layer.3/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 88   | shuffle_after_(Unnamed Layer* 1618) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 89   | {ForeignNode[/model/encoder.2/encoder.2.1/layer/layer.3/convs/Expand...(Unnamed Layer* 1681) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 90   | Reformatting CopyNode for Input Tensor 0 to shuffle_between_(Unnamed Layer* 1681) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 91   | shuffle_between_(Unnamed Layer* 1681) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 92   | /model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 93   | shuffle_after_(Unnamed Layer* 1682) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 94   | {ForeignNode[/model/encoder.3/encoder.3.0/grouper/Unsqueeze_1...(Unnamed Layer* 1706) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 95   | /model/encoder.3/encoder.3.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 96   | shuffle_between_(Unnamed Layer* 1706) [Shuffle]_output_and_/model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 97   | /model/encoder.2/encoder.2.1/layer/layer.3/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 98   | shuffle_after_(Unnamed Layer* 1707) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 99   | {ForeignNode[/model/encoder.3/encoder.3.1/grouper/Unsqueeze_1...(Unnamed Layer* 1825) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 100  | /model/encoder.3/encoder.3.1/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 101  | /model/encoder.3/encoder.3.0/rel_pos/conv/conv.1/conv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 102  | shuffle_between_(Unnamed Layer* 1825) [Shuffle]_output_and_/model/encoder.3/encoder.3.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 103  | /model/encoder.3/encoder.3.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 104  | shuffle_after_(Unnamed Layer* 1826) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 105  | {ForeignNode[/model/encoder.3/encoder.3.0/Expand_2...(Unnamed Layer* 2195) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 106  | /model/encoder.3/encoder.3.1/rel_pos/conv/conv.1/conv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 107  | shuffle_between_(Unnamed Layer* 2195) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 108  | /model/encoder.3/encoder.3.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 109  | shuffle_after_(Unnamed Layer* 2196) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 110  | {ForeignNode[/model/encoder.3/encoder.3.1/layer/layer.0/convs/Expand...(Unnamed Layer* 2259) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 111  | shuffle_between_(Unnamed Layer* 2259) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 112  | /model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 113  | shuffle_after_(Unnamed Layer* 2260) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 114  | {ForeignNode[(Unnamed Layer* 2264) [Shuffle]...(Unnamed Layer* 2284) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 115  | shuffle_between_(Unnamed Layer* 2284) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 116  | /model/encoder.3/encoder.3.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 117  | shuffle_after_(Unnamed Layer* 2285) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 118  | {ForeignNode[(Unnamed Layer* 2289) [Shuffle]...(Unnamed Layer* 2310) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 119  | shuffle_between_(Unnamed Layer* 2310) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 120  | /model/encoder.3/encoder.3.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 121  | shuffle_after_(Unnamed Layer* 2311) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 122  | {ForeignNode[/model/encoder.3/encoder.3.1/layer/layer.1/convs/Expand...(Unnamed Layer* 2374) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 123  | shuffle_between_(Unnamed Layer* 2374) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 124  | /model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 125  | shuffle_after_(Unnamed Layer* 2375) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 126  | {ForeignNode[/model/encoder.4/encoder.4.0/grouper/Unsqueeze_1...(Unnamed Layer* 2399) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 127  | /model/encoder.4/encoder.4.0/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 128  | shuffle_between_(Unnamed Layer* 2399) [Shuffle]_output_and_/model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 129  | /model/encoder.3/encoder.3.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 130  | shuffle_after_(Unnamed Layer* 2400) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 131  | {ForeignNode[/model/encoder.4/encoder.4.1/grouper/Unsqueeze_1...(Unnamed Layer* 2518) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 132  | /model/encoder.4/encoder.4.1/rel_pos/conv/conv.0/conv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 133  | /model/encoder.4/encoder.4.0/rel_pos/conv/conv.1/conv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 134  | shuffle_between_(Unnamed Layer* 2518) [Shuffle]_output_and_/model/encoder.4/encoder.4.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 135  | /model/encoder.4/encoder.4.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 136  | shuffle_after_(Unnamed Layer* 2519) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 137  | {ForeignNode[/model/encoder.4/encoder.4.0/Expand_2...(Unnamed Layer* 2888) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 138  | /model/encoder.4/encoder.4.1/rel_pos/conv/conv.1/conv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 139  | shuffle_between_(Unnamed Layer* 2888) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 140  | /model/encoder.4/encoder.4.1/layer/layer.0/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 141  | shuffle_after_(Unnamed Layer* 2889) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 142  | {ForeignNode[/model/encoder.4/encoder.4.1/layer/layer.0/convs/Expand...(Unnamed Layer* 2952) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 143  | shuffle_between_(Unnamed Layer* 2952) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 144  | /model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 145  | shuffle_after_(Unnamed Layer* 2953) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 146  | {ForeignNode[(Unnamed Layer* 2957) [Shuffle]...(Unnamed Layer* 2977) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 147  | shuffle_between_(Unnamed Layer* 2977) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 148  | /model/encoder.4/encoder.4.1/layer/layer.0/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 149  | shuffle_after_(Unnamed Layer* 2978) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 150  | {ForeignNode[(Unnamed Layer* 2982) [Shuffle]...(Unnamed Layer* 3003) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 151  | shuffle_between_(Unnamed Layer* 3003) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 152  | /model/encoder.4/encoder.4.1/layer/layer.1/convs/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 153  | shuffle_after_(Unnamed Layer* 3004) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 154  | {ForeignNode[/model/encoder.4/encoder.4.1/layer/layer.1/convs/Expand...(Unnamed Layer* 3067) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 155  | shuffle_between_(Unnamed Layer* 3067) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 156  | /model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.0/pwconv.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 157  | shuffle_after_(Unnamed Layer* 3068) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 158  | {ForeignNode[(Unnamed Layer* 3072) [Shuffle]...(Unnamed Layer* 3092) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 159  | shuffle_between_(Unnamed Layer* 3092) [Shuffle]_output_and_/model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 160  | /model/encoder.4/encoder.4.1/layer/layer.1/pwconv/pwconv.1/pwconv.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 161  | shuffle_after_(Unnamed Layer* 3093) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 162  | {ForeignNode[/model/decoder/decoder.3.0/Unsqueeze...(Unnamed Layer* 3206) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 163  | shuffle_between_(Unnamed Layer* 3206) [Shuffle]_output_and_/model/decoder/decoder.3.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 164  | /model/decoder/decoder.3.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 165  | shuffle_after_(Unnamed Layer* 3207) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 166  | {ForeignNode[(Unnamed Layer* 3211) [Shuffle]...(Unnamed Layer* 3231) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 167  | shuffle_between_(Unnamed Layer* 3231) [Shuffle]_output_and_/model/decoder/decoder.3.0/convs/convs.1/convs.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 168  | /model/decoder/decoder.3.0/convs/convs.1/convs.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 169  | shuffle_after_(Unnamed Layer* 3232) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 170  | {ForeignNode[/model/decoder/decoder.2.0/Unsqueeze...(Unnamed Layer* 3344) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 171  | shuffle_between_(Unnamed Layer* 3344) [Shuffle]_output_and_/model/decoder/decoder.2.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 172  | /model/decoder/decoder.2.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 173  | shuffle_after_(Unnamed Layer* 3345) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 174  | {ForeignNode[(Unnamed Layer* 3349) [Shuffle]...(Unnamed Layer* 3369) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 175  | shuffle_between_(Unnamed Layer* 3369) [Shuffle]_output_and_/model/decoder/decoder.2.0/convs/convs.1/convs.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 176  | /model/decoder/decoder.2.0/convs/convs.1/convs.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 177  | shuffle_after_(Unnamed Layer* 3370) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 178  | {ForeignNode[/model/decoder/decoder.1.0/Unsqueeze...(Unnamed Layer* 3482) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 179  | shuffle_between_(Unnamed Layer* 3482) [Shuffle]_output_and_/model/decoder/decoder.1.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 180  | /model/decoder/decoder.1.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 181  | shuffle_after_(Unnamed Layer* 3483) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 182  | {ForeignNode[(Unnamed Layer* 3487) [Shuffle]...(Unnamed Layer* 3507) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 183  | shuffle_between_(Unnamed Layer* 3507) [Shuffle]_output_and_/model/decoder/decoder.1.0/convs/convs.1/convs.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 184  | /model/decoder/decoder.1.0/convs/convs.1/convs.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 185  | shuffle_after_(Unnamed Layer* 3508) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 186  | {ForeignNode[/model/decoder/decoder.0.0/Unsqueeze_1...(Unnamed Layer* 3620) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 187  | shuffle_between_(Unnamed Layer* 3620) [Shuffle]_output_and_/model/decoder/decoder.0.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 188  | /model/decoder/decoder.0.0/convs/convs.0/convs.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 189  | shuffle_after_(Unnamed Layer* 3621) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 190  | {ForeignNode[(Unnamed Layer* 3670) [Shuffle]...(Unnamed Layer* 3645) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 191  | shuffle_between_(Unnamed Layer* 3670) [Shuffle]_output_and_/model/decoder/fc_all/fc_all.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 192  | /model/decoder/fc_all/fc_all.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 193  | shuffle_after_(Unnamed Layer* 3671) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 194  | shuffle_between_(Unnamed Layer* 3645) [Shuffle]_output_and_/model/decoder/decoder.0.0/convs/convs.1/convs.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 195  | /model/decoder/decoder.0.0/convs/convs.1/convs.1.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 196  | shuffle_after_(Unnamed Layer* 3646) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 197  | {ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 198  | Reformatting CopyNode for Input Tensor 0 to unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0 [Op: Unknown]
+        {} -> {}
+    
+    Layer 199  | unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/decoder.0.0/convs/convs.1/convs.1.2/Relu_output_0 [Op: Unknown]
+        {} -> {}
+    
+    Layer 200  | Reformatting CopyNode for Input Tensor 0 to unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/ReduceSum_output_0 [Op: Unknown]
+        {} -> {}
+    
+    Layer 201  | unsqueeze_node_after_{ForeignNode[/model/decoder/Reshape + /model/decoder/Unsqueeze_1...(Unnamed Layer* 3728) [Shuffle]]}_/model/decoder/ReduceSum_output_0 [Op: Unknown]
+        {} -> {}
+    
+    Layer 202  | Reformatting CopyNode for Input Tensor 0 to /model/decoder/ddfc/fc1/fc1.0/fc1.0.0/Conv + /model/decoder/ddfc/fc1/fc1.0/fc1.0.1/Relu [Op: Unknown]
+        {} -> {}
+    
+    Layer 203  | /model/decoder/ddfc/fc1/fc1.0/fc1.0.0/Conv + /model/decoder/ddfc/fc1/fc1.0/fc1.0.1/Relu [Op: Unknown]
+        {} -> {}
+    
+    Layer 204  | Reformatting CopyNode for Input Tensor 0 to /model/decoder/ddfc/fc2/fc2.0/fc2.0.0/Conv + /model/decoder/ddfc/fc2/fc2.0/fc2.0.1/Relu [Op: Unknown]
+        {} -> {}
+    
+    Layer 205  | /model/decoder/ddfc/fc2/fc2.0/fc2.0.0/Conv + /model/decoder/ddfc/fc2/fc2.0/fc2.0.1/Relu [Op: Unknown]
+        {} -> {}
+    
+    Layer 206  | /model/decoder/ddfc/fc1/fc1.1/fc1.1.0/Conv + /model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_output_0 + (Unnamed Layer* 3743) [Shuffle]_(Unnamed Layer* 3743) [Shuffle]_output + /model/decoder/ddfc/Mul [Op: Unknown]
+        {} -> {}
+    
+    Layer 207  | Reformatting CopyNode for Input Tensor 0 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [Op: Unknown]
+        {} -> {}
+    
+    Layer 208  | Reformatting CopyNode for Input Tensor 1 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [Op: Unknown]
+        {} -> {}
+    
+    Layer 209  | /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [Op: Unknown]
+        {} -> {}
+    
+    Layer 210  | Reformatting CopyNode for Output Tensor 0 to /model/decoder/ddfc/fc2/fc2.1/fc2.1.0/Conv + /model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle] + unsqueeze_node_after_/model/decoder/ddfc/Constant_1_output_0 + (Unnamed Layer* 3746) [Shuffle]_(Unnamed Layer* 3746) [Shuffle]_output + /model/decoder/ddfc/Mul_1 + /model/decoder/ddfc/Add + PWN(/model/decoder/ddfc/sigmoid/Sigmoid) [Op: Unknown]
+        {} -> {}
+    
+    Layer 211  | PWN(/model/decoder/ddfc/Mul_2, /model/decoder/ddfc/Add_1) [Op: Unknown]
+        {} -> {}
+    
+    Layer 212  | copied_squeeze_after_/model/decoder/ddfc/Add_1 [Op: Unknown]
+        {} -> {}
+    
+    Layer 213  | copied_squeeze_after_/model/decoder/ddfc/Add_1_copy_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 214  | PWN(/model/decoder/ddfc/Mul_3, /model/decoder/ddfc/Add_2) [Op: Unknown]
+        {} -> {}
+    
+    Layer 215  | copied_squeeze_after_/model/decoder/ddfc/Add_2 [Op: Unknown]
+        {} -> {}
+    
+    Layer 216  | copied_squeeze_after_/model/decoder/ddfc/Add_2_copy_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 217  | (Unnamed Layer* 3760) [Shuffle] [Op: Unknown]
+        {} -> {}
+    
+    Layer 218  | shuffle_between_(Unnamed Layer* 3760) [Shuffle]_output_and_/model/head/head/head.0/head.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 219  | /model/head/head/head.0/head.0.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 220  | shuffle_after_(Unnamed Layer* 3761) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 221  | {ForeignNode[(Unnamed Layer* 3765) [Shuffle]...(Unnamed Layer* 3785) [Shuffle]]} [Op: Unknown]
+        {} -> {}
+    
+    Layer 222  | shuffle_between_(Unnamed Layer* 3785) [Shuffle]_output_and_/model/head/head/head.2/head.2.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 223  | /model/head/head/head.2/head.2.0/Conv [Op: Unknown]
+        {} -> {}
+    
+    Layer 224  | shuffle_after_(Unnamed Layer* 3786) [Convolution]_output [Op: Unknown]
+        {} -> {}
+    
+    Layer 225  | (Unnamed Layer* 3790) [Shuffle] [Op: Unknown]
+        {} -> {}

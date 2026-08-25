@@ -147,5 +147,6 @@ data/S3DIS/
 data/RadarClassi/radarfull/raw
 data/RadarClassi/radarfullwl/raw
 # !data/RadarClassi/radarfull/raw/0000001.ply
-.omo/
+# .omo/
 FPS/
+*.engine

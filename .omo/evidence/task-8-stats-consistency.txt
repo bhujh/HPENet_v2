@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "<string>", line 17, in <module>
+IndexError: too many indices for array: array is 0-dimensional, but 1 were indexed
+C++ stats_feat5.json keys: ['feat_mean', 'feat_std', 'z_mean', 'z_std']
+  feat_mean: [90.58853912353516, -5.00185489654541, 16.714941024780273, 0.012920886278152466]... (len=4)
+  feat_std: [10.569221496582031, 12.55279541015625, 8.522045135498047, 0.11293333023786545]... (len=4)
+  z_mean: 34.57350540161133
+  z_std: 25.360679626464844
+
+Python feat_stats_area5.pth keys: ['feat_mean', 'feat_std', 'z_mean', 'z_std']
+  feat_mean: shape=(4,), values=[ 9.0588539e+01 -5.0018549e+00  1.6714941e+01  1.2920886e-02]
+  feat_std: shape=(4,), values=[10.5692215  12.552795    8.522045    0.11293333]
+feat_mean: py=[ 9.0588539e+01 -5.0018549e+00  1.6714941e+01  1.2920886e-02], cpp=[ 9.05885391e+01 -5.00185490e+00  1.67149410e+01  1.29208863e-02], MATCH
+feat_std: py=[10.5692215  12.552795    8.522045    0.11293333], cpp=[10.5692215  12.55279541  8.52204514  0.11293333], MATCH
+z_mean: py=[34.573505], cpp=[34.5735054], MATCH
+z_std: py=[25.36068], cpp=[25.36067963], MATCH
+结论: stats 文件数值完全一致

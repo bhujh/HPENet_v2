@@ -1,0 +1,16 @@
+[07/29/2026-15:20:24] [TRT] [W] onnx2trt_utils.cpp:374: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
+============================================================
+HPENet V2 → TensorRT Engine Builder (TRT 8.6)
+============================================================
+  ONNX:   deploy/onnx_model_feat5.onnx
+  Output: deploy/trt_model_feat5_fp32_fixed.engine
+  FP16:   False
+  Profile: min_n=1024, opt_n=3500, max_n=10000
+  Parsing ONNX: deploy/onnx_model_feat5.onnx
+  ONNX parsed OK.  Inputs: 2, outputs: 1
+  Dynamic profile: min_n=1024, opt_n=3500, max_n=10000
+  Workspace: 2 GiB
+  Building engine (this may take several minutes)...
+  Engine saved: deploy/trt_model_feat5_fp32_fixed.engine (18.5 MB)
+
+Done!

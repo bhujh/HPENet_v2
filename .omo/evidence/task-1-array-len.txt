@@ -1,0 +1,4 @@
+QA: Array length check
+feat_mean[RAW_FEAT_DIM] = { 0, 0, 0, 0 }
+feat_std[RAW_FEAT_DIM]  = { 1, 1, 1, 1 }
+Verdict: PASS

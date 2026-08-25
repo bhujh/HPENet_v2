@@ -1,0 +1,2 @@
+Test 1 PASS: Loaded feat5 stats (90.5885 -5.00185 16.7149 0.0129209, z_mean=34.5735)
+Test 2 PASS: Old stats.json correctly rejected with 'array has 3 elements, expected 4'

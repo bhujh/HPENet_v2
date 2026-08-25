@@ -1,0 +1,5 @@
+QA: Header compile test
+Command: g++ -std=c++17 -fsyntax-only -Iinclude -c <(echo '#include "types.h"'...)
+Result: exit code 0, static_assert RAW_FEAT_DIM==4 passed, static_assert FEAT_DIM==5 passed
+Warning: linker input file unused (expected with -c/syntax-only)
+Verdict: PASS

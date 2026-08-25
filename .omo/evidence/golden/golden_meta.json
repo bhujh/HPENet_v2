@@ -1,0 +1,15 @@
+{
+  "ply": "data/RadarClassi/radarfullwl/raw/0000001.ply",
+  "seed": 100,
+  "voxel_size": 0.3,
+  "n_points": 5119,
+  "n_subclouds": 5,
+  "subcloud_sizes": [
+    4872,
+    4872,
+    4872,
+    4872,
+    4872
+  ],
+  "sha256": "05b676ca113541d4"
+}

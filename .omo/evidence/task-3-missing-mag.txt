@@ -1,0 +1,1 @@
+PASS: missing mag field filled with 0

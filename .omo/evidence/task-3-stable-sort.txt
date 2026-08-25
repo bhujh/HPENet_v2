@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "<string>", line 13, in <module>
+AssertionError: FAIL: [2 0]
+stable sort idx_sort: [2 0 1]
+count: [1 2]
+体素0: idx_sort[:2] = [2 0] (expect [0,1] 原始顺序)
+Traceback (most recent call last):
+  File "<string>", line 18, in <module>
+AssertionError: FAIL stable sort: [0 1] vs [0 1 2]
+keys: [15658191375538532279 15658191375538532279 15658191375538532279
+ 15657234800422177934 15657234800422177934]
+idx_sort: [3 4 0 1 2]
+count: [2 3]
+体素15658191375538532279: 原始顺序[0 1 2], 排序后[0 1]
+idx_sort=[3 4 0 1 2], count=[2 3]
+PASS: 同体素内点保持原始顺序 (stable sort)
+train mode 输出: (2,)
+ALL PASS

@@ -1,0 +1,5 @@
+  File: 0000001.ply
+  Points: 5119, Sub-clouds: 5
+  Sub-cloud sizes: min=4872, max=4872, mean=4872
+  SHA256 (first 16): 05b676ca113541d4
+  Golden saved to: .omo/evidence/golden/golden_idx_points.pkl
