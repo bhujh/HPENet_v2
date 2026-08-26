@@ -648,7 +648,7 @@ def test(model, data_list, cfg, num_votes=1):
             label = torch.from_numpy(label.astype(np.int64).squeeze()).cuda(non_blocking=True)
 
         len_part = len(idx_points)
-        nearest_neighbor = len_part == 1
+        # nearest_neighbor = len_part == 1  # 误判源：voxel_size=0.02 使部分文件 count.max()==1 → len_part==1 被误判为 nearest_neighbor，覆盖了 L641 的正确赋值。注释后 nearest_neighbor 回到 L641 配置驱动。
         pbar = tqdm(range(len(idx_points)))
         for idx_subcloud in pbar:
             pbar.set_description(f"Test on {cloud_idx}-th cloud [{idx_subcloud}]/[{len_part}]]")

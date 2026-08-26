@@ -5,7 +5,8 @@
   "plan_name": "latency-cppbatch-fpswarp",
   "started_at": "2026-08-23T16:31:30.618Z",
   "session_ids": [
-    "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n"
+    "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n",
+    "opencode:ses_fc41050a8ffeajnoWbjUkVB5UV"
   ],
   "status": "completed",
   "agent": "atlas",
@@ -104,12 +105,14 @@
       "plan_name": "latency-cppbatch-fpswarp",
       "status": "completed",
       "started_at": "2026-08-23T16:31:30.618Z",
-      "updated_at": "2026-08-23T17:49:24.199Z",
+      "updated_at": "2026-08-26T02:39:19.300Z",
       "session_ids": [
-        "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n"
+        "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n",
+        "opencode:ses_fc41050a8ffeajnoWbjUkVB5UV"
       ],
       "session_origins": {
-        "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n": "direct"
+        "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n": "direct",
+        "opencode:ses_fc41050a8ffeajnoWbjUkVB5UV": "appended"
       },
       "agent": "atlas",
       "task_sessions": {
@@ -169,9 +172,10 @@
       "elapsed_ms": 4673581
     }
   },
-  "updated_at": "2026-08-23T17:49:24.199Z",
+  "updated_at": "2026-08-26T02:39:19.300Z",
   "session_origins": {
-    "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n": "direct"
+    "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n": "direct",
+    "opencode:ses_fc41050a8ffeajnoWbjUkVB5UV": "appended"
   },
   "task_sessions": {
     "todo:1": {
