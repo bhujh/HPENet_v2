@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "active_work_id": "latency-cppbatch-fpswarp-458c1f7d",
-  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/latency-cppbatch-fpswarp.md",
-  "plan_name": "latency-cppbatch-fpswarp",
+  "active_work_id": "scatter-mean-always",
+  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/scatter-mean-always.md",
+  "plan_name": "scatter-mean-always",
   "started_at": "2026-08-23T16:31:30.618Z",
   "session_ids": [
     "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n",
@@ -48,7 +48,8 @@
           "category": "unspecified-high",
           "updated_at": "2026-08-22T18:43:33.678Z",
           "started_at": "2026-08-22T18:43:33.678Z",
-          "status": "running"
+          "status": "completed",
+          "completed_at": "2026-08-22T18:43:33.678Z"
         }
       },
       "updated_at": "2026-08-23T06:48:47.682Z",
@@ -164,72 +165,37 @@
           "category": "unspecified-high",
           "updated_at": "2026-08-23T16:53:37.266Z",
           "started_at": "2026-08-23T16:53:37.266Z",
-          "status": "running"
+          "status": "completed",
+          "completed_at": "2026-08-23T16:53:37.266Z"
         }
       },
       "completed_at": "2026-08-24T02:00:00.000Z",
       "ended_at": "2026-08-23T17:49:24.199Z",
       "elapsed_ms": 4673581
+    },
+    "scatter-mean-always": {
+      "work_id": "scatter-mean-always",
+      "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/scatter-mean-always.md",
+      "plan_name": "scatter-mean-always",
+      "status": "completed",
+      "started_at": "2026-08-26T02:37:00.000Z",
+      "completed_at": "2026-08-26T03:00:00.000Z",
+      "session_ids": [
+        "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n"
+      ],
+      "session_origins": {
+        "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {}
     }
   },
   "updated_at": "2026-08-26T02:39:19.300Z",
   "session_origins": {
-    "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n": "direct",
-    "opencode:ses_fc41050a8ffeajnoWbjUkVB5UV": "appended"
+    "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n": "direct"
   },
-  "task_sessions": {
-    "todo:1": {
-      "task_key": "todo:1",
-      "task_label": "1",
-      "task_title": "**构建入口决策（步骤 -1）+ CPP 基线测量与留档**：①CMake 换 main.cpp 入口（或 fallback 给 test.c 加 CLI）并重编——以能跑通本 TODO 全部测量为验收；②以当前源码（插件宏 0）重编基线二进制（消除版本漂移）；③给 `pipeline.cpp` `process_file` 尾部加 **dump-only 前置补丁**（写 result.logits/predictions 二进制；**带运行时开关默认关**）；开 dump 用 **fp32 engine** 跑 ti10 留档（fp32 是唯一 bit 级基线；fp16 不做 bit 级对拍）；④nsys 基线（--num_files 10，dump 关），.nsys-rep 命名 S1 留档，记录 §四基线表",
-      "session_id": "opencode:ses_fd088128cffe0eqhIFFcEarhZR",
-      "agent": "Sisyphus-Junior",
-      "category": "unspecified-high",
-      "updated_at": "2026-08-23T16:39:00.804Z",
-      "started_at": "2026-08-23T16:38:31.489Z",
-      "status": "completed",
-      "ended_at": "2026-08-23T16:39:00.804Z",
-      "elapsed_ms": 29315
-    },
-    "todo:2": {
-      "task_key": "todo:2",
-      "task_label": "2",
-      "task_title": "CPP 实现：源码锚点确认 → `trim_transpose_kernel`（含 N_true=0 防御、int64 staging 持久缓冲）→ 重构两份函数（行号对见 §二）→ **d_output_ 预分配删 realloc（cudaFree 防御）** → stream-FIFO+cudaFree 注释 → 保留 dump 于 process_file 同位置 → 重编",
-      "session_id": "opencode:ses_fd0822201ffe0ketADur3LdPSt",
-      "agent": "Sisyphus-Junior",
-      "category": "unspecified-high",
-      "updated_at": "2026-08-23T16:44:49.501Z",
-      "started_at": "2026-08-23T16:44:17.814Z",
-      "status": "completed",
-      "ended_at": "2026-08-23T16:44:49.501Z",
-      "elapsed_ms": 31687
-    },
-    "todo:3": {
-      "task_key": "todo:3",
-      "task_label": "3",
-      "task_title": "CPP 验证 + 改后测量：①开 dump 对拍轮：merged logits/pred 逐点 bit 级一致 + **acc 逐文件与基线留档相同（4 位小数逐字符），10 文件均值 == 0.9636**；fp16 只验 acc（`--engine deploy/hpenet_v2_fp16.engine`）；②nsys 改后轮（dump 关，S2 留档），回填 §四项目一表",
-      "session_id": "opencode:ses_fd07cdb6effeJmvIe0Jl6eaZr8",
-      "agent": "Sisyphus-Junior",
-      "category": "unspecified-high",
-      "updated_at": "2026-08-23T16:48:48.868Z",
-      "started_at": "2026-08-23T16:48:48.867Z",
-      "status": "completed",
-      "ended_at": "2026-08-23T16:48:48.868Z",
-      "elapsed_ms": 1
-    },
-    "todo:4": {
-      "task_key": "todo:4",
-      "task_label": "4",
-      "task_title": "FPS：源码锚点确认 → `fps_kernel_warp.cu`（定名 furthest_point_sampling_kernel_warp；**≥64 档位 warp + 小档位分流现役**）→ CMakeLists 加源 → 宏切换放 `fps_launcher_with_stream` 内部 → 双编译 .so",
-      "session_id": "opencode:ses_fd0786e58ffeZv3RPdWUn2HSem",
-      "agent": "Sisyphus-Junior",
-      "category": "unspecified-high",
-      "updated_at": "2026-08-23T16:53:37.266Z",
-      "started_at": "2026-08-23T16:53:37.266Z",
-      "status": "running"
-    }
-  },
-  "completed_at": "2026-08-24T02:00:00.000Z",
+  "task_sessions": {},
+  "completed_at": "2026-08-26T03:00:00.000Z",
   "ended_at": "2026-08-23T17:49:24.199Z",
   "elapsed_ms": 4673581
 }
