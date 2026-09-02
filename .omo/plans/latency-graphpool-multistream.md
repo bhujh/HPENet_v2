@@ -30,8 +30,20 @@ Graph 固化全部 kernel launch 为单次 `cudaGraphLaunch`（2.2µs vs 2091µs
 ### 机理 3：逐 shape 池——解 graph 的"shape 烧死"约束
 Graph 固化捕获时的 shape 与地址。**逐 shape 池**：对每个出现过的真实 N 各捕一张图，池 `{(N, ctx): graphExec}`。全集 328 个唯一 N（同文件 6 子云同 N）；**注意 miss 代价按 ctx 计：每文件 1 个新 N × K 个 ctx = 每文件 K 次新图捕获（~4–5ms/次）**——同文件内 6 子云在同 ctx 串行复用同一张图（拷入→launch→读出，stream-FIFO 保序）。**池为 per-ctx 独立 LRU，每 ctx 容量 = 384（>328 唯一 N，全集不淘汰；总量 ≤328×K 图，估算 65–260MB，并入 0c 显存口径监控）**。全局统一池 + 小容量 LRU 已在 R2 评审中被证伪（K=4 循环扫描 1312>512 → thrash → 每帧 miss 开销 +18ms 反超 host 节省，负收益）。**输入零改动 → 输出与现役 bit 级一致（spike③ 实证），无精度争议**。
 
-### 复制 pad 点无害性（不再作为主路径依据；保留为 bucket 方案的记录）
-原论证（FPS tie 保低、ball_query 凑满 break）在理论层成立，但 **spike① 实测证伪**：`fpsprune_plugin.cpp` 的 M/num_points 随 N 缩放导致采样集合变化，属于算法性差异，与 tactic 无关。**结论：pad 到非真实 N 的任何方案（含桶化）都不可保证 pred==100%，弃用**；如未来确需桶化（显存/图数约束），按"逐 shape 池不可行再试桶化 + 重新定义验收（接受 ~1.5% pred 差异）"。
+### Padding 不可行原因总结（spike① 证伪 + 源码机理，2026-08-31 补充）
+
+**结论：pad 到非真实 N 的任何方案（含桶化）都不可保证 pred==100%。** 原因不是实现细节，而是 FPS 的定义域被改写。完整因果链如下：
+
+1. **N 是 FPS 输出的确定性函数**：`fpsprune_plugin.cpp` 的 `enqueue` 从 `N = inputDesc[0].dims.d[1]` 派生三个结构量——`M = N/stride`（输出点数）、`N_points = (int)(keep_rate*N)`（候选前缀）、`num_points = N_points/sample_rate`（FPS 迭代轮数）。三者**全部随 N 缩放**，pad 的瞬间就偏离真实 N 下的取值（stride=4 时 M 随 N 从 880 → 1152、num_points 从 660 → 864）。
+2. **pad 点进入贪心采样，污染选点序列**：pad 点（复制末点/补 0）在坐标空间是真实点，参与 `temp[k]=min(d²,temp[k])` 距离比较与 `d2>best` tie-break，并扩大每轮 scan 范围 `[0,N)`——即 spike① 原文「复制的 pad 点参与 FPS 采样，改变采样中心/邻域聚合」。
+3. **贪心累积放大（蝴蝶效应）**：FPS 是串行贪心，第 j 轮严格依赖前 j−1 轮，任何一轮的偏差都会被逐级放大——最终是「整条选点序列漂移」，而非「一个点选错」。
+4. **下游级联**：FPS 的 idx 是 ball_query 的 query 点（new_xyz）与邻居聚合种子——idx 变 → 邻居集合变 → 特征聚合变 → pred 变。pad 只影响第一个采样算子，误差从这里级联到整网输出。
+5. **算法性差异，非浮点噪声**：spike① 已排除干扰项——两模式 run-to-run bit 确定、logits 位级一致，说明差异纯粹由「pad 点参与采样 + N 改变结构量」造成，与 ULP 噪声 / TRT tactic 抖动无关（实测 pred 一致率仅 98.5%，单文件漂 ±1pp）。
+6. **桶化同理**：桶化是「连续 N → 离散桶」映射，桶内 N 仍 ≠ 真实 N；只有当真实 N 恰好等于桶值才是等价变换，而真实子云 N 连续分布（ti10 3523~4219、全集至 6988），精确命中桶值概率趋零。桶化只是把「每文件错」变「多数文件错」，根因未除。
+
+**唯一保证 pred==100% 的路径**：每子云用其真实 N 跑 FPS——即现役 dynamic-shape engine（min_n=2024/opt_n=4096/max_n=10000）所做的事。本计划主路径「逐 shape 池」正是因此选择无 pad、输入零改动（spike③ 已证 graph 输出 bit 级一致）。
+
+**回退口径**：如未来确需桶化（显存/图数约束），按「逐 shape 池不可行再试桶化 + 重新定义验收（接受 ~1.5% pred 差异 + 精度重验）」，不作无精度代价方案（见 §六.3）。
 
 ### Graph 与 context 的绑定关系（实现约束，R1 钉死）
 - **共享 buffer 按 ctx 切段**：维度 = `[ctx_id][max_n]`，`(N, ctx)` 图的输入/输出地址 = **ctx 段内固定偏移**（同 ctx 不同 N 的图共享该 ctx 的输入/输出段——**同 ctx 内不并发**，安全；不同 ctx 各用各段，并发安全）。**切片 key = ctx，不是 N，不是 (N,ctx)**。

@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "active_work_id": "scatter-mean-always",
-  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/scatter-mean-always.md",
-  "plan_name": "scatter-mean-always",
+  "active_work_id": "orin-measure-scripts",
+  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/orin-measure-scripts.md",
+  "plan_name": "orin-measure-scripts",
   "started_at": "2026-08-23T16:31:30.618Z",
   "session_ids": [
     "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n",
@@ -188,6 +188,30 @@
       },
       "agent": "atlas",
       "task_sessions": {}
+    },
+    "orin-measure-scripts": {
+      "work_id": "orin-measure-scripts",
+      "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/orin-measure-scripts.md",
+      "plan_name": "orin-measure-scripts",
+      "session_ids": [
+        "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n"
+      ],
+      "status": "completed",
+      "agent": "atlas",
+      "task_sessions": {},
+      "completed_at": "2026-08-31T11:00:00.000Z"
+    },
+    "ballquery-fp16-validation": {
+      "work_id": "ballquery-fp16-validation",
+      "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/ballquery-fp16-validation.md",
+      "plan_name": "ballquery-fp16-validation",
+      "status": "completed",
+      "session_ids": [
+        "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n"
+      ],
+      "agent": "atlas",
+      "task_sessions": {},
+      "completed_at": "2026-08-31T12:00:00.000Z"
     }
   },
   "updated_at": "2026-08-26T02:39:19.300Z",

@@ -20,7 +20,7 @@ Recursive dict merge — later files override at any depth. `default.yaml` auto-
 
 | Dir | Task | Classes | Key params |
 |-----|------|---------|------------|
-| `radar/` | Custom binary seg | 2 | voxel=0.3, loop=10, norm: ll=bn/其余=in, feature_keys=x,heights, voxel_max=4608 |
+| `radar/` | Custom binary seg | 2 | voxel=0.02, loop=10, norm: ll=bn/其余=in, feature_keys=x,heights, voxel_max=4608 |
 | `s3dis/` | S3DIS room seg | 13 | voxel=0.04, loop=30, norm=bn, test_area=5 |
 | `scannet/` | ScanNet v2 seg | 20 | voxel=0.02, loop=6, norm=bn, RGB |
 | `modelnet40ply2048/` | ModelNet40 cls | 40 | 1024 pts, SmoothCrossEntropy, 600 epochs |
@@ -31,7 +31,7 @@ Recursive dict merge — later files override at any depth. `default.yaml` auto-
 | `scanobjectnn_pix4point/` | Pix4Point on ScanObjectNN | — | ditto |
 ## MODEL CONFIG NAMING
 
-- HPENet V2: `hpenet-{size}.yaml` where size ∈ {s, b, l, **ll (当前活跃, in_ch=5/strides=2/radius=10/norm=bn)**, xl, xxl}
+- HPENet V2: `hpenet-{size}.yaml` where size ∈ {s, b, l, **ll (当前活跃, in_ch=5/strides=[1,4,4,4,4]/radius=5/norm=bn)**, xl, xxl}
 - Baselines: `pointnext-{size}.yaml`, `pointnet++.yaml`, `dgcnn.yaml`, etc.
 - Config structure for seg:
   ```yaml
@@ -48,7 +48,7 @@ Recursive dict merge — later files override at any depth. `default.yaml` auto-
 
 | Param | Radar (ll) | Radar (其余) | S3DIS | ScanNet | ModelNet40 |
 |-------|-------|-------|-------|---------|------------|
-| `radius` | 10 | 0.1 | 0.1 | 0.05 | 0.15 |
+| `radius` | 5 | 0.1 | 0.1 | 0.05 | 0.15 |
 | `in_channels` | 5 | 4 | 4 | 7 (RGB) | 3 (xyz) |
 | `norm` | `bn` | `in` | `bn` | `bn` | `bn` |
 | `nsample` | 32 | 32 | 32 | 32 | 32 |

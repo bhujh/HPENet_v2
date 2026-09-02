@@ -1,6 +1,6 @@
 # HPENet V2 — Project Knowledge Base
 
-**Generated:** 2026-05-29 | **Last updated:** 2026-08-17 | **Branch:** deploy (main 仍为默认远端分支，近期工作在 deploy，有未提交暂存改动)
+**Generated:** 2026-05-29 | **Last updated:** 2026-08-27 | **Branch:** deploy (main 仍为默认远端分支，近期工作在 deploy，有未提交暂存改动)
 
 ## OVERVIEW
 
@@ -60,7 +60,7 @@ For HPENet V2 specifically: `cfg.model.NAME: BaseSeg` → `encoder_args.NAME: HP
 - Binary segmentation (valid/invalid), PLY input: `x, y, z, mag, rcs, snr, v, label`（按字段名加载）
 - `feature_keys: x,heights` — radar features (mag/rcs/snr/v = 4 dims) + z-height (1 dim) = 5 dims（`get_features_by_keys` 拼接，`data_util.py:177`）
 - `in_channels: 5` 仅 hpenet-ll 匹配 5 维输入；**其余变体 (s/b/l/xl/xxl) 仍写 in_channels: 4，与 5 维数据管线不匹配（stem conv 会报错）— 属过时配置**
-- Voxel size: 0.3, `voxel_max: 4608` (train/val), `None` (test) — 旧文档写 3000 已过时
+- Voxel size: **0.02**（训练 run `20260825-161134` 口径，cfg.yaml:21 + 训练日志确认；历史值 0.3/0.2/0.1/0.15/0.05 均过时）, `voxel_max: 4608` (train/val), `None` (test) — 旧文档写 3000/0.3 已过时
 - `dataset.train.loop: 10` — each sample seen 10× per epoch (multiplies `__len__`)
 - Code in `openpoints/dataset/radar/s3disRadar.py`（`RadarClassi`，83/17 随机 split seed=100，feat/z 归一化用 feat_stats）— **misleading filename**；同目录 `s3disRadar_block.py`（孤儿，全注释）与 `s3disRadar_sphere.py`
 - Launch: `script_me/main_segmentation_train.sh`, `script_me/main_segmentation_test.sh` — **当前均指向 hpenet-ll.yaml**
@@ -71,11 +71,11 @@ For HPENet V2 specifically: `cfg.model.NAME: BaseSeg` → `encoder_args.NAME: HP
 | s | 32 | [1,1,1,1,1] | [1,4,4,4,4] | 4 | 0.1 | in |
 | b | 32 | [1,2,3,2,2] | [1,4,4,4,4] | 4 | 0.1 | in |
 | l | 32 | [1,3,5,3,3] | [1,4,4,4,4] | 4 | 0.1 | in |
-| **ll (active)** | 32 | [1,3,5,3,3] | **[1,2,2,2,2]** | **5** | **10** | **bn** |
+| **ll (active)** | 32 | [1,3,5,3,3] | **[1,4,4,4,4]** | **5** | **5** | **bn** |
 | xl | 64 | [1,4,7,4,4] | [1,4,4,4,4] | 4 | 0.1 | in |
 | xxl | 64 | [1,5,9,5,5] | [1,4,4,4,4] | 4 | 0.1 | in |
 
-- **BN 死层问题已修复** (commit e850cbc, 2026-08-12): 原 7/8 `rel_pos.conv.0.1` BN `running_var=5.61e-45` 下溢、eval 输出 ~316× 放大。修复 = hpenet-ll 改 strides [1,4,4,4,4]→[1,2,2,2,2]、radius 0.3→10（降低 FPS/ball_query 采样下 dp=0 概率）+ warmup 10→15。旧 checkpoint 仍带病 BN，勿直接 eval。
+- **BN 死层问题已修复** (commit e850cbc, 2026-08-12): 原 7/8 `rel_pos.conv.0.1` BN `running_var=5.61e-45` 下溢、eval 输出 ~316× 放大。历史修复曾用 strides [1,2,2,2,2]/radius 10，但**当前部署口径（用户有意配置，2026-08-23）是 stride-4（[1,4,4,4,4]）+ FPSPrune(keep_rate=0.75)、radius 5——精度换延迟**。勿按旧描述把 stride-4「修复」回 stride-2。旧 checkpoint 仍带病 BN，勿直接 eval。
 
 ## ANTI-PATTERNS (DO NOT)
 
@@ -107,10 +107,11 @@ For HPENet V2 specifically: `cfg.model.NAME: BaseSeg` → `encoder_args.NAME: HP
   - `CPP_trt` — 原始 C++ CLI 版（--engine/--stats/--data_dir），唯一带 gtest CUDA 测试（test_voxelize/fnv_hash/scatter_mean.cu）
   - `CPP_trt1` — extern "C" C-API 封装版，入口 `src/test.c`（main.cpp 未接 CMake），feat5 模型 (RAW_FEAT_DIM=4/FEAT_DIM=5)，FP16，radarfullwl 硬编码路径
   - `CPP_trt2` — 旧 3-feat 变体，FP32，radarfull，入口 main.cpp
-  - `CPP_trt3` — **当前工作流**: = CPP_trt1 + trt_plugins 子目录 + cuDNN；仅 `src/trt_engine.cpp` 不同于 v1（加 initLibHPENetPlugins()）
+  - `CPP_trt3` — **当前工作流**: = CPP_trt1 + trt_plugins 子目录 + cuDNN。已落地：CPP 批量化（trim_transpose GPU 累积）、FPS warp 归约（宏 1 默认）、代码审查修复 22 项（见 `.omo/plans/cpp-trt3-code-review-fixes.md`，含 CUDA_CHECK_THROW/CUDA_CHECK_LAST 错误检查、list_test_files 去重、#if 0 包裹死代码）。入口 `src/main.cpp`（--engine/--stats/--data_dir/--num_files/--min_n/--voxel_size/--warmup/--dump-prefix）
   - `CPP_onnx` — ONNX Runtime CPU 推理（无 CUDA/TRT），Eigen 头文件已提交，libonnxruntime.so 未提交；`onnx_cppdeploy.md` + `verify.py` 对拍
 - Build: `cd deploy/CPP_trt3 && mkdir build && cd build && cmake .. -DTENSORRT_ROOT=/usr/local/TensorRT-8.6.1.6 -DCMAKE_CUDA_ARCHITECTURES="80;86;89" -DCMAKE_BUILD_TYPE=Release && make -j`
-- Pre-built `.onnx` / `.engine` in `deploy/`: `hpenet_v2_plugin.onnx`, `hpenet_v2_fp32.engine`, `onnx_model_feat5_bn(_sim).onnx` 等。
+- Pre-built `.onnx` / `.engine` in `deploy/`: 当前部署 engine = `hpenet_v2_fp32.engine`（**14,446,844 B**, 2026-08-26 从 `20260825-161134` pth 转出, profile min_n=2024/**opt_n=4096**/max_n=10000, in_channels=5）；`hpenet_v2_plugin.onnx`（11,899,013 B）。旧 engine（opt_n=5500, 15,238,884 B, Aug 23）已过时。
+- **延迟现状**（详见 `latency-statistics.md`）: voxel 0.02 新口径端到端 **16ms/文件**（benchmark 含 PLY 读取，其中 PLY_LOAD 9.64ms 是 IO 假象）/**6.4ms/帧**（部署口径无 PLY），GPU kernel **4.79ms**（FPS warp 1.65ms + ball_query 1.38ms）。Orin AGX 目标 ~48ms/帧（host enqueue 主导）。ti10 acc 基线 **0.9578**（fp32）。
 
 ## HPENet vs HPENet V2
 

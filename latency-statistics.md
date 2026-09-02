@@ -1,6 +1,6 @@
 # HPENet V2 推理延迟统计与优化方向
 
-> 生成：2026-08-26 | 数据来源：本 session 问答 + `.omo/plans/`、`.omo/notepads/`、`.omo/evidence/` 全部 latency 相关归档 + 任务 18 nsys 实测（`/tmp/opencode/latency_v002/`）
+> 生成：2026-08-26 | 数据来源：本 session 问答 + `.omo/plans/`、`.omo/notepads/`、`.omo/evidence/` 全部 latency 相关归档 + 任务 18 L20 nsys 实测（`/tmp/opencode/latency_v002/`）+ Orin 实测（`deploy/orin_lat/`，2026-08-31）
 > 部署口径：stride-4 + FPSPrune(keep_rate=0.75) + **voxel_size=0.02**（训练 run `20260825-161134` 标定，cfg.yaml:21），ti10 acc 基线 **0.9578**（fp32，10 文件 mean）
 > 引擎：`deploy/hpenet_v2_fp32.engine`（**14,446,844 B**，2026-08-26 从 `20260825-161134` pth 转出），profile min_n=2024/**opt_n=4096**/max_n=10000，in_channels=5
 
@@ -106,23 +106,56 @@
 
 ---
 
-## 四、Orin AGX 延迟现状
+## 四、Orin AGX 延迟现状（voxel 0.02 实测）
 
-> 来源：`.omo/plans/latency-graphpool-multistream.md` §五（Orin 端验收，2026-08-24 方案 B 代跑）
+> 来源：`deploy/orin_lat/`（2026-08-31 Orin 端实测，100 文件，voxel 0.02，新引擎 20260825-161134，`analyze_latency.py` 提取）
 
-### 4.1 三冒烟实测
+### 4.1 端到端（两口径，实测）
+
+| 口径 | fp32 | fp16 | vs L20（fp32） |
+|---|---|---|---|
+| **部署口径**（去 PLY IO） | **25.66 ms/帧** | 24.37 ms | 6.4ms → **4×** |
+| **benchmark 口径**（含 PLY IO） | **40.45 ms/文件** | 38.66 ms | 16ms → **2.5×** |
+| GPU kernel 总 | 17.71 ms | 16.49 ms | 4.79ms → **3.7×** |
+| acc（100 文件 mean） | 0.9425 | 0.9425 | ti10 0.9578（含更多难样本，正常） |
+
+### 4.2 NVTX 分段（fp32，每文件）
+
+| 阶段 | ms | 占比 | 说明 |
+|---|---|---|---|
+| PLY_LOAD | 14.79 | 36.6% | ASCII 文本解析，**IO 假象**（真实部署无） |
+| TAIL | 13.74 | 34.0% | scatter + D2H + **末次 sync 等 GPU 收尾** |
+| SUBCLOUD_LOOP | 9.85 | 24.4% | 推理循环（CPU enqueue wall time） |
+| VOXELIZE | 1.85 | 4.6% | CPU 体素化 |
+| 其余 | 0.22 | 0.5% | COORD_SHIFT + ARGMAX_ACC |
+
+### 4.3 GPU kernel 构成（fp32，17.71ms/文件 = 部署口径 69%）
+
+| kernel 段 | 占比 | 说明 |
+|---|---|---|
+| **ball_query** | **27.0%**（4.78ms） | **第一大**——带宽退化（见 4.4） |
+| FPS warp | 16.4%（2.91ms） | 已 warp 优化 |
+| Myelin 融合（`__myl_bb0_*`） | 13.9% | TRT 融合算子（Relu/Repeat/Gather/Reshape/Add/ReduceMax） |
+| ArrayN（gather） | 10.0% | 采样后按索引 gather 数据 |
+| TRT 卷积（TF32 GEMM） | 3.8% | — |
+| bq_dp + ti_top3 + 其他 | ~28% | 散项 |
+
+### 4.4 关键发现
+
+1. **ball_query 在 Orin 上退化为第一大 GPU kernel（27%）**：L20 1.38ms → Orin 4.78ms（**3.5×**），而 FPS 仅 1.65→2.91ms（1.8×）——ball_query 是**内存带宽型** kernel，Orin（LPDDR5 ~200GB/s）带宽远弱于 L20（HBM ~800GB/s+），退化最严重。**L20 上「GridBallQuery/融合1 已证负」的结论在 Orin 上未必成立，值得重估**。
+2. **TAIL 13.74ms = 末次 sync 等 GPU 收尾**：CPU enqueue 只 9.85ms，GPU kernel 要 17.71ms，差值 ~7.9ms 堆在 TAIL 的 `synchronize()` 空等（单流异步固有结构，GPU 未跑完 CPU 只能在末尾等）。
+3. **fp16 只快 ~5%**：瓶颈（ball_query/FPS/Myelin/ArrayN）全是自定义插件或非 GEMM kernel（内部 fp32 计算），fp16 只加速了 GEMM（3.8%→3.0%）——**要让 fp16 真正提速，插件 kernel 须半精度化**。
+4. **部署口径 25.66ms = GPU 17.71ms（69%）+ host ~8ms**——与 L20「GPU 86%」不同，Orin host 占比更高（enqueue 慢 + sync 空等）。
+
+### 4.5 三冒烟（历史技术锚点，2026-08-24，voxel 0.3 旧口径）
+
+> 注：以下为 CUDA Graph / 多流「技术可行性」验证结果，非当前延迟基线（T1=7.49ms 为旧口径单子云值）。
 
 | 冒烟 | 结果 | 关键数字 |
 |---|---|---|
-| 0a graph capture | **PASS**（bit 级一致，三组 memcmp 全等） | enqueue 8007µs → graphLaunch 42.4µs（**188.8×**） |
+| 0a graph capture | **PASS**（bit 级一致） | enqueue 8007µs → graphLaunch 42.4µs（**188.8×**） |
 | 0b 双 context 并发 | **1.20×**（<1.3 机械阈值） | T1=7.49ms / serial=15.51ms / concurrent=12.93ms |
 | 0c workspace/ctx | **PASS** | +8.6MB RSS / +7.4MB 显存（远低于 700MB 预算） |
-
-### 4.2 端到端画像
-
-- **现役 ≈48 ms/帧**，且 **host 主导**（host 路径 48ms > GPU 45ms）——与 L20「GPU 主导」相反。
-- 根因：Orin 单子云 host enqueue ~8ms（L20 仅 ~2ms），6 子云/文件 → host enqueue 成为第一瓶颈。
-- GPU ~45ms 为 N=3523 单 shape smoke 外推下界（全集 N 至 7467，真实 GPU 路径可能更长）。
 
 ---
 
@@ -130,15 +163,17 @@
 
 ### 本机（L20，voxel 0.02 现状）
 1. **（benchmark 口径）PLY_LOAD 9.64ms（60%）** — 纯 ASCII 文本解析，真实部署无此，属测量假象。
-2. **（部署口径）GPU kernel 4.79ms/帧（75%）** — FPS warp（1.65ms）+ ball_query（1.38ms）居首，两者仍有优化空间。
+2. **（部署口径）GPU kernel 4.79ms/帧（75%）** — FPS warp（1.65ms）+ ball_query（1.38ms）居首；两者均已逼近当前算法/kernel 范式上限（FPS warp 归约已落地、ball_query 早停剪枝已到头），剩余仅融合1.5（~4% GPU kernel，高风险，打的是 bq_dp 而非搜索段）。
 3. host ENQUEUE ~1.64ms/子云 ×2 — TRT enqueueV3 host 开销，CUDA Graph 可打。
 
-### Orin AGX
-1. **host enqueue ~8ms/子云** — 第一瓶颈（host 48ms > GPU 45ms）。
-2. GPU kernel ~45ms/帧 — 单子云 7.49ms × 6，SM 利用率低（FPS warp 单 block 只占 1/16 SM）。
+### Orin AGX（voxel 0.02 实测）
+1. **（部署口径）GPU kernel 17.71ms/帧（69%）** — **ball_query（27%，带宽退化 3.5×）反超 FPS（16.4%）成第一大 kernel**；两者都有空间（ball_query 在 Orin 上可重估 nsample/radius、FPS 已 warp 优化）。
+2. **TAIL 末次 sync 空等 ~7.9ms** — CPU enqueue（9.85ms）跑完但 GPU（17.71ms）没跑完，单流异步固有结构（多流/CUDA Graph 可缓解）。
+3. host enqueue（Orin 上慢）— CUDA Graph 已证 188.8×，待落地。
+4. （benchmark 口径）PLY_LOAD 14.79ms（36.6%）— 真实部署无，属测量假象。
 
 ### 共同瓶颈本质
-- **GPU 侧**：FPS（贪心串行 M 轮 + 归约/同步开销）+ ball_query（内存带宽型，已到头）+ SM 空闲（单流单 block）。
+- **GPU 侧**：FPS（贪心串行 M 轮，结构上限；warp 归约已落地）+ ball_query（内存带宽型，已到头）+ SM 空闲（单流单 block）。
 - **host 侧**：TRT `enqueueV3` 提交开销（每子云一次），Orin 上尤甚（~8ms vs L20 ~1.6ms）。
 
 ---
@@ -156,6 +191,13 @@
 | **③ 逐 shape GraphPool**（配合 ①②） | 对每个真实 N（全集 2803–7467、328 唯一值、mean 5286）各捕一张图 | graph 输出 bit 级一致（spike③） | 解 graph「shape 烧死」约束；per-ctx LRU 384 全集不淘汰 |
 
 > 注：原方向 ④「voxel_size 调小」已落地（voxel 0.02 成为训练/部署标定），见 §2.1/§3.1，不再列为待办方向。
+
+### Orin 专项（基于 2026-08-31 实测新发现）
+
+| 方向 | 机理 | 预期收益 |
+|---|---|---|
+| **⑨ ball_query 在 Orin 上重估** | Orin 带宽弱（~200GB/s vs L20 ~800GB/s），ball_query 带宽退化 **3.5×** 成第一大 kernel（27%）；L20 上「GridBallQuery/融合1 已证负」的结论在 Orin 上**未必成立** | 先做 nsample 32→16 / radius 5 调参敏感性测试（改 `hpenet-ll.yaml` 测 acc 影响）；再评估带宽优化（coalescing/缓存） |
+| **⑩ fp16 插件 kernel 半精度化** | 当前 fp16 只快 5%（瓶颈是自定义插件 kernel，内部 fp32 计算）；让 ball_query/FPS 的 distance/dp 走 fp16 | 让 fp16 engine 真正提速（当前 fp16 几乎无效） |
 
 ### 中优先级
 
@@ -180,8 +222,12 @@
 
 按「GraphPool + 多流」计划（`.omo/plans/latency-graphpool-multistream.md`，状态：定稿待执行）：
 
-1. **阶段 2 先行**：逐 shape GraphPool（单流）→ 验证 → 预期 Orin ~−6%。
-2. **阶段 3 叠加**：多 context 多流（K=2/4）→ 组合预期 Orin **48→37.5ms（−22%）**。
+> ✅ 基线已更新：voxel 0.02 实测 Orin 部署口径 **25.66 ms/帧**（fp32，2026-08-31，100 文件），原 48ms 预估作废。收益预期按新基线重估：
+> - **graph 单独**：打 host enqueue（部署口径 host ~8ms），理论上限 ~−8ms；实际可消除 enqueue 部分。
+> - **graph+多流**：进一步打 GPU SM 空闲（FPS warp 单 block 占 1/16 SM），叠加后下限 ≈ GPU 17.71ms 的并发上限。
+
+1. **阶段 2 先行**：逐 shape GraphPool（单流）→ 验证 → 打 host enqueue。
+2. **阶段 3 叠加**：多 context 多流（K=2/4）→ 打 GPU SM 空闲（ball_query/FPS 并发）。
 3. 阶段 4 回填测量 + Orin 端到端验收（三冒烟已在 L20/Orin 逻辑层 PASS，Orin 端需复测端到端）。
 
 **未决前提**：Orin 0b 双 ctx 实测 1.20×（低于 1.3 机械阈值）——已改判为「graph 落地后的第二阶段」，叠加后若 Orin 帧时无改善则 `num_streams` 保持 1 回退。
@@ -202,3 +248,4 @@
 | `.omo/plans/scatter-mean-always.md` | voxel_size=0.02 崩溃根因与 L651 修复 |
 | `.omo/boulder.json` | 6 个 work 状态（5 completed / 1 paused） |
 | `/tmp/opencode/latency_v002/cpp_v002.nsys-rep` | 任务 18 nsys 实测（voxel 0.02，新引擎 20260825-161134，e2e 16ms / GPU 4.79ms / 部署 6.4ms） |
+| `deploy/orin_lat/`（e2e_fp32/fp16 .nsys-rep + .sqlite） | 2026-08-31 Orin 实测（voxel 0.02，100 文件，部署 25.66ms / GPU 17.71ms / ball_query 27% 带宽退化） |
