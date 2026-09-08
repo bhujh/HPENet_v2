@@ -14,7 +14,7 @@ model:
     width: 32
     in_channels: 5 #4
     expansion: 1 #4
-    radius: 5 # 4 #3 #2 #5 #10 #0.3 #0.1
+    radius: 7 #5 # 4 #3 #2 #5 #10 #0.3 #0.1
     nsample: 32
     aggr_args:
       feature_type: 'dp_fj'

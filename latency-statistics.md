@@ -146,6 +146,30 @@
 2. **TAIL 13.74ms = 末次 sync 等 GPU 收尾**：CPU enqueue 只 9.85ms，GPU kernel 要 17.71ms，差值 ~7.9ms 堆在 TAIL 的 `synchronize()` 空等（单流异步固有结构，GPU 未跑完 CPU 只能在末尾等）。
 3. **fp16 只快 ~5%**：瓶颈（ball_query/FPS/Myelin/ArrayN）全是自定义插件或非 GEMM kernel（内部 fp32 计算），fp16 只加速了 GEMM（3.8%→3.0%）——**要让 fp16 真正提速，插件 kernel 须半精度化**。
 4. **部署口径 25.66ms = GPU 17.71ms（69%）+ host ~8ms**——与 L20「GPU 86%」不同，Orin host 占比更高（enqueue 慢 + sync 空等）。
+5. **插件 kernel 半精度化裁决（ball_query 已实测否决，FPS 机理外推更难）**——详见 §六 ⑩。
+
+### 4.4a 半精度化状况详录（2026-08-31，`ballquery-fp16-validation` 方案归档）
+
+**ball_query（已实测，否决）**：
+
+| 阶段 | 做法 | 精度 | 性能 | 裁决 |
+|---|---|---|---|---|
+| 阶段 1 | 只把**距离计算**转 fp16（坐标仍 fp32 读入，`BALLQUERY_FP16` 宏，默认 0 回退通道） | ✅ acc −0.03pp（0.9577→0.9574）、真实场景 idx 翻转率 **0%** | ❌ **零收益**（带宽一字节未省） | 精度过闸但无意义 |
+| 阶段 2 | 坐标**存储**改 fp16（唯一能省带宽的路） | ❌ 5b 实测 max\|pos\| ≈ **200m** → fp16 粒度 ~9.8cm ≫ voxel 2cm | ✅ 带宽可减半 | **否决归档** |
+
+**根因**：kernel 是带宽瓶颈型（Orin 退化 3.5× 的机理），省钱点在"读坐标"不在"算距离"；pos = 子云内点相对质心的偏移，而雷达单帧物理覆盖就是 ~200m，**减 min / 减 mean 只平移原点、不压缩空间扩展**（推翻"中心化后 pos 只有几米"的假设）；fp16 相对精度恒 2⁻¹¹，量级 200m 处绝对粒度必然 ~10cm——这是**表示层**（全局量级 ~200m 与局部精度 2cm 耦合在一个固定相对精度格式里）的矛盾，不是 kernel 写法问题。
+
+**FPS（未实测，机理外推三障碍全中）**：
+
+| 障碍 | ball_query（实测） | FPS（预判） |
+|---|---|---|
+| 坐标存储墙（共有） | pos ~200m → 粒度 ~9.8cm，否决 | 读同一份 xyz，同样 200m → 同一堵墙 |
+| **d² 溢出**（FPS 独有） | 免疫：`d2 < radius2` 只关心 radius 5m 内，远处溢出成 inf 无害 | **致命**：dist 存到已选中心集的最小距离，量级到子云直径（~280m），**d² 可达 ~80000 > fp16 max 65504** → 溢出成 inf 后 argmax 崩 |
+| **误差传播**（FPS 独有） | 逐点**独立**比较，一次翻转只影响一个邻居槽位，误差隔离（实测翻转率 0%） | **贪心串行**：第 k 轮 argmax 翻转 → 选错中心 → 后续所有轮 dist 沿错误轨迹漂移，**级联放大** |
+
+**结论**：FPS 半精度化从未做（builder 级 fp16 已覆盖但 autotune 自选跑 fp32，即 §4.4-3 "fp16 只快 ~5%" 的原因之一），即使做也是三障碍全中，且 FPS 的收益主线在算法/图级（warp 归约 −20% 已落地、cache/prune −38%~−61% 已落地、下一目标多 block 化），与精度红线零冲突，半精度化优先级最低。
+
+**若未来重启**：唯一可行路径是 **int16 定点坐标**（粒度 = span/65536，scale 真正有效；逐子云归一化 ±1 时粒度 0.03mm，远优于阶段 1 的 ~2.4mm）——FPS 与 ball_query 作为同一份 xyz 的消费者**同方案受益**，无需单独立项。可复用资产：`BALLQUERY_FP16` 宏（默认 0）、`tests/test_bq_fp16.cu` + `compare_bq_fp16.py`（翻转率对拍工具）、闸门判据（acc <0.3pp / pos <20m 可接受）。
 
 ### 4.5 三冒烟（历史技术锚点，2026-08-24，voxel 0.3 旧口径）
 
@@ -197,7 +221,7 @@
 | 方向 | 机理 | 预期收益 |
 |---|---|---|
 | **⑨ ball_query 在 Orin 上重估** | Orin 带宽弱（~200GB/s vs L20 ~800GB/s），ball_query 带宽退化 **3.5×** 成第一大 kernel（27%）；L20 上「GridBallQuery/融合1 已证负」的结论在 Orin 上**未必成立** | 先做 nsample 32→16 / radius 5 调参敏感性测试（改 `hpenet-ll.yaml` 测 acc 影响）；再评估带宽优化（coalescing/缓存） |
-| **⑩ fp16 插件 kernel 半精度化** | 当前 fp16 只快 5%（瓶颈是自定义插件 kernel，内部 fp32 计算）；让 ball_query/FPS 的 distance/dp 走 fp16 | 让 fp16 engine 真正提速（当前 fp16 几乎无效） |
+| **⑩ fp16 插件 kernel 半精度化** | 当前 fp16 只快 5%（瓶颈是自定义插件 kernel，内部 fp32 计算）；让 ball_query/FPS 的 distance/dp 走 fp16 | ~~让 fp16 engine 真正提速~~ **ball_query 已实测否决**（阶段 1 精度过闸但零性能收益、阶段 2 撞 pos ~200m 坐标存储墙，详见 §4.4a）；FPS 未实测但机理外推三障碍全中，不建议单独立项 |
 
 ### 中优先级
 
@@ -243,6 +267,7 @@
 | `.omo/plans/latency-graphpool-multistream.md` | Orin 三冒烟、GraphPool+多流计划、收益修正 |
 | `.omo/notepads/ballquery-dp-fusion/{verdict,learnings}.md` | 融合1 否决、FPS 微基准分解、CPP 批量化调研 |
 | `.omo/notepads/gridballquery-trt-plugin/learnings.md` | GridBallQuery nsys 负结论 |
+| `.omo/plans/ballquery-fp16-validation.md` | 插件 kernel 半精度化：ball_query 实测否决（阶段 1/2 全表 + 根因）、FPS 机理外推、int16 定点唯一出路、可复用资产清单 |
 | `.omo/notepads/fps-samplefps-flashfps/learnings.md` | FPS 四算法端到端对比、fps_cache 档、已关闭路线 |
 | `.omo/plans/gpu-memory-monitor.md` | GPU 显存监控落地（get_gpu_memory_info） |
 | `.omo/plans/scatter-mean-always.md` | voxel_size=0.02 崩溃根因与 L651 修复 |
