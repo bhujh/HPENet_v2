@@ -1,12 +1,11 @@
 {
   "schema_version": 2,
-  "active_work_id": "orin-measure-scripts",
-  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/orin-measure-scripts.md",
-  "plan_name": "orin-measure-scripts",
-  "started_at": "2026-08-23T16:31:30.618Z",
+  "active_work_id": "omitting-voxelize-00000001",
+  "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/omitting-voxelize.md",
+  "plan_name": "omitting-voxelize",
+  "started_at": "2026-09-16T05:42:07.988Z",
   "session_ids": [
-    "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n",
-    "opencode:ses_fc41050a8ffeajnoWbjUkVB5UV"
+    "opencode:ses_f93e9cca7ffejUisiUBL6S2LR7"
   ],
   "status": "completed",
   "agent": "atlas",
@@ -199,7 +198,8 @@
       "status": "completed",
       "agent": "atlas",
       "task_sessions": {},
-      "completed_at": "2026-08-31T11:00:00.000Z"
+      "completed_at": "2026-08-31T11:00:00.000Z",
+      "session_origins": {}
     },
     "ballquery-fp16-validation": {
       "work_id": "ballquery-fp16-validation",
@@ -211,15 +211,263 @@
       ],
       "agent": "atlas",
       "task_sessions": {},
-      "completed_at": "2026-08-31T12:00:00.000Z"
+      "completed_at": "2026-08-31T12:00:00.000Z",
+      "session_origins": {}
+    },
+    "omitting-voxelize-00000001": {
+      "work_id": "omitting-voxelize-00000001",
+      "active_plan": "/home/wangpeng/CODE/HPENet_v2-main/.omo/plans/omitting-voxelize.md",
+      "plan_name": "omitting-voxelize",
+      "status": "completed",
+      "started_at": "2026-09-16T05:42:07.988Z",
+      "session_ids": [
+        "opencode:ses_f93e9cca7ffejUisiUBL6S2LR7"
+      ],
+      "session_origins": {
+        "opencode:ses_f93e9cca7ffejUisiUBL6S2LR7": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {
+        "todo:1": {
+          "task_key": "todo:1",
+          "task_label": "1",
+          "task_title": "**P1 基线重测（GPU）**：用钉死 ckpt 在当前仓库状态（`voxel_size: 0.0001`）跑 `ti10`，得**逐文件 + 10 文件均值 acc** 作为 Δacc 的**唯一基准**。命令骨架 `CUDA_VISIBLE_DEVICES=3 python examples/segmentation/main.py --cfg cfgs/radar/hpenet-ll.yaml wandb.use_wandb=False mode=test --pretrained_path <钉死 ckpt>`；🔴 覆盖 `script_me/main_segmentation_test.sh:43` 与 `onnx_inference.py:175` 的默认 ckpt；记录 seed（`main.py:606 set_random_seed(0)`）；判据 **不得**出现 `0.9578`",
+          "session_id": "opencode:ses_f57430d55ffe1XcvsBlNxa9Qo2",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-09-16T05:50:51.701Z",
+          "started_at": "2026-09-16T05:49:57.878Z",
+          "status": "completed",
+          "ended_at": "2026-09-16T05:50:51.701Z",
+          "elapsed_ms": 53823
+        },
+        "todo:3": {
+          "task_key": "todo:3",
+          "task_label": "3",
+          "task_title": "**A1** `openpoints/dataset/radar/s3disRadar.py:73-74`：f-string 条件化 —— `tag = 'novx' if voxel_size is None else f'{voxel_size:.3f}'` 再拼进 filename",
+          "session_id": "opencode:ses_f573b1500ffe4pyv7hQwPH5L50",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "updated_at": "2026-09-16T05:54:46.055Z",
+          "started_at": "2026-09-16T05:51:45.730Z",
+          "status": "completed",
+          "ended_at": "2026-09-16T05:54:46.055Z",
+          "elapsed_ms": 180325
+        },
+        "todo:8": {
+          "task_key": "todo:8",
+          "task_label": "8",
+          "task_title": "**A4 A 验收**：train 1 epoch（loss 无 NaN/发散、train acc Δ < 1.0pp）+ `ti10` 对拍 **Δacc < 0.3pp**（同 seed 同 ckpt，`null` vs 任务 1 基线）",
+          "session_id": "opencode:ses_f573774a2ffe3jJxoDxlVdYmRB",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-09-16T05:58:08.415Z",
+          "started_at": "2026-09-16T05:58:08.415Z",
+          "status": "running"
+        },
+        "todo:12": {
+          "task_key": "todo:12",
+          "task_label": "12",
+          "task_title": "**C6** 🔴 `src/trt_inference_wrapper.cpp:192-194`：删硬编码 `0.02f`（**BLK-1**），显式补 `100`；**必须在任务 11 之后**（颠倒 → `100` 绑到仍为 float 的 `voxel_size` → 全部点并成一格）",
+          "session_id": "opencode:ses_f572ea477ffeQFvkGNsXLqXJVC",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "updated_at": "2026-09-16T06:07:55.821Z",
+          "started_at": "2026-09-16T06:05:19.118Z",
+          "status": "completed",
+          "ended_at": "2026-09-16T06:07:55.821Z",
+          "elapsed_ms": 156703
+        },
+        "todo:15": {
+          "task_key": "todo:15",
+          "task_label": "15",
+          "task_title": "**C7 C 验收**：**clean rebuild**（删 `build/` —— `link.txt` 仍引用已删的 `voxelizer.cu`，只 `make` 会失败）+ CLI/C-API 双入口跑通 + C-API **acc 级**对拍。⚠️ C-API 各入口只返回 `latency_ms` 不返回 accuracy，且 `update_predictions_to_cdi` **原地覆写 `valid`、销毁 ground truth** → 须**调用前备份标签**、外部脚本对拍；⚠️ C-API 路径语义跳变最大（`0.02f` 真体素化 → 单子云）",
+          "session_id": "opencode:ses_f572b6d42ffeEHo2TQZUrO2OuV",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-09-16T06:22:23.513Z",
+          "started_at": "2026-09-16T06:21:51.356Z",
+          "status": "completed",
+          "ended_at": "2026-09-16T06:22:23.513Z",
+          "elapsed_ms": 32157
+        },
+        "todo:16": {
+          "task_key": "todo:16",
+          "task_label": "16",
+          "task_title": "**B1** `examples/segmentation/main.py:703`：保留重排、只去 mean 归约 —— 🔴 **必须含 `all_logits = out` 回绑**（`:707 pred = all_logits.argmax(dim=1)` 消费的是 `all_logits`；只建 `out` 不回绑 → 静默低 acc）",
+          "session_id": "opencode:ses_f571e5d56ffe9J5rmd81dThCHS",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "updated_at": "2026-09-16T06:28:14.516Z",
+          "started_at": "2026-09-16T06:23:55.424Z",
+          "status": "completed",
+          "ended_at": "2026-09-16T06:28:14.516Z",
+          "elapsed_ms": 259092
+        },
+        "todo:19": {
+          "task_key": "todo:19",
+          "task_label": "19",
+          "task_title": "**B4 B 验收**：A+C 通过后落地，再验一次 acc（口径同任务 8）",
+          "session_id": "opencode:ses_f5718ecb0ffemerKYxHxU0DmDw",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-09-16T06:40:01.927Z",
+          "started_at": "2026-09-16T06:39:37.347Z",
+          "status": "completed",
+          "ended_at": "2026-09-16T06:40:01.927Z",
+          "elapsed_ms": 24580
+        },
+        "final-wave:f1": {
+          "task_key": "final-wave:f1",
+          "task_label": "F1",
+          "task_title": "（规格 §5.2 train 行）1–2 epoch 实跑 —— loss 无 NaN/发散，**train acc Δ < 1.0pp**",
+          "session_id": "opencode:ses_f5703ac55ffeHM8HuYViZxYCeS",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "started_at": "2026-09-16T06:45:35.380Z",
+          "status": "completed",
+          "updated_at": "2026-09-16T15:57:03.900Z",
+          "ended_at": "2026-09-16T15:57:03.900Z",
+          "elapsed_ms": 33088520
+        },
+        "final-wave:f4": {
+          "task_key": "final-wave:f4",
+          "task_label": "F4",
+          "task_title": "（规格 §5.2 部署 CLI/C-API + 构建行）`analyze_latency.py` 确认 **VOXELIZE 段消失** + 端到端**延迟 ↓ ≥ 5%**（分母用 0.0001 基线，**非 25.66ms**）；`CPP_trt4` clean rebuild **exit 0**，CLI + C-API 两入口自洽",
+          "session_id": "opencode:ses_f550ab78affeFMgEOWk92x7ZwD",
+          "agent": "oracle",
+          "started_at": "2026-09-16T09:58:19.752Z",
+          "ended_at": "2026-09-16T16:14:44.269Z",
+          "elapsed_ms": 22584517,
+          "status": "completed",
+          "updated_at": "2026-09-16T16:14:44.269Z"
+        }
+      },
+      "updated_at": "2026-09-16T16:14:44.269Z",
+      "ended_at": "2026-09-16T09:59:46.672Z",
+      "elapsed_ms": 15458684
     }
   },
-  "updated_at": "2026-08-26T02:39:19.300Z",
+  "updated_at": "2026-09-16T16:14:44.269Z",
   "session_origins": {
-    "opencode:ses_fdfa9d610ffelwRnPUsyKQcH5n": "direct"
+    "opencode:ses_f93e9cca7ffejUisiUBL6S2LR7": "direct"
   },
-  "task_sessions": {},
-  "completed_at": "2026-08-26T03:00:00.000Z",
-  "ended_at": "2026-08-23T17:49:24.199Z",
-  "elapsed_ms": 4673581
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "**P1 基线重测（GPU）**：用钉死 ckpt 在当前仓库状态（`voxel_size: 0.0001`）跑 `ti10`，得**逐文件 + 10 文件均值 acc** 作为 Δacc 的**唯一基准**。命令骨架 `CUDA_VISIBLE_DEVICES=3 python examples/segmentation/main.py --cfg cfgs/radar/hpenet-ll.yaml wandb.use_wandb=False mode=test --pretrained_path <钉死 ckpt>`；🔴 覆盖 `script_me/main_segmentation_test.sh:43` 与 `onnx_inference.py:175` 的默认 ckpt；记录 seed（`main.py:606 set_random_seed(0)`）；判据 **不得**出现 `0.9578`",
+      "session_id": "opencode:ses_f57430d55ffe1XcvsBlNxa9Qo2",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-09-16T05:50:51.701Z",
+      "started_at": "2026-09-16T05:49:57.878Z",
+      "status": "completed",
+      "ended_at": "2026-09-16T05:50:51.701Z",
+      "elapsed_ms": 53823
+    },
+    "todo:3": {
+      "task_key": "todo:3",
+      "task_label": "3",
+      "task_title": "**A1** `openpoints/dataset/radar/s3disRadar.py:73-74`：f-string 条件化 —— `tag = 'novx' if voxel_size is None else f'{voxel_size:.3f}'` 再拼进 filename",
+      "session_id": "opencode:ses_f573b1500ffe4pyv7hQwPH5L50",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-09-16T05:54:46.055Z",
+      "started_at": "2026-09-16T05:51:45.730Z",
+      "status": "completed",
+      "ended_at": "2026-09-16T05:54:46.055Z",
+      "elapsed_ms": 180325
+    },
+    "todo:8": {
+      "task_key": "todo:8",
+      "task_label": "8",
+      "task_title": "**A4 A 验收**：train 1 epoch（loss 无 NaN/发散、train acc Δ < 1.0pp）+ `ti10` 对拍 **Δacc < 0.3pp**（同 seed 同 ckpt，`null` vs 任务 1 基线）",
+      "session_id": "opencode:ses_f573774a2ffe3jJxoDxlVdYmRB",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-09-16T05:58:08.415Z",
+      "started_at": "2026-09-16T05:58:08.415Z",
+      "status": "running"
+    },
+    "todo:12": {
+      "task_key": "todo:12",
+      "task_label": "12",
+      "task_title": "**C6** 🔴 `src/trt_inference_wrapper.cpp:192-194`：删硬编码 `0.02f`（**BLK-1**），显式补 `100`；**必须在任务 11 之后**（颠倒 → `100` 绑到仍为 float 的 `voxel_size` → 全部点并成一格）",
+      "session_id": "opencode:ses_f572ea477ffeQFvkGNsXLqXJVC",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-09-16T06:07:55.821Z",
+      "started_at": "2026-09-16T06:05:19.118Z",
+      "status": "completed",
+      "ended_at": "2026-09-16T06:07:55.821Z",
+      "elapsed_ms": 156703
+    },
+    "todo:15": {
+      "task_key": "todo:15",
+      "task_label": "15",
+      "task_title": "**C7 C 验收**：**clean rebuild**（删 `build/` —— `link.txt` 仍引用已删的 `voxelizer.cu`，只 `make` 会失败）+ CLI/C-API 双入口跑通 + C-API **acc 级**对拍。⚠️ C-API 各入口只返回 `latency_ms` 不返回 accuracy，且 `update_predictions_to_cdi` **原地覆写 `valid`、销毁 ground truth** → 须**调用前备份标签**、外部脚本对拍；⚠️ C-API 路径语义跳变最大（`0.02f` 真体素化 → 单子云）",
+      "session_id": "opencode:ses_f572b6d42ffeEHo2TQZUrO2OuV",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-09-16T06:22:23.513Z",
+      "started_at": "2026-09-16T06:21:51.356Z",
+      "status": "completed",
+      "ended_at": "2026-09-16T06:22:23.513Z",
+      "elapsed_ms": 32157
+    },
+    "todo:16": {
+      "task_key": "todo:16",
+      "task_label": "16",
+      "task_title": "**B1** `examples/segmentation/main.py:703`：保留重排、只去 mean 归约 —— 🔴 **必须含 `all_logits = out` 回绑**（`:707 pred = all_logits.argmax(dim=1)` 消费的是 `all_logits`；只建 `out` 不回绑 → 静默低 acc）",
+      "session_id": "opencode:ses_f571e5d56ffe9J5rmd81dThCHS",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-09-16T06:28:14.516Z",
+      "started_at": "2026-09-16T06:23:55.424Z",
+      "status": "completed",
+      "ended_at": "2026-09-16T06:28:14.516Z",
+      "elapsed_ms": 259092
+    },
+    "todo:19": {
+      "task_key": "todo:19",
+      "task_label": "19",
+      "task_title": "**B4 B 验收**：A+C 通过后落地，再验一次 acc（口径同任务 8）",
+      "session_id": "opencode:ses_f5718ecb0ffemerKYxHxU0DmDw",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-09-16T06:40:01.927Z",
+      "started_at": "2026-09-16T06:39:37.347Z",
+      "status": "completed",
+      "ended_at": "2026-09-16T06:40:01.927Z",
+      "elapsed_ms": 24580
+    },
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "（规格 §5.2 train 行）1–2 epoch 实跑 —— loss 无 NaN/发散，**train acc Δ < 1.0pp**",
+      "session_id": "opencode:ses_f5703ac55ffeHM8HuYViZxYCeS",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "started_at": "2026-09-16T06:45:35.380Z",
+      "status": "completed",
+      "updated_at": "2026-09-16T15:57:03.900Z",
+      "ended_at": "2026-09-16T15:57:03.900Z",
+      "elapsed_ms": 33088520
+    },
+    "final-wave:f4": {
+      "task_key": "final-wave:f4",
+      "task_label": "F4",
+      "task_title": "（规格 §5.2 部署 CLI/C-API + 构建行）`analyze_latency.py` 确认 **VOXELIZE 段消失** + 端到端**延迟 ↓ ≥ 5%**（分母用 0.0001 基线，**非 25.66ms**）；`CPP_trt4` clean rebuild **exit 0**，CLI + C-API 两入口自洽",
+      "session_id": "opencode:ses_f550ab78affeFMgEOWk92x7ZwD",
+      "agent": "oracle",
+      "started_at": "2026-09-16T09:58:19.752Z",
+      "ended_at": "2026-09-16T16:14:44.269Z",
+      "elapsed_ms": 22584517,
+      "status": "completed",
+      "updated_at": "2026-09-16T16:14:44.269Z"
+    }
+  },
+  "ended_at": "2026-09-16T09:59:46.672Z",
+  "elapsed_ms": 15458684
 }

@@ -137,7 +137,9 @@ def load_data(data_path, cfg):
                 np.random.shuffle(idx_part)
                 idx_points.append(idx_part)
     else:
-        idx_points.append(np.arange(label.shape[0]))
+        idx_part = np.arange(label.shape[0])
+        np.random.shuffle(idx_part)
+        idx_points.append(idx_part)
     coord = np.nan_to_num(coord, nan=0.0)
     feat = np.nan_to_num(feat, nan=0.0)
     label = np.nan_to_num(label, nan=0.0)
@@ -698,9 +700,11 @@ def test(model, data_list, cfg, num_votes=1):
             all_logits = all_logits.transpose(1, 2).reshape(-1, cfg.num_classes)
 
         if not nearest_neighbor:
-            # average merge overlapped multi voxels logits to original point set
+            # reorder sub-cloud logits back to original point order (no mean reduction)
             idx_points = torch.from_numpy(np.hstack(idx_points)).cuda(non_blocking=True)
-            all_logits = scatter(all_logits, idx_points, dim=0, reduce='mean')
+            out = torch.empty_like(all_logits)
+            out[idx_points] = all_logits
+            all_logits = out
         else:
             # interpolate logits by nearest neighbor
             all_logits = all_logits[reverse_idx_part][voxel_idx][reverse_idx]

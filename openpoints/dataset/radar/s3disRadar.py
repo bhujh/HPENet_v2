@@ -70,8 +70,9 @@ class RadarClassi(Dataset):
         # os.abort()
 
         processed_root = os.path.join(data_root, 'processed')
+        tag = 'novx' if voxel_size is None else f'{voxel_size:.3f}'
         filename = os.path.join(
-            processed_root, f'radar_{split}_area{test_area}_{voxel_size:.3f}_{str(voxel_max)}.pkl')
+            processed_root, f'radar_{split}_area{test_area}_{tag}_{str(voxel_max)}.pkl')
         if presample and not os.path.exists(filename):
             np.random.seed(0)
             self.data = []
